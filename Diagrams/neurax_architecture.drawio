@@ -1,0 +1,151 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" version="28.1.1">
+  <diagram name="Page-1" id="2YBvvXClWsGukQMizWep">
+    <mxGraphModel dx="1718" dy="475" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-1" value="10G Server" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="1" vertex="1">
+          <mxGeometry x="50" y="100" width="100" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-5" value="1G Server" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="1" vertex="1">
+          <mxGeometry x="230" y="100" width="100" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-1" value="PM300" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="50" y="20" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-2" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" target="aM9ryv3xv72pqoxQDRHE-1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint y="170" as="sourcePoint" />
+            <mxPoint x="450" y="270" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-3" value="iperf3 server" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FYBnrMPm6ZZ5zBHLjD3S-2" vertex="1" connectable="0">
+          <mxGeometry x="-0.2604" y="-4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-4" value="Lifeline1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="1" vertex="1">
+          <mxGeometry x="460" y="100" width="100" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-5" value="Lifeline2" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="1" vertex="1">
+          <mxGeometry x="640" y="100" width="100" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-6" value="PM350" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="460" y="20" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-7" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="95" y="170" width="10" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-8" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="180" y="190" as="sourcePoint" />
+            <mxPoint x="280" y="190" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-9" value="iperf3 server" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FYBnrMPm6ZZ5zBHLjD3S-8" vertex="1" connectable="0">
+          <mxGeometry x="-0.2604" y="-4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="FYBnrMPm6ZZ5zBHLjD3S-10" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="275" y="190" width="10" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-28" value="NEURAX Neural Network Accelerator&#xa;Software Architecture" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-29" value="Application Layer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="20" y="100" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-30" value="Demo Apps&#xa;&#xa;simple_cnn_demo.c&#xa;Image Classification&#xa;Benchmarks" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-31" value="User Applications&#xa;&#xa;Custom CNN&#xa;Deep Learning&#xa;AI Inference" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="200" y="160" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-32" value="Benchmarks&#xa;&#xa;Performance Tests&#xa;Memory Tests&#xa;Validation Suite" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="360" y="160" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-33" value="NEURAX Public API Layer (neurax.h)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="20" y="260" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-34" value="Public API Functions:&#xa;• neurax_device_init() / destroy()&#xa;• neurax_tensor_create() / destroy()&#xa;• neurax_conv2d() - 2D Convolution&#xa;• neurax_pooling() - Max/Avg Pooling&#xa;• neurax_activation() - ReLU/Sigmoid/Tanh&#xa;• neurax_get_device_info()&#xa;• neurax_benchmark_*() functions&#xa;• neurax_validate_*() functions" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="1080" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-35" value="NEURAX Core Library Implementation" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="460" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-36" value="neurax_core.c&#xa;&#xa;• Device Management&#xa;• Memory Management&#xa;• Hardware Detection&#xa;• Error Handling&#xa;• Initialization" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-37" value="neurax_conv2d.c&#xa;&#xa;• 2D Convolution&#xa;• CPU Implementation&#xa;• FPGA Acceleration&#xa;• Kernel Processing&#xa;• Optimizations" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="520" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-38" value="neurax_layers.c&#xa;&#xa;• Pooling Operations&#xa;• Activation Functions&#xa;• Layer Management&#xa;• Data Flow Control&#xa;• Performance Monitoring" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="360" y="520" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-39" value="neurax_utils.c&#xa;&#xa;• Input Validation&#xa;• Tensor Operations&#xa;• Data Conversion&#xa;• Utility Functions&#xa;• Helper Methods" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="520" y="520" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-40" value="neurax_perf.c&#xa;&#xa;• Performance Benchmarks&#xa;• Profiling Tools&#xa;• Statistics Collection&#xa;• Timing Analysis&#xa;• Memory Usage" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="680" y="520" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-41" value="Hardware Abstraction Layer (neurax_private.h)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="20" y="640" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-42" value="Hardware Interface:&#xa;• Register definitions (0x43C00000 base)&#xa;• Avalon-MM bus interface&#xa;• Memory mapping and DMA&#xa;• Hardware detection logic&#xa;• CPU fallback mechanisms&#xa;• Debug logging and error handling" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#f8cecc;strokeColor=#b85450;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="1080" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-43" value="Hardware Layer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="20" y="800" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-44" value="CPU Mode&#xa;&#xa;• Software Emulation&#xa;• ARM Cortex-A9&#xa;• Linux Kernel&#xa;• Standard Libraries&#xa;• Fallback Mode" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="860" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-45" value="FPGA Mode&#xa;&#xa;• Hardware Acceleration&#xa;• Cyclone V FPGA&#xa;• Avalon Bus Interface&#xa;• Custom RTL Modules&#xa;• High Performance" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="520" y="860" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-46" value="DE1-SoC Platform&#xa;ARM Cortex-A9 + Cyclone V FPGA" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontStyle=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="840" y="860" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-47" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="JXrQLyOWsIOblFouRV87-29" target="JXrQLyOWsIOblFouRV87-33">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="580" y="400" as="sourcePoint" />
+            <mxPoint x="630" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-48" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="JXrQLyOWsIOblFouRV87-33" target="JXrQLyOWsIOblFouRV87-35">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="580" y="400" as="sourcePoint" />
+            <mxPoint x="630" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-49" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="JXrQLyOWsIOblFouRV87-35" target="JXrQLyOWsIOblFouRV87-41">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="580" y="400" as="sourcePoint" />
+            <mxPoint x="630" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-50" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="JXrQLyOWsIOblFouRV87-41" target="JXrQLyOWsIOblFouRV87-43">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="580" y="400" as="sourcePoint" />
+            <mxPoint x="630" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-51" value="API Calls" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="520" y="245" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-52" value="Function Calls" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="510" y="445" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-53" value="Hardware Interface" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="500" y="625" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="JXrQLyOWsIOblFouRV87-54" value="Hardware Access" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="505" y="785" width="90" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
