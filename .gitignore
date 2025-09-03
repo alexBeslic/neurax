@@ -1,55 +1,87 @@
-# Prerequisites
-*.d
+# NEURAX .gitignore
 
-# Object files
+# Build artifacts
+build/
+bin/
+*/build/
+*/bin/
+software/lib/lib/
 *.o
-*.ko
-*.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
 *.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
 *.so
 *.so.*
-*.dylib
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+# Ensure source files are not ignored
+!software/lib/src/
+!software/lib/src/**
+!software/lib/include/
+!software/lib/include/**
 
 # Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+*.gdb_history
+*.gdb
+core.*
+vgcore.*
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+# Test artifacts
+tests/build/
+tests/bin/
+*.gcov
+*.gcda
+*.gcno
 
-# debug information files
-*.dwo
+# Demo artifacts
+demo/build/
+demo/bin/
+
+# Documentation artifacts
+docs/*.pdf
+docs/*.html
+docs/latex/
+docs/html/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Log files
+*.log
+*.out
+
+# Backup files
+*.bak
+*.backup
+*_backup.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Model files (potentially large)
+*.onnx
+*.pb
+*.tflite
+*.pth
+*.h5
+
+# Data files
+*.bin
+*.dat
+*.raw
+
+# Generated files
+*_generated.*
+*_auto.*
+
+# Dependency files
+*.d
+*.dep
