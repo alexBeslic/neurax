@@ -1,0 +1,71 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity 2d_convolution_block is
+    generic (
+        IMG_WIDTH  : integer := 4;
+        IMG_HEIGHT : integer := 4;
+        PIXEL_WIDTH: integer := 8
+    );
+    port (
+        clk         : in  std_logic;
+        rst         : in  std_logic;
+        enable      : in  std_logic;
+        pixel_in    : in  std_logic_vector(PIXEL_WIDTH-1 downto 0);
+        pixel_valid : in  std_logic;
+        conv_out    : out std_logic_vector(15 downto 0);
+        out_valid   : out std_logic
+    );
+end 2d_convolution_block;
+
+architecture Behavioral of 2d_convolution_block is
+    type img_array is array (0 to IMG_HEIGHT-1, 0 to IMG_WIDTH-1) of integer range 0 to 255;
+    signal image : img_array := (others => (others => 0));
+    signal row, col : integer range 0 to IMG_HEIGHT-1 := 0;
+    signal conv_result : integer := 0;
+    signal kernel : integer_vector(0 to 2, 0 to 2) := ((1, 0, -1), (1, 0, -1), (1, 0, -1)); -- Example Sobel kernel
+begin
+    process(clk, rst)
+    begin
+        if rst = '1' then
+            row <= 0;
+            col <= 0;
+            conv_result <= 0;
+            conv_out <= (others => '0');
+            out_valid <= '0';
+        elsif rising_edge(clk) then
+            if enable = '1' and pixel_valid = '1' then
+                image(row, col) <= to_integer(unsigned(pixel_in));
+                if col = IMG_WIDTH-1 then
+                    col <= 0;
+                    if row = IMG_HEIGHT-1 then
+                        row <= 0;
+                    else
+                        row <= row + 1;
+                    end if;
+                else
+                    col <= col + 1;
+                end if;
+            end if;
+
+            -- Perform convolution when image is loaded
+            if enable = '1' and row = IMG_HEIGHT-1 and col = IMG_WIDTH-1 then
+                conv_result := 0;
+                for i in 1 to IMG_HEIGHT-2 loop
+                    for j in 1 to IMG_WIDTH-2 loop
+                        for ki in 0 to 2 loop
+                            for kj in 0 to 2 loop
+                                conv_result := conv_result + image(i+ki-1, j+kj-1) * kernel(ki, kj);
+                            end loop;
+                        end loop;
+                    end loop;
+                end loop;
+                conv_out <= std_logic_vector(to_signed(conv_result, 16));
+                out_valid <= '1';
+            else
+                out_valid <= '0';
+            end if;
+        end if;
+    end process;
+end Behavioral;
