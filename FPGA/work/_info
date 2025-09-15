@@ -1,0 +1,132 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA
+Econvolution_block
+Z1 w1757958011
+Z2 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+Z3 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z4 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+R0
+Z5 8convolution_block.vhd
+Z6 Fconvolution_block.vhd
+l0
+L5
+V[cF7[ZzFge3blI4?V6Jj33
+!s100 ]7?lJV[CUV:iE=TMhZlYW1
+Z7 OV;C;10.5b;63
+33
+Z8 !s110 1757961058
+!i10b 1
+Z9 !s108 1757961058.000000
+Z10 !s90 -2008|convolution_block.vhd|
+Z11 !s107 convolution_block.vhd|
+!i113 1
+Z12 o-2008
+Z13 tExplicit 1 CvgOpt 0
+Aconvolution_block_arch
+R2
+R3
+R4
+DEx4 work 17 convolution_block 0 22 [cF7[ZzFge3blI4?V6Jj33
+l34
+L22
+Vm5J^QU64NkHoIZ1TQ2YXB2
+!s100 bNWFo;:B0_R321LZCGSz63
+R7
+33
+R8
+!i10b 1
+R9
+R10
+R11
+!i113 1
+R12
+R13
+Efpga_accelerator
+Z14 w1757954618
+R3
+R4
+R0
+Z15 8FPGA_accelerator.vhd
+Z16 FFPGA_accelerator.vhd
+l0
+L4
+VjA^D?dI_a<Zlba8nFVkK?3
+!s100 C>G:zHV[^PefhzQIHf^UC2
+R7
+33
+R8
+!i10b 1
+R9
+Z17 !s90 -2008|FPGA_accelerator.vhd|
+Z18 !s107 FPGA_accelerator.vhd|
+!i113 1
+R12
+R13
+Afpga_accelerator_arch
+R3
+R4
+DEx4 work 16 fpga_accelerator 0 22 jA^D?dI_a<Zlba8nFVkK?3
+l42
+L21
+V9N0_a[@gk7FTYFR=Qe;cE2
+!s100 X_M;1@oLP3165kF7iRRlF2
+R7
+33
+R8
+!i10b 1
+R9
+R17
+R18
+!i113 1
+R12
+R13
+Efpga_accelerator_vhd_tst
+Z19 w1757960774
+R2
+R3
+R4
+R0
+Z20 8simulation/questa/FPGA_accelerator.vht
+Z21 Fsimulation/questa/FPGA_accelerator.vht
+l0
+L32
+VS]LH=aDFoTP74ZjzSG@P20
+!s100 0VgliF=?h=C<Ob8mBRK1X0
+R7
+33
+R8
+!i10b 1
+R9
+Z22 !s90 -2008|simulation/questa/FPGA_accelerator.vht|
+Z23 !s107 simulation/questa/FPGA_accelerator.vht|
+!i113 1
+R12
+R13
+Afpga_accelerator_arch
+Z24 DPx3 std 3 env 0 22 d?`1ck@NdeD@H3RZG7FgZ2
+R2
+R3
+R4
+Z25 DEx4 work 24 fpga_accelerator_vhd_tst 0 22 S]LH=aDFoTP74ZjzSG@P20
+l54
+L34
+Z26 Ve2KmN9GfLSz3;_EBCDlgn0
+Z27 !s100 hb2_]j[g<bgJbb2z[TjP=1
+R7
+33
+R8
+!i10b 1
+R9
+R22
+R23
+!i113 1
+R12
+R13

@@ -1,0 +1,10 @@
+transcript on
+if {[file exists rtl_work]} {
+	vdel -lib rtl_work -all
+}
+vlib rtl_work
+vmap work rtl_work
+
+vcom -93 -work work {C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd}
+vcom -93 -work work {C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd}
+
