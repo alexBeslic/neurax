@@ -25,6 +25,7 @@ target_link_libraries(example_hal_image_blur
         neurax_hal
         neurax_tensor
         neurax_image
+        neurax_core
         Threads::Threads
 )
 

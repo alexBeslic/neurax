@@ -1,11 +1,11 @@
 /**
  * @file neurax_bsp.h
  * @brief Board Support Package (BSP) for NEURAX Neural Network Accelerator
- * 
+ *
  * This header defines the low-level hardware interface for the NEURAX
  * accelerator running on DE1-SoC FPGA platform. BSP layer provides
  * direct hardware communication functions.
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 1.0

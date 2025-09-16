@@ -4,6 +4,8 @@
 #include "neurax/tensor/Shape.hpp"
 #include "neurax/tensor/Tensor.hpp"
 #include "neurax/image/ImageProcessor.hpp"
+#include "neurax/core/NeuralNetworkBuilder.hpp"
+#include "neurax/core/LayerBuilder.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -12,6 +14,7 @@
 using namespace neurax::tensor;
 using namespace neurax::hal;
 using namespace neurax::image;
+using namespace neurax::core;
 
 Tensor create_gaussian_blur_kernel()
 {
@@ -74,10 +77,25 @@ int main()
     accelerator->initialize();
     Tensor blur_kernel = create_gaussian_blur_kernel();
     auto start = std::chrono::high_resolution_clock::now();
-    auto out = accelerator->convolution(input_tensor,blur_kernel,Tensor::zeros({1,3,3,1}, DataType::FLOAT32),c);
+    auto out_hal = accelerator->convolution(input_tensor,blur_kernel,Tensor::zeros({1,3,3,1}, DataType::FLOAT32),c);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end - start;
-    std::cout << "Convolution time: " << duration.count() << " ms\n";
+    std::cout << "Convolution time with hal layer: " << duration.count() << " ms\n";
+
+    LayerBuilder layerBuilder;
+    layerBuilder.conv2d()
+                .addWeights(blur_kernel,Tensor::zeros({1,3,3,1}));
+    NeuralNetworkBuilder builder;
+    builder.addAccelerator(accelerator.get())
+        .addLayer(layerBuilder.build());
+    INetwork* network = builder.build();
+    start = std::chrono::high_resolution_clock::now();
+    auto out_core = network->infer(input_tensor);
+    end = std::chrono::high_resolution_clock::now();
+    duration = end - start;
+    std::cout << "Convolution time with core layer: " << duration.count() << " ms\n";
+
     accelerator->cleanup();
-    processor.save_bmp(out, "examples/data/images/Lenna_out.bmp");
+    processor.save_bmp(out_hal, "examples/data/images/Lenna_out_hal.bmp");
+    processor.save_bmp(out_core, "examples/data/images/Lenna_out_core.bmp");
 }
