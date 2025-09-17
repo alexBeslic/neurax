@@ -12,7 +12,7 @@ namespace core {
 using namespace ::neurax::hal;
 
 Conv2dLayer::Conv2dLayer(int inChannels, int outChannels, int kernelSize, int stride, int padding){
-    config_ = new ConvolutionConfig();
+    config_ = std::make_unique<neurax::hal::ConvolutionConfig>();
     config_->input_channels = inChannels;
     config_->output_channels = outChannels;
     config_->kernel_size = kernelSize;
@@ -46,7 +46,6 @@ void Conv2dLayer::addAccelerator(neurax::hal::IAccelerator* accelerator) {
 }
 
 Conv2dLayer::~Conv2dLayer() {
-    delete config_;
 }
 
 } // namespace core

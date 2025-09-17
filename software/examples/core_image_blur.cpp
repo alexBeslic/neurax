@@ -1,5 +1,4 @@
 
-#include "neurax/hal/AcceleratorFactory.hpp"
 #include "neurax/tensor/DataType.hpp"
 #include "neurax/tensor/Shape.hpp"
 #include "neurax/tensor/Tensor.hpp"
@@ -66,24 +65,26 @@ Tensor create_gaussian_blur_kernel()
     return kernel;
 }
 
-
 int main()
 {
     ImageProcessor processor;
     ConvolutionConfig c(3,1,1,4,4); // 3x3 kernel, stride 1, padding 1, 4 in/out channels
     processor.load_bmp("examples/data/images/Lenna.bmp");
     auto input_tensor = processor.to_tensor();
-    auto accelerator = AcceleratorFactory::create(AcceleratorType::CPU_OPTIMIZED);
-    accelerator->initialize();
-    Tensor blur_kernel = create_gaussian_blur_kernel();
-    /****************************************************** */
-    /***********************HAL IMPLEMENTATION************** */
-    auto start = std::chrono::high_resolution_clock::now();
-    auto out_hal = accelerator->convolution(input_tensor,blur_kernel,Tensor::zeros({1,3,3,1}, DataType::FLOAT32),c);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration = end - start;
-    std::cout << "Convolution time with hal layer: " << duration.count() << " ms\n";
+    auto blur_kernel = create_gaussian_blur_kernel();
+    LayerBuilder layerBuilder;
+    NeuralNetworkBuilder builder;
+    layerBuilder.conv2d()
+                .addWeights(blur_kernel,Tensor::zeros({1,3,3,1}));
 
-    accelerator->cleanup();
-    processor.save_bmp(out_hal, "examples/data/images/Lenna_out_hal.bmp");
+    builder.useAccelerator(AcceleratorType::CPU_OPTIMIZED)
+            .addLayer(layerBuilder.build());
+    auto network = builder.build();
+
+    auto start_core = std::chrono::high_resolution_clock::now();
+    auto out_core = network->infer(input_tensor);
+    auto end_core = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration_core = end_core - start_core;
+    std::cout << "Convolution time with core layer: " << duration_core.count() << " ms\n";
+    processor.save_bmp(out_core, "examples/data/images/Lenna_out_core.bmp");
 }

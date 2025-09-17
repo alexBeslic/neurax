@@ -25,6 +25,11 @@ SoftwareAccelerator::SoftwareAccelerator()
     , use_16bit_precision_(false)
     , debug_mode_(false)
     , operation_in_progress_(false) {
+
+        bool success = initialize();
+        if (!success) {
+            throw std::runtime_error("Failed to initialize SoftwareAccelerator");
+        }
 }
 
 SoftwareAccelerator::~SoftwareAccelerator() {

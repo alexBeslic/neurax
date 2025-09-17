@@ -22,32 +22,31 @@ using neurax::tensor::Tensor;
 using neurax::tensor::Shape;
 using neurax::tensor::DataType;
 
-std::unique_ptr<IAccelerator> AcceleratorFactory::create(AcceleratorType type) {
-    switch (type) {
-        case AcceleratorType::SOFTWARE_FALLBACK:
-            return std::make_unique<SoftwareAccelerator>();
-
+std::unique_ptr<IAccelerator> AcceleratorFactory::create(AcceleratorType type){
+    switch(type){
         case AcceleratorType::FPGA_DE1SOC:
-            try {
+            try{
                 return std::make_unique<FPGAAccelerator>();
-            } catch (const std::exception& e) {
-                std::cerr << "Failed to create FPGA accelerator: " << e.what() << std::endl;
-                return nullptr;
+            }catch(std::exception& e){
+                std::cout<<"Falling back to CPU accelerator\n";
+                std::cerr<<"Falling back to CPU accelerator\n";
             }
-
         case AcceleratorType::GPU_OPENCL:
-            // TODO: Implement GPUAccelerator
-            std::cerr << "GPU accelerator not yet implemented, falling back to software\n";
-            return nullptr;
-
+            std::cout<<"GPU accelerator not yet implemented, falling back to CPU accelerator\n";
+            std::cerr<<"GPU accelerator not yet implemented, falling back to CPU accelerator\n";
         case AcceleratorType::CPU_OPTIMIZED:
-            return std::make_unique<CPUAccelerator>();
-
+            try{
+                return std::make_unique<CPUAccelerator>();
+            }catch(std::exception& e){
+                std::cout<<"Falling back to Software accelerator\n";
+                std::cerr<<"Falling back to Software accelerator\n";
+            }
+        case AcceleratorType::SOFTWARE_FALLBACK:
         default:
-            std::cerr << "Unknown accelerator type, falling back to software\n";
-            return nullptr;
+            return std::make_unique<SoftwareAccelerator>();
     }
 }
+
 
 std::vector<AcceleratorType> AcceleratorFactory::get_available_accelerators() {
     std::vector<AcceleratorType> available;

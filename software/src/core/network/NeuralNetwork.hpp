@@ -19,14 +19,18 @@ namespace core {
 class NeuralNetwork : public INetwork
 {
 private:
-    neurax::hal::IAccelerator* accelerator_;
+    friend class NeuralNetworkBuilder;
+    std::unique_ptr<neurax::hal::IAccelerator> accelerator_;
     std::vector<std::unique_ptr<ILayer>> layers_;
+
+    NeuralNetwork(){}   // private constructor because only NeuralNetworkBuilder can create this object
+    ~NeuralNetwork();
 public:
     void addLayer(std::unique_ptr<ILayer> layer) override;
     void removeLayer(size_t index) override;
     std::unique_ptr<ILayer>& getLayer(size_t index) override;
     size_t getLayerCount() const override;
-    void addAccelerator(neurax::hal::IAccelerator* accelerator) override { accelerator_ = accelerator; }
+    void addAccelerator(std::unique_ptr<neurax::hal::IAccelerator> accelerator) override;
     neurax::hal::IAccelerator* getAccelerator() override;
     void infer(const Tensor& input, Tensor& output) override;
     Tensor infer(const Tensor& input) override;

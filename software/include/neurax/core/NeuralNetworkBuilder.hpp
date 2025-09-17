@@ -12,17 +12,19 @@ class ILayer;
 
 class NeuralNetworkBuilder {
 private:
-    INetwork* network_;
+    std::unique_ptr<INetwork> network_;
+
+    neurax::hal::AcceleratorType accelerator_type_;
+    std::unique_ptr<neurax::hal::IAccelerator> accelerator_;
 public:
 
-    NeuralNetworkBuilder(INetwork* network) : network_(network) {}
     NeuralNetworkBuilder();
-
-    NeuralNetworkBuilder& addAccelerator(neurax::hal::IAccelerator* accelerator);
 
     NeuralNetworkBuilder& addLayer(ILayer* layer);
 
-    INetwork* build() { return network_; }
+    NeuralNetworkBuilder& useAccelerator(neurax::hal::AcceleratorType type);
+
+    std::unique_ptr<INetwork> build();
 };
 
 } // namespace core

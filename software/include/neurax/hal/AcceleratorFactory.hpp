@@ -46,8 +46,10 @@ public:
 
     /**
      * @brief Create an accelerator instance of specified type
+     * if available, otherwise fallback to next best option.
+     * At worst, returns a SoftwareAccelerator.
      * @param type Desired accelerator type
-     * @return Unique pointer to accelerator, or nullptr if creation failed
+     * @return Unique pointer to accelerator
      */
     static std::unique_ptr<IAccelerator> create(AcceleratorType type);
 

@@ -36,9 +36,15 @@ size_t NeuralNetwork::getLayerCount() const {
 }
 
 neurax::hal::IAccelerator* NeuralNetwork::getAccelerator() {
-    return accelerator_;
+    return accelerator_.get();
 }
 
+void NeuralNetwork::addAccelerator(std::unique_ptr<neurax::hal::IAccelerator> accelerator) {
+    accelerator_ = std::move(accelerator);
+    for (auto& layer : layers_) {
+        layer->addAccelerator(accelerator_.get());
+    }
+}
 
 void NeuralNetwork::infer(const Tensor& input, Tensor& output){
     const Tensor *current_input = &input;
@@ -63,6 +69,12 @@ Tensor NeuralNetwork::infer(const Tensor& input){
     }
 
     return current_output; // Final output
+}
+
+
+NeuralNetwork::~NeuralNetwork()
+{
+    accelerator_->cleanup();
 }
 
 } // namespace core

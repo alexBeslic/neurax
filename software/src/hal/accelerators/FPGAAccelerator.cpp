@@ -17,6 +17,11 @@ FPGAAccelerator::FPGAAccelerator()
     : initialized_(false)
     , use_16bit_precision_(false)
     , debug_mode_(false) {
+
+        bool success = initialize();
+        if (!success) {
+            throw std::runtime_error("Failed to initialize FPGAAccelerator");
+        }
 }
 
 FPGAAccelerator::~FPGAAccelerator() {

@@ -30,7 +30,7 @@ public:
     virtual std::unique_ptr<ILayer>& getLayer(size_t index) = 0;
     virtual size_t getLayerCount() const = 0;
     virtual neurax::hal::IAccelerator* getAccelerator() = 0;
-    virtual void addAccelerator(neurax::hal::IAccelerator* accelerator) = 0;
+    virtual void addAccelerator(std::unique_ptr<neurax::hal::IAccelerator> accelerator) = 0;
 
     virtual void infer(const Tensor& input, Tensor& output) = 0;
     virtual Tensor infer(const Tensor& input) = 0;

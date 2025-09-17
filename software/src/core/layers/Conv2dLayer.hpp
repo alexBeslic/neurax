@@ -15,13 +15,16 @@ namespace core {
 
 class Conv2dLayer : public ILayer {
 private:
+    friend class LayerBuilder;
     neurax::hal::IAccelerator* accelerator_;
-    neurax::hal::ConvolutionConfig* config_;
+    std::unique_ptr<neurax::hal::ConvolutionConfig> config_;
     Tensor weights_;
     Tensor bias_;
 
-public:
+    Conv2dLayer() = delete;
     Conv2dLayer(int inChannels, int outChannels, int kernelSize, int stride = 1, int padding = 0);
+
+public:
     ~Conv2dLayer();
 
     // Override virtual functions from ILayer

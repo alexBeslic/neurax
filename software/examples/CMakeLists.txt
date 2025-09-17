@@ -13,7 +13,7 @@ find_package(Threads REQUIRED)
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/../include)
 
-# Link directories  
+# Link directories
 link_directories(${CMAKE_SOURCE_DIR}/../build)
 
 add_executable(example_hal_image_blur
@@ -23,6 +23,18 @@ add_executable(example_hal_image_blur
 target_link_libraries(example_hal_image_blur
     PRIVATE
         neurax_hal
+        neurax_tensor
+        neurax_image
+        Threads::Threads
+)
+
+# Core example bluring
+add_executable(example_core_image_blur
+    core_image_blur.cpp
+)
+
+target_link_libraries(example_core_image_blur
+    PRIVATE
         neurax_tensor
         neurax_image
         neurax_core
