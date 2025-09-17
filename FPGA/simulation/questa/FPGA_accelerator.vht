@@ -17,7 +17,9 @@ architecture sim of tb_conv_file is
     signal pixel_in    : std_logic_vector(CHANNELS*BPP-1 downto 0) := (others=>'0');
     signal pixel_valid : std_logic := '0';
     signal conv_out    : std_logic_vector((CHANNELS*16)-1 downto 0);
-    signal out_valid   : std_logic;
+    signal conv_valid  : std_logic;
+    signal act_out     : std_logic_vector((CHANNELS*16)-1 downto 0);
+    signal act_valid   : std_logic;
 
     -- Input buffer
     constant MAX_PIXELS : integer := 196608;  -- podržava velike slike
@@ -32,9 +34,8 @@ begin
 
     -- Clock 100 MHz
     clk <= not clk after 5 ns;
-
-    -- DUT
-    uut: entity work.convolution_block
+    -- DUT: convolution block
+    uut_conv: entity work.convolution_block
         generic map (
             IMG_WIDTH           => IMG_WIDTH,
             IMG_HEIGHT          => IMG_HEIGHT,
@@ -48,7 +49,24 @@ begin
             pixel_in    => pixel_in,
             pixel_valid => pixel_valid,
             conv_out    => conv_out,
-            out_valid   => out_valid
+            out_valid   => conv_valid
+        );
+
+    -- DUT: activation block (ReLU)
+    uut_act: entity work.activation_block
+        generic map (
+            CHANNELS        => CHANNELS,
+            DATA_WIDTH      => 16,
+            ACTIVATION_TYPE => "TANH"
+        )
+        port map (
+            clk         => clk,
+            rst         => rst,
+            enable      => enable,
+            data_in     => conv_out,
+            in_valid    => conv_valid,
+            data_out    => act_out,
+            out_valid   => act_valid
         );
 
     ----------------------------------------------------------------
@@ -88,7 +106,10 @@ begin
             pixel_idx := pixel_idx + 3;
         end loop;
 
-        wait;  -- end process
+    -- Wait for all output to be written
+    wait for 1000 ns; -- allow monitor to finish
+    std.env.stop;
+    wait;
     end process;
 
     ----------------------------------------------------------------
@@ -100,10 +121,10 @@ begin
         variable r_val, g_val, b_val : integer;
     begin
         if rising_edge(clk) then
-            if out_valid = '1' then
-                r_val := to_integer(signed(conv_out(15 downto 0)));
-                g_val := to_integer(signed(conv_out(31 downto 16)));
-                b_val := to_integer(signed(conv_out(47 downto 32)));
+            if act_valid = '1' then
+                r_val := to_integer(signed(act_out(15 downto 0)));
+                g_val := to_integer(signed(act_out(31 downto 16)));
+                b_val := to_integer(signed(act_out(47 downto 32)));
 
                 write(line_out, r_val);
                 write(line_out, string'(" "));

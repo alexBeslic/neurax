@@ -64,10 +64,6 @@
 					"strict" : false
 				},
 				{
-					"name" : "result_out[15]",
-					"strict" : false
-				},
-				{
 					"name" : "result_out[16]",
 					"strict" : false
 				},
@@ -128,10 +124,6 @@
 					"strict" : false
 				},
 				{
-					"name" : "result_out[31]",
-					"strict" : false
-				},
-				{
 					"name" : "result_out[32]",
 					"strict" : false
 				},
@@ -189,10 +181,6 @@
 				},
 				{
 					"name" : "result_out[46]",
-					"strict" : false
-				},
-				{
-					"name" : "result_out[47]",
 					"strict" : false
 				},
 				{

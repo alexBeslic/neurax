@@ -1,5 +1,5 @@
 EDA Netlist Writer report for FPGA_accelerator
-Mon Sep 15 18:47:33 2025
+Wed Sep 17 20:02:01 2025
 Quartus Prime Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 
 
@@ -8,7 +8,9 @@ Quartus Prime Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 ---------------------
   1. Legal Notice
   2. EDA Netlist Writer Summary
-  3. EDA Netlist Writer Messages
+  3. Simulation Settings
+  4. Simulation Generated Files
+  5. EDA Netlist Writer Messages
 
 
 
@@ -35,11 +37,42 @@ on the Quartus Prime software download page.
 +-------------------------------------------------------------------+
 ; EDA Netlist Writer Summary                                        ;
 +---------------------------+---------------------------------------+
-; EDA Netlist Writer Status ; Successful - Mon Sep 15 18:47:33 2025 ;
+; EDA Netlist Writer Status ; Successful - Wed Sep 17 20:02:01 2025 ;
 ; Revision Name             ; FPGA_accelerator                      ;
 ; Top-level Entity Name     ; FPGA_accelerator                      ;
 ; Family                    ; Cyclone V                             ;
+; Simulation Files Creation ; Successful                            ;
 +---------------------------+---------------------------------------+
+
+
++----------------------------------------------------------------------------------------------------------------------+
+; Simulation Settings                                                                                                  ;
++---------------------------------------------------------------------------------------------------+------------------+
+; Option                                                                                            ; Setting          ;
++---------------------------------------------------------------------------------------------------+------------------+
+; Tool Name                                                                                         ; QuestaSim (VHDL) ;
+; Generate functional simulation netlist                                                            ; On               ;
+; Truncate long hierarchy paths                                                                     ; Off              ;
+; Map illegal HDL characters                                                                        ; Off              ;
+; Flatten buses into individual nodes                                                               ; Off              ;
+; Maintain hierarchy                                                                                ; Off              ;
+; Bring out device-wide set/reset signals as ports                                                  ; Off              ;
+; Enable glitch filtering                                                                           ; Off              ;
+; Do not write top level VHDL entity                                                                ; Off              ;
+; Disable detection of setup and hold time violations in the input registers of bi-directional pins ; Off              ;
+; Architecture name in VHDL output netlist                                                          ; structure        ;
+; Generate third-party EDA tool command script for RTL functional simulation                        ; Off              ;
+; Generate third-party EDA tool command script for gate-level simulation                            ; Off              ;
++---------------------------------------------------------------------------------------------------+------------------+
+
+
++-------------------------------------------------------------------------------------------+
+; Simulation Generated Files                                                                ;
++-------------------------------------------------------------------------------------------+
+; Generated Files                                                                           ;
++-------------------------------------------------------------------------------------------+
+; C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vho ;
++-------------------------------------------------------------------------------------------+
 
 
 +-----------------------------+
@@ -48,15 +81,14 @@ on the Quartus Prime software download page.
 Info: *******************************************************************
 Info: Running Quartus Prime EDA Netlist Writer
     Info: Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
-    Info: Processing started: Mon Sep 15 18:47:33 2025
-Info: Command: quartus_eda --read_settings_files=on --write_settings_files=off FPGA_accelerator -c FPGA_accelerator --gen_testbench
-Info (119006): Selected device 5CSEMA5F31C6 for design "FPGA_accelerator"
+    Info: Processing started: Wed Sep 17 20:02:00 2025
+Info: Command: quartus_eda --read_settings_files=off --write_settings_files=off FPGA_accelerator -c FPGA_accelerator
 Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
-Info (201002): Generated VHDL Test Bench File C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht for simulation
+Info (204019): Generated file FPGA_accelerator.vho in folder "C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/" for EDA simulation tool
 Info: Quartus Prime EDA Netlist Writer was successful. 0 errors, 1 warning
-    Info: Peak virtual memory: 4723 megabytes
-    Info: Processing ended: Mon Sep 15 18:47:33 2025
-    Info: Elapsed time: 00:00:00
+    Info: Peak virtual memory: 4751 megabytes
+    Info: Processing ended: Wed Sep 17 20:02:01 2025
+    Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 
 
