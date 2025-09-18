@@ -9,9 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find parent project (NEURAX library)
 find_package(Threads REQUIRED)
+find_package(OpenCV REQUIRED)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/../include)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Link directories
 link_directories(${CMAKE_SOURCE_DIR}/../build)
@@ -39,6 +41,20 @@ target_link_libraries(example_core_image_blur
         neurax_image
         neurax_core
         Threads::Threads
+)
+
+
+add_executable(example_webcam_blur
+    webcam_hal_blur.cpp
+)
+
+target_link_libraries(example_webcam_blur
+    PRIVATE
+        neurax_hal
+        neurax_tensor
+        neurax_image
+        Threads::Threads
+        ${OpenCV_LIBS}
 )
 
 # Set runtime library path for development
