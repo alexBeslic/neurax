@@ -76,13 +76,8 @@ begin
             out_valid <= '0';
         elsif rising_edge(clk) then
             if enable = '1' and in_valid = '1' then
-                -- Split input vector into channels
                 for ch in 0 to CHANNELS-1 loop
-                    input_channels(ch) <= data_in((ch*DATA_WIDTH+DATA_WIDTH-1) downto (ch*DATA_WIDTH));
-                end loop;
-                -- Apply activation function and build output vector
-                for ch in 0 to CHANNELS-1 loop
-                    x_signed := signed(input_channels(ch));
+                    x_signed := signed(data_in((ch*DATA_WIDTH+DATA_WIDTH-1) downto (ch*DATA_WIDTH)));
                     if ACTIVATION_TYPE = "RELU" then
                         y_signed := relu(x_signed);
                     elsif ACTIVATION_TYPE = "TANH" then

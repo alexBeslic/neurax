@@ -106,10 +106,8 @@ begin
             pixel_idx := pixel_idx + 3;
         end loop;
 
-    -- Wait for all output to be written
-    wait for 1000 ns; -- allow monitor to finish
-    std.env.stop;
-    wait;
+    -- Wait for pipeline to flush and all outputs to be written
+    wait for 10000000 ns; -- long pause to allow output
     end process;
 
     ----------------------------------------------------------------
@@ -119,8 +117,11 @@ begin
         file fout : text open write_mode is "output.txt";
         variable line_out : line;
         variable r_val, g_val, b_val : integer;
+        variable pixel_count : integer := 0;
+        variable cycle_count : integer := 0;
     begin
         if rising_edge(clk) then
+            cycle_count := cycle_count + 1;
             if act_valid = '1' then
                 r_val := to_integer(signed(act_out(15 downto 0)));
                 g_val := to_integer(signed(act_out(31 downto 16)));
@@ -132,6 +133,13 @@ begin
                 write(line_out, string'(" "));
                 write(line_out, b_val);
                 writeline(fout, line_out);
+                pixel_count := pixel_count + 1;
+                if pixel_count = IMG_WIDTH * IMG_HEIGHT then
+                    std.env.stop;
+                end if;
+            end if;
+            if cycle_count > 1000000 then -- timeout to prevent infinite simulation
+                std.env.stop;
             end if;
         end if;
     end process;
