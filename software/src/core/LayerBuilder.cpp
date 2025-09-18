@@ -1,20 +1,14 @@
 
-
 #include "neurax/core/LayerBuilder.hpp"
-#include "layers/Conv2dLayer.hpp"
+#include "neurax/core/Conv2dBuilder.hpp"
 
 namespace neurax {
 namespace core {
 
+Conv2dBuilder LayerBuilder::conv2d(){
+    return Conv2dBuilder();
+}
 
-LayerBuilder& LayerBuilder::conv2d(){
-    layer_ = new Conv2dLayer(4,4,3,1,1);
-    return *this;
-}
-LayerBuilder& LayerBuilder::addWeights(const Tensor& weights, const Tensor& bias) {
-    layer_->loadWeights(weights, bias);
-    return *this;
-}
 
 } // namespace core
 } // namespace neurax

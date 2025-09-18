@@ -5,6 +5,7 @@
 #include "neurax/image/ImageProcessor.hpp"
 #include "neurax/core/NeuralNetworkBuilder.hpp"
 #include "neurax/core/LayerBuilder.hpp"
+#include "neurax/core/Conv2dBuilder.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -68,17 +69,20 @@ Tensor create_gaussian_blur_kernel()
 int main()
 {
     ImageProcessor processor;
-    ConvolutionConfig c(3,1,1,4,4); // 3x3 kernel, stride 1, padding 1, 4 in/out channels
     processor.load_bmp("examples/data/images/Lenna.bmp");
     auto input_tensor = processor.to_tensor();
     auto blur_kernel = create_gaussian_blur_kernel();
-    LayerBuilder layerBuilder;
     NeuralNetworkBuilder builder;
-    layerBuilder.conv2d()
-                .addWeights(blur_kernel,Tensor::zeros({1,3,3,1}));
+    auto layer = LayerBuilder::conv2d();
+    layer.kernelSize(3)
+         .stride(1)
+         .padding(1)
+         .inputChanels(4)
+         .outputChanels(4)
+         .addWeights(blur_kernel,Tensor::zeros({1,3,3,1}));
 
     builder.useAccelerator(AcceleratorType::CPU_OPTIMIZED)
-            .addLayer(layerBuilder.build());
+            .addLayer(layer.build());
     auto network = builder.build();
 
     auto start_core = std::chrono::high_resolution_clock::now();

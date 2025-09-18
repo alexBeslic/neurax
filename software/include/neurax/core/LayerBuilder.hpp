@@ -3,26 +3,23 @@
 #define NEURAX_CORE_LAYERBUILDER_HPP
 
 #include "layers/ILayer.hpp"
+#include "Conv2dBuilder.hpp"
 
 namespace neurax {
 namespace core {
 
-class ILayer;
+class Conv2dBuilder;
 
 class LayerBuilder {
-private:
-    ILayer* layer_;
+
+    LayerBuilder() = delete;
 public:
 
-    LayerBuilder& conv2d();
-
-
-    LayerBuilder& addWeights(const Tensor& weights, const Tensor& bias);
-    ILayer* build() { return layer_; }
+    static Conv2dBuilder conv2d();
 
 };
 
 } // namespace core
 } // namespace neurax
 
-#endif // NEURAX_CORE_NEURALNETWORKBUILDER_HPP
+#endif // NEURAX_CORE_LAYERBUILDER_HPP
