@@ -48,13 +48,13 @@ struct BMPInfoHeader {
 
 /**
  * @brief Image processing class for loading, converting, and saving images
- * 
+ *
  * The ImageProcessor class provides functionality for:
  * - Loading BMP images (24-bit and 32-bit)
  * - Converting images to NEURAX tensor format (NHWC with normalization)
  * - Saving tensors back to BMP format
  * - Handling BGRA ↔ RGBA conversions
- * 
+ *
  * Example usage:
  * @code
  * neurax::image::ImageProcessor processor;
@@ -72,74 +72,74 @@ private:
     uint32_t width_;
     uint32_t height_;
     uint32_t channels_;
-    
+
 public:
     /**
      * @brief Default constructor
      */
     ImageProcessor();
-    
+
     /**
      * @brief Load BMP image from file
      * @param filename Path to BMP file
      * @return True if successful, false otherwise
-     * 
+     *
      * Supports 24-bit BGR and 32-bit BGRA BMP files.
      * Automatically handles row padding as per BMP specification.
      */
     bool load_bmp(const std::string& filename);
-    
+
     /**
      * @brief Convert loaded image to NEURAX tensor format
      * @return 4D tensor in NHWC format [1, height, width, 4]
      * @throws std::runtime_error if no image data is loaded
-     * 
+     *
      * Converts BGR(A) to RGBA format and normalizes pixel values to [0,1].
      * Alpha channel is set to 1.0 for 24-bit images (opaque).
      */
     neurax::tensor::Tensor to_tensor() const;
-    
+
     /**
      * @brief Save tensor as BMP image
-     * @param tensor 4D tensor in NHWC format [1, height, width, 4] 
+     * @param tensor 4D tensor in NHWC format [1, height, width, 4]
      * @param filename Output BMP file path
      * @return True if successful, false otherwise
-     * 
+     *
      * Converts RGBA tensor back to BGRA format and saves as 32-bit BMP.
      * Denormalizes values from [0,1] to [0,255] and clamps to valid range.
      */
     bool save_bmp(const neurax::tensor::Tensor& tensor, const std::string& filename);
-    
+
     /**
      * @brief Get image width in pixels
      * @return Image width
      */
     uint32_t width() const { return width_; }
-    
+
     /**
      * @brief Get image height in pixels
      * @return Image height
      */
     uint32_t height() const { return height_; }
-    
+
     /**
      * @brief Get number of channels (3 for BGR, 4 for BGRA)
      * @return Number of channels
      */
     uint32_t channels() const { return channels_; }
-    
+
     /**
      * @brief Check if image data is loaded
      * @return True if image is loaded, false otherwise
      */
     bool is_loaded() const { return !image_data_.empty(); }
-    
+
     /**
      * @brief Get raw image data
      * @return Reference to raw pixel data vector
      */
     const std::vector<uint8_t>& get_image_data() const { return image_data_; }
-    
+
     /**
      * @brief Clear loaded image data
      */

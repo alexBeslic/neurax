@@ -1,7 +1,7 @@
 /**
  * @file FPGAAccelerator.cpp
  * @brief FPGA accelerator implementation (stub)
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0
@@ -13,10 +13,15 @@
 namespace neurax {
 namespace hal {
 
-FPGAAccelerator::FPGAAccelerator() 
+FPGAAccelerator::FPGAAccelerator()
     : initialized_(false)
     , use_16bit_precision_(false)
     , debug_mode_(false) {
+
+        bool success = initialize();
+        if (!success) {
+            throw std::runtime_error("Failed to initialize FPGAAccelerator");
+        }
 }
 
 FPGAAccelerator::~FPGAAccelerator() {
@@ -31,7 +36,7 @@ bool FPGAAccelerator::initialize() {
     if (initialized_) {
         return true;
     }
-    
+
     // For now, FPGA is not available - this is just a stub
     return false;
 }

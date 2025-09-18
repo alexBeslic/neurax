@@ -1,7 +1,7 @@
 /**
  * @file DataType.hpp
  * @brief Data type definitions for NEURAX tensor operations
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0
@@ -20,7 +20,7 @@ namespace tensor {
  */
 enum class DataType {
     INT8 = 0,      ///< 8-bit signed integer
-    INT16 = 1,     ///< 16-bit signed integer  
+    INT16 = 1,     ///< 16-bit signed integer
     FLOAT32 = 2    ///< 32-bit floating point
 };
 

@@ -1,7 +1,7 @@
 /**
  * @file DataType.cpp
  * @brief Implementation of data type utilities
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0

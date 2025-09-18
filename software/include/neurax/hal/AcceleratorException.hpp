@@ -1,7 +1,7 @@
 /**
  * @file AcceleratorException.hpp
  * @brief Exception classes for the Hardware Abstraction Layer
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0

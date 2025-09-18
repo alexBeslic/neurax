@@ -1,7 +1,7 @@
 /**
  * @file IAccelerator.hpp
  * @brief Main interface for hardware accelerators
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0
@@ -23,7 +23,7 @@ using neurax::tensor::Tensor;
 
 /**
  * @brief Abstract interface for all hardware accelerators
- * 
+ *
  * This interface defines the contract that all accelerator implementations
  * must follow. It provides a common API for neural network operations
  * regardless of the underlying hardware (FPGA, GPU, CPU, etc.).
@@ -87,7 +87,7 @@ public:
      */
     virtual Tensor activation(const Tensor& input,
                              ActivationType type) = 0;
-    
+
     /**
      * @brief Perform activation function (alias for activation)
      * @param input Input tensor

@@ -1,7 +1,7 @@
 /**
  * @file CPUAccelerator.hpp
  * @brief CPU-optimized accelerator implementation
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0
@@ -18,10 +18,10 @@ namespace hal {
 
 /**
  * @brief CPU-optimized implementation of accelerator interface
- * 
+ *
  * This accelerator uses CPU computations with SIMD optimizations
  * and multi-threading for improved performance over software fallback.
- * 
+ *
  * Performance characteristics:
  * - Faster than pure software implementation through optimizations
  * - Uses multi-threaded computation when beneficial

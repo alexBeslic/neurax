@@ -1,7 +1,7 @@
 /**
  * @file AcceleratorTypes.hpp
  * @brief Common types and enums for the Hardware Abstraction Layer
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0
@@ -54,15 +54,15 @@ struct ConvolutionConfig {
     uint32_t padding;
     uint32_t input_channels;
     uint32_t output_channels;
-    
+
     // Default constructor
-    ConvolutionConfig() 
+    ConvolutionConfig()
         : kernel_size(3), stride(1), padding(0), input_channels(1), output_channels(1) {}
-    
+
     // Constructor with basic parameters
     ConvolutionConfig(uint32_t ks, uint32_t s, uint32_t p)
         : kernel_size(ks), stride(s), padding(p), input_channels(1), output_channels(1) {}
-    
+
     // Full constructor
     ConvolutionConfig(uint32_t ks, uint32_t s, uint32_t p, uint32_t ic, uint32_t oc)
         : kernel_size(ks), stride(s), padding(p), input_channels(ic), output_channels(oc) {}
@@ -76,12 +76,12 @@ struct PoolingConfig {
     uint32_t stride;
     PoolingType type;
     uint32_t kernel_size;   // Alias for pool_size for compatibility
-    
+
     // Default constructor
     PoolingConfig()
         : pool_size(2), stride(2), type(PoolingType::MAX), kernel_size(2) {}
-    
-    // Constructor with basic parameters  
+
+    // Constructor with basic parameters
     PoolingConfig(uint32_t ps, uint32_t s, PoolingType t)
         : pool_size(ps), stride(s), type(t), kernel_size(ps) {}
 };
@@ -95,8 +95,8 @@ struct AcceleratorStatus {
     bool using_fallback;
     std::string last_error;
     bool is_available;
-    
-    AcceleratorStatus() 
+
+    AcceleratorStatus()
         : active_type(AcceleratorType::SOFTWARE_FALLBACK)
         , requested_type(AcceleratorType::SOFTWARE_FALLBACK)
         , using_fallback(true)

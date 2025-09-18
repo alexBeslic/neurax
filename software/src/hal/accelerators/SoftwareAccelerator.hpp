@@ -15,7 +15,7 @@
     Tensor dense(const Tensor& input,
                 const Tensor& weights,
                 const Tensor& bias) override;lementation (guaranteed fallback)
- * 
+ *
  * @author NEURAX Development Team
  * @date September 2025
  * @version 2.0
@@ -32,11 +32,11 @@ namespace hal {
 
 /**
  * @brief Pure software implementation of accelerator interface
- * 
+ *
  * This accelerator uses only CPU computations without any hardware
  * acceleration. It serves as the guaranteed fallback that always works
  * regardless of hardware availability.
- * 
+ *
  * Performance characteristics:
  * - Slower than hardware accelerators but reliable
  * - Uses single-threaded computation (can be extended to multi-threaded)
