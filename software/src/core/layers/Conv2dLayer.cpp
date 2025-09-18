@@ -11,6 +11,12 @@ namespace core {
 
 using namespace ::neurax::hal;
 
+
+Conv2dLayer::Conv2dLayer() : accelerator_(nullptr)
+                            ,config_(std::make_unique<neurax::hal::ConvolutionConfig>()) {
+    // Default configuration
+}
+
 Conv2dLayer::Conv2dLayer(int inChannels, int outChannels, int kernelSize, int stride, int padding){
     config_ = std::make_unique<neurax::hal::ConvolutionConfig>();
     config_->input_channels = inChannels;
@@ -43,6 +49,26 @@ void Conv2dLayer::loadWeights(const Tensor& weights, const Tensor& bias) {
 
 void Conv2dLayer::addAccelerator(neurax::hal::IAccelerator* accelerator) {
     this->accelerator_ = accelerator;
+}
+
+void Conv2dLayer::setInputChannels(int channels) {
+    config_->input_channels = channels;
+}
+
+void Conv2dLayer::setOutputChannels(int channels) {
+    config_->output_channels = channels;
+}
+
+void Conv2dLayer::setKernelSize(int size) {
+    config_->kernel_size = size;
+}
+
+void Conv2dLayer::setStride(int stride) {
+    config_->stride = stride;
+}
+
+void Conv2dLayer::setPadding(int padding) {
+    config_->padding = padding;
 }
 
 Conv2dLayer::~Conv2dLayer() {

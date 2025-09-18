@@ -95,6 +95,7 @@ add_library(neurax_core STATIC
     src/core/layers/Conv2dLayer.cpp
     src/core/NeuralNetworkBuilder.cpp
     src/core/LayerBuilder.cpp
+    src/core/Conv2dBuilder.cpp
 )
 
 target_include_directories(neurax_core PUBLIC
@@ -135,9 +136,9 @@ install(TARGETS neurax_hal neurax_core neurax_image neurax_tensor neurax_bsp
 # -------------------------
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in 
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in
                    ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-    
+
     add_custom_target(docs
         ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
