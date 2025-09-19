@@ -41,3 +41,15 @@ target_link_libraries(core_test_pool
         neurax_core
         Threads::Threads
 )
+
+add_executable(core_test_activation
+    core_activation_test.cpp
+)
+
+target_link_libraries(core_test_activation
+    PRIVATE
+        neurax_tensor
+        neurax_image
+        neurax_core
+        Threads::Threads
+)

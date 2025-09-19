@@ -41,6 +41,19 @@ target_link_libraries(example_core_image_blur
         Threads::Threads
 )
 
+# Core example convolution with custom kernel
+add_executable(example_core_load_kernel
+    core_load_kernel.cpp
+)
+
+target_link_libraries(example_core_load_kernel
+    PRIVATE
+        neurax_tensor
+        neurax_image
+        neurax_core
+        Threads::Threads
+)
+
 # Set runtime library path for development
 if(UNIX AND NOT APPLE)
 endif()
