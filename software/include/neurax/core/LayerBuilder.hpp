@@ -6,6 +6,7 @@
 #include "Conv2dBuilder.hpp"
 #include "PoolingBuilder.hpp"
 #include "ActivationBuilder.hpp"
+#include "DenseBuilder.hpp"
 
 namespace neurax {
 namespace core {
@@ -20,6 +21,7 @@ public:
 
     static PoolingBuilder pool();
     static ActivationBuilder activation();
+    static DenseBuilder dense();
 };
 
 } // namespace core

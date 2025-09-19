@@ -94,12 +94,14 @@ add_library(neurax_core STATIC
     src/core/layers/Conv2dLayer.cpp
     src/core/layers/PoolingLayer.cpp
     src/core/layers/ActivationLayer.cpp
+    src/core/layers/DenseLayer.cpp
     src/core/network/NeuralNetwork.cpp
     src/core/NeuralNetworkBuilder.cpp
     src/core/LayerBuilder.cpp
     src/core/Conv2dBuilder.cpp
     src/core/PoolingBuilder.cpp
     src/core/ActivationBuilder.cpp
+    src/core/DenseBuilder.cpp
 )
 
 target_include_directories(neurax_core PUBLIC
