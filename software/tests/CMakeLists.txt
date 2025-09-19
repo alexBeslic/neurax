@@ -16,4 +16,4 @@ include_directories(${CMAKE_SOURCE_DIR}/../include)
 # Link directories
 link_directories(${CMAKE_SOURCE_DIR}/../build)
 
-add_subdirectory(core/python_tensorflow_comarison)
+add_subdirectory(core/python_tensorflow_comparison)
