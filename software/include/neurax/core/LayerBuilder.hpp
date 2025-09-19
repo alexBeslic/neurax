@@ -4,11 +4,13 @@
 
 #include "layers/ILayer.hpp"
 #include "Conv2dBuilder.hpp"
+#include "PoolingBuilder.hpp"
 
 namespace neurax {
 namespace core {
 
 class Conv2dBuilder;
+class PoolingBuilder;
 
 class LayerBuilder {
 
@@ -17,6 +19,7 @@ public:
 
     static Conv2dBuilder conv2d();
 
+    static PoolingBuilder pool();
 };
 
 } // namespace core

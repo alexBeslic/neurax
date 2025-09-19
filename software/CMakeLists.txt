@@ -91,11 +91,13 @@ target_link_libraries(neurax_hal
 # Core library
 # -------------------------
 add_library(neurax_core STATIC
-    src/core/network/NeuralNetwork.cpp
     src/core/layers/Conv2dLayer.cpp
+    src/core/layers/PoolingLayer.cpp
+    src/core/network/NeuralNetwork.cpp
     src/core/NeuralNetworkBuilder.cpp
     src/core/LayerBuilder.cpp
     src/core/Conv2dBuilder.cpp
+    src/core/PoolingBuilder.cpp
 )
 
 target_include_directories(neurax_core PUBLIC

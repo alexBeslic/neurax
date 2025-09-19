@@ -25,7 +25,6 @@ class ILayer
 public:
     virtual void forward(const Tensor& input, Tensor& output) = 0;
     virtual Tensor forward(const Tensor& input) = 0;
-    virtual void loadWeights(const Tensor& weights, const Tensor& bias) = 0;
     virtual void addAccelerator(neurax::hal::IAccelerator* accelerator) = 0;
 };
 

@@ -36,7 +36,7 @@ public:
     // Override virtual functions from ILayer
     void forward(const Tensor& input, Tensor& output) override;
     Tensor forward(const Tensor& input) override;
-    void loadWeights(const Tensor& weights, const Tensor& bias) override;
+    void loadWeights(const Tensor& weights, const Tensor& bias);
     void addAccelerator(neurax::hal::IAccelerator* accelerator) override;
 };
 
