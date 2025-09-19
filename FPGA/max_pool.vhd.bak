@@ -1,0 +1,64 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity max_pool is
+    generic (
+        DATA_WIDTH : integer := 8  -- pixel bit width
+    );
+    port (
+        clk        : in  std_logic;
+        reset      : in  std_logic;
+        valid_in   : in  std_logic;
+        pixel_in   : in  unsigned(DATA_WIDTH-1 downto 0);
+        
+        pooled_out : out unsigned(DATA_WIDTH-1 downto 0);
+        valid_out  : out std_logic
+    );
+end max_pool;
+
+architecture max_pool_arch of max_pool is
+
+    -- Registers to hold 2x2 window pixels
+    signal p1, p2, p3, p4 : unsigned(DATA_WIDTH-1 downto 0);
+
+    -- Internal valid signal
+    signal valid_reg : std_logic;
+
+begin
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                p1 <= (others => '0');
+                p2 <= (others => '0');
+                p3 <= (others => '0');
+                p4 <= (others => '0');
+                valid_reg <= '0';
+            else
+                if valid_in = '1' then
+                    -- Shift pixels into window (simplified: assume proper input sequencing)
+                    p1 <= p2;
+                    p2 <= pixel_in;
+                    p3 <= p4;
+                    p4 <= pixel_in; -- In practice, comes from next row buffer
+                    
+                    valid_reg <= '1';
+                else
+                    valid_reg <= '0';
+                end if;
+            end if;
+        end if;
+    end process;
+
+    -- Max Pool Operation (combinational)
+    pooled_out <= 
+        (p1 when (p1 >= p2 and p1 >= p3 and p1 >= p4) else
+         p2 when (p2 >= p1 and p2 >= p3 and p2 >= p4) else
+         p3 when (p3 >= p1 and p3 >= p2 and p3 >= p4) else
+         p4);
+
+    valid_out <= valid_reg;
+
+end max_pool_arch;

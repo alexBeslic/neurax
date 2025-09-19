@@ -1,10 +1,10 @@
-Analysis & Synthesis Status : Successful - Wed Sep 17 19:58:27 2025
+Analysis & Synthesis Status : Successful - Fri Sep 19 23:20:55 2025
 Quartus Prime Version : 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 Revision Name : FPGA_accelerator
 Top-level Entity Name : FPGA_accelerator
 Family : Cyclone V
 Logic utilization (in ALMs) : N/A
-Total registers : 1119
+Total registers : 1088
 Total pins : 77
 Total virtual pins : 0
 Total block memory bits : 0

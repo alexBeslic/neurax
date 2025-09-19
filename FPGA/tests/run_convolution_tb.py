@@ -6,8 +6,8 @@ PNG_INPUT  = "input.png"
 IMAGE_TXT  = "image.txt"
 OUTPUT_TXT = "output.txt"
 OUTPUT_PNG = "output.png"
-VHDL_FILES = ["../activation_block.vhd", "../FPGA_accelerator.vhd", "../convolution_block.vhd", "../simulation/questa/FPGA_accelerator.vht"]
-TB_ENTITY  = "tb_conv_file"
+VHDL_FILES = ["../activation_block.vhd", "../FPGA_accelerator.vhd", "../convolution_block.vhd", "../max_pool.vhd", "../simulation/questa/FPGA_accelerator.vht"]
+TB_ENTITY  = "tb_max_pool"
 BPP        = 8
 CHANNELS   = 3
 
@@ -53,11 +53,11 @@ if len(lines) != expected_len:
         lines += [0] * (expected_len - len(lines))
 
 # --- Convert to PNG ---
-output_img = Image.new("RGB", (IMG_WIDTH, IMG_HEIGHT))
+output_img = Image.new("RGB", (128, 128))
 
-for y in range(IMG_HEIGHT):
-    for x in range(IMG_WIDTH):
-        idx = (y*IMG_WIDTH + x) * CHANNELS
+for y in range(IMG_HEIGHT//2):
+    for x in range(IMG_WIDTH//2):
+        idx = (y*128 + x) * CHANNELS
         r = lines[idx]
         g = lines[idx+1]
         b = lines[idx+2]

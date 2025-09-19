@@ -3,143 +3,98 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use std.textio.all;
 
-entity tb_conv_file is
-end tb_conv_file;
+entity tb_max_pool is
+end tb_max_pool;
 
-architecture sim of tb_conv_file is
-    constant CHANNELS : integer := 3;
-    constant BPP      : integer := 8;
-
-    -- Signals
-    signal clk         : std_logic := '0';
-    signal rst         : std_logic := '1';
-    signal enable      : std_logic := '0';
-    signal pixel_in    : std_logic_vector(CHANNELS*BPP-1 downto 0) := (others=>'0');
-    signal pixel_valid : std_logic := '0';
-    signal conv_out    : std_logic_vector((CHANNELS*16)-1 downto 0);
-    signal conv_valid  : std_logic;
-    signal act_out     : std_logic_vector((CHANNELS*16)-1 downto 0);
-    signal act_valid   : std_logic;
-
-    -- Input buffer
-    constant MAX_PIXELS : integer := 196608;  -- podržava velike slike
-    type pixel_array_t is array (0 to MAX_PIXELS-1) of integer range 0 to 255;
-    signal img_pixels : pixel_array_t;
-
-    -- Image dimensions (mora odgovarati slici)
+architecture sim of tb_max_pool is
+    constant DATA_WIDTH : integer := 8;
     constant IMG_WIDTH  : integer := 256;
     constant IMG_HEIGHT : integer := 256;
 
+    signal clk        : std_logic := '0';
+    signal reset      : std_logic := '1';
+    signal valid_in   : std_logic := '0';
+    signal pixel_r_in : unsigned(DATA_WIDTH-1 downto 0) := (others=>'0');
+    signal pixel_g_in : unsigned(DATA_WIDTH-1 downto 0) := (others=>'0');
+    signal pixel_b_in : unsigned(DATA_WIDTH-1 downto 0) := (others=>'0');
+
+    signal pooled_r_out : unsigned(DATA_WIDTH-1 downto 0);
+    signal pooled_g_out : unsigned(DATA_WIDTH-1 downto 0);
+    signal pooled_b_out : unsigned(DATA_WIDTH-1 downto 0);
+    signal valid_out    : std_logic;
+
+    -- Input and output files
+    file fin  : text open read_mode is "image.txt";
+    file fout : text open write_mode is "output.txt";
 begin
-
-    -- Clock 100 MHz
     clk <= not clk after 5 ns;
-    -- DUT: convolution block
-    uut_conv: entity work.convolution_block
+
+    -- DUT instantiation
+    uut: entity work.max_pool
         generic map (
-            IMG_WIDTH           => IMG_WIDTH,
-            IMG_HEIGHT          => IMG_HEIGHT,
-            CHANNELS            => CHANNELS,
-            PIXEL_CHANNEL_WIDTH => BPP
+            DATA_WIDTH => DATA_WIDTH,
+            IMG_WIDTH  => IMG_WIDTH
         )
         port map (
-            clk         => clk,
-            rst         => rst,
-            enable      => enable,
-            pixel_in    => pixel_in,
-            pixel_valid => pixel_valid,
-            conv_out    => conv_out,
-            out_valid   => conv_valid
+            clk        => clk,
+            reset      => reset,
+            valid_in   => valid_in,
+            pixel_r_in => pixel_r_in,
+            pixel_g_in => pixel_g_in,
+            pixel_b_in => pixel_b_in,
+            pooled_r_out => pooled_r_out,
+            pooled_g_out => pooled_g_out,
+            pooled_b_out => pooled_b_out,
+            valid_out    => valid_out
         );
 
-    -- DUT: activation block (ReLU)
-    uut_act: entity work.activation_block
-        generic map (
-            CHANNELS        => CHANNELS,
-            DATA_WIDTH      => 16,
-            ACTIVATION_TYPE => "TANH"
-        )
-        port map (
-            clk         => clk,
-            rst         => rst,
-            enable      => enable,
-            data_in     => conv_out,
-            in_valid    => conv_valid,
-            data_out    => act_out,
-            out_valid   => act_valid
-        );
-
-    ----------------------------------------------------------------
-    -- Stimulus: load input file
-    ----------------------------------------------------------------
+    -- Stimulus process for planar RGB input
     stim: process
-        file fin  : text open read_mode is "image.txt";
         variable line_in : line;
-        variable val     : integer;
-        variable i       : integer := 0;
-        variable pixel_idx : integer := 0;
+        variable r_val, g_val, b_val : integer;
     begin
-        -- Reset
-        rst <= '1';
+        reset <= '1';
         wait for 20 ns;
-        rst <= '0';
-        enable <= '1';
+        reset <= '0';
+        wait for 10 ns;
 
-        -- Read pixels
         while not endfile(fin) loop
+            -- Read R
             readline(fin, line_in);
-            read(line_in, val);
-            img_pixels(i) <= val;
-            i := i + 1;
+            read(line_in, r_val);
+            pixel_r_in <= to_unsigned(r_val, DATA_WIDTH);
+            -- Read G
+            readline(fin, line_in);
+            read(line_in, g_val);
+            pixel_g_in <= to_unsigned(g_val, DATA_WIDTH);
+            -- Read B
+            readline(fin, line_in);
+            read(line_in, b_val);
+            pixel_b_in <= to_unsigned(b_val, DATA_WIDTH);
+
+            valid_in <= '1';
+            wait for 10 ns;
         end loop;
 
-        -- Send pixels to DUT (3 channels per pixel)
-        pixel_idx := 0;
-        while pixel_idx < i loop
-            pixel_valid <= '1';
-            pixel_in <= std_logic_vector(to_unsigned(img_pixels(pixel_idx), BPP)) &
-                        std_logic_vector(to_unsigned(img_pixels(pixel_idx+1), BPP)) &
-                        std_logic_vector(to_unsigned(img_pixels(pixel_idx+2), BPP));
-            wait until rising_edge(clk);
-            pixel_valid <= '0';
-            wait until rising_edge(clk);
-            pixel_idx := pixel_idx + 3;
-        end loop;
-
-    -- Wait for pipeline to flush and all outputs to be written
-    wait for 10000000 ns; -- long pause to allow output
+        valid_in <= '0';
+        wait for 500 ns;
+        std.env.stop;
+        wait;
     end process;
 
-    ----------------------------------------------------------------
-    -- Monitor: write conv_out to output.txt
-    ----------------------------------------------------------------
+    -- Monitor process (writes pooled RGB output)
     monitor: process(clk)
-        file fout : text open write_mode is "output.txt";
-        variable line_out : line;
-        variable r_val, g_val, b_val : integer;
-        variable pixel_count : integer := 0;
-        variable cycle_count : integer := 0;
+    variable line_out : line;
     begin
         if rising_edge(clk) then
-            cycle_count := cycle_count + 1;
-            if act_valid = '1' then
-                r_val := to_integer(signed(act_out(15 downto 0)));
-                g_val := to_integer(signed(act_out(31 downto 16)));
-                b_val := to_integer(signed(act_out(47 downto 32)));
-
-                write(line_out, r_val);
-                write(line_out, string'(" "));
-                write(line_out, g_val);
-                write(line_out, string'(" "));
-                write(line_out, b_val);
+            if valid_out = '1' then
+                -- Write one line per pixel: R G B
+                write(line_out, to_integer(pooled_r_out), right, 4);
+                write(line_out, ' ');
+                write(line_out, to_integer(pooled_g_out), right, 4);
+                write(line_out, ' ');
+                write(line_out, to_integer(pooled_b_out), right, 4);
                 writeline(fout, line_out);
-                pixel_count := pixel_count + 1;
-                if pixel_count = IMG_WIDTH * IMG_HEIGHT then
-                    std.env.stop;
-                end if;
-            end if;
-            if cycle_count > 1000000 then -- timeout to prevent infinite simulation
-                std.env.stop;
             end if;
         end if;
     end process;

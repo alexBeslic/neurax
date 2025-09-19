@@ -1,5 +1,5 @@
 Analysis & Synthesis report for FPGA_accelerator
-Wed Sep 17 19:58:27 2025
+Fri Sep 19 23:20:55 2025
 Quartus Prime Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 
 
@@ -14,14 +14,17 @@ Quartus Prime Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
   6. Analysis & Synthesis Resource Usage Summary
   7. Analysis & Synthesis Resource Utilization by Entity
   8. Registers Removed During Synthesis
-  9. General Register Statistics
- 10. Multiplexer Restructuring Statistics (Restructuring Performed)
- 11. Parameter Settings for User Entity Instance: Top-level Entity: |FPGA_accelerator
- 12. Parameter Settings for User Entity Instance: convolution_block:conv_inst
- 13. Parameter Settings for User Entity Instance: activation_block:act_inst
- 14. Post-Synthesis Netlist Statistics for Top Partition
- 15. Elapsed Time Per Partition
- 16. Analysis & Synthesis Messages
+  9. Removed Registers Triggering Further Register Optimizations
+ 10. General Register Statistics
+ 11. Multiplexer Restructuring Statistics (Restructuring Performed)
+ 12. Parameter Settings for User Entity Instance: Top-level Entity: |FPGA_accelerator
+ 13. Parameter Settings for User Entity Instance: convolution_block:conv_inst
+ 14. Parameter Settings for User Entity Instance: activation_block:act_inst
+ 15. Parameter Settings for User Entity Instance: max_pool:maxpool_inst
+ 16. Port Connectivity Checks: "activation_block:act_inst"
+ 17. Post-Synthesis Netlist Statistics for Top Partition
+ 18. Elapsed Time Per Partition
+ 19. Analysis & Synthesis Messages
 
 
 
@@ -48,13 +51,13 @@ on the Quartus Prime software download page.
 +-----------------------------------------------------------------------------------+
 ; Analysis & Synthesis Summary                                                      ;
 +---------------------------------+-------------------------------------------------+
-; Analysis & Synthesis Status     ; Successful - Wed Sep 17 19:58:27 2025           ;
+; Analysis & Synthesis Status     ; Successful - Fri Sep 19 23:20:55 2025           ;
 ; Quartus Prime Version           ; 24.1std.0 Build 1077 03/04/2025 SC Lite Edition ;
 ; Revision Name                   ; FPGA_accelerator                                ;
 ; Top-level Entity Name           ; FPGA_accelerator                                ;
 ; Family                          ; Cyclone V                                       ;
 ; Logic utilization (in ALMs)     ; N/A                                             ;
-; Total registers                 ; 1119                                            ;
+; Total registers                 ; 1088                                            ;
 ; Total pins                      ; 77                                              ;
 ; Total virtual pins              ; 0                                               ;
 ; Total block memory bits         ; 0                                               ;
@@ -185,6 +188,7 @@ on the Quartus Prime software download page.
 ; File Name with User-Entered Path ; Used in Netlist ; File Type             ; File Name with Absolute Path                                             ; Library ;
 +----------------------------------+-----------------+-----------------------+--------------------------------------------------------------------------+---------+
 ; FPGA_accelerator.vhd             ; yes             ; User VHDL File        ; C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd  ;         ;
+; max_pool.vhd                     ; yes             ; User VHDL File        ; C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/max_pool.vhd          ;         ;
 ; convolution_block.vhd            ; yes             ; Auto-Found VHDL File  ; C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd ;         ;
 ; activation_block.vhd             ; yes             ; Auto-Found VHDL File  ; C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd  ;         ;
 +----------------------------------+-----------------+-----------------------+--------------------------------------------------------------------------+---------+
@@ -195,25 +199,25 @@ on the Quartus Prime software download page.
 +---------------------------------------------+-----------+
 ; Resource                                    ; Usage     ;
 +---------------------------------------------+-----------+
-; Estimate of Logic utilization (ALMs needed) ; 858       ;
+; Estimate of Logic utilization (ALMs needed) ; 905       ;
 ;                                             ;           ;
-; Combinational ALUT usage for logic          ; 1419      ;
+; Combinational ALUT usage for logic          ; 1474      ;
 ;     -- 7 input functions                    ; 0         ;
-;     -- 6 input functions                    ; 189       ;
-;     -- 5 input functions                    ; 45        ;
-;     -- 4 input functions                    ; 8         ;
-;     -- <=3 input functions                  ; 1177      ;
+;     -- 6 input functions                    ; 226       ;
+;     -- 5 input functions                    ; 15        ;
+;     -- 4 input functions                    ; 75        ;
+;     -- <=3 input functions                  ; 1158      ;
 ;                                             ;           ;
-; Dedicated logic registers                   ; 1119      ;
+; Dedicated logic registers                   ; 1088      ;
 ;                                             ;           ;
 ; I/O pins                                    ; 77        ;
 ;                                             ;           ;
 ; Total DSP Blocks                            ; 0         ;
 ;                                             ;           ;
 ; Maximum fan-out node                        ; clk~input ;
-; Maximum fan-out                             ; 1119      ;
-; Total fan-out                               ; 9176      ;
-; Average fan-out                             ; 3.41      ;
+; Maximum fan-out                             ; 1088      ;
+; Total fan-out                               ; 9288      ;
+; Average fan-out                             ; 3.42      ;
 +---------------------------------------------+-----------+
 
 
@@ -222,9 +226,10 @@ on the Quartus Prime software download page.
 +----------------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+-----------------------------------------------+-------------------+--------------+
 ; Compilation Hierarchy Node       ; Combinational ALUTs ; Dedicated Logic Registers ; Block Memory Bits ; DSP Blocks ; Pins ; Virtual Pins ; Full Hierarchy Name                           ; Entity Name       ; Library Name ;
 +----------------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+-----------------------------------------------+-------------------+--------------+
-; |FPGA_accelerator                ; 1419 (0)            ; 1119 (0)                  ; 0                 ; 0          ; 77   ; 0            ; |FPGA_accelerator                             ; FPGA_accelerator  ; work         ;
-;    |activation_block:act_inst|   ; 8 (8)               ; 91 (91)                   ; 0                 ; 0          ; 0    ; 0            ; |FPGA_accelerator|activation_block:act_inst   ; activation_block  ; work         ;
-;    |convolution_block:conv_inst| ; 1411 (1411)         ; 1028 (1028)               ; 0                 ; 0          ; 0    ; 0            ; |FPGA_accelerator|convolution_block:conv_inst ; convolution_block ; work         ;
+; |FPGA_accelerator                ; 1474 (0)            ; 1088 (0)                  ; 0                 ; 0          ; 77   ; 0            ; |FPGA_accelerator                             ; FPGA_accelerator  ; work         ;
+;    |activation_block:act_inst|   ; 4 (4)               ; 25 (25)                   ; 0                 ; 0          ; 0    ; 0            ; |FPGA_accelerator|activation_block:act_inst   ; activation_block  ; work         ;
+;    |convolution_block:conv_inst| ; 1307 (1307)         ; 842 (842)                 ; 0                 ; 0          ; 0    ; 0            ; |FPGA_accelerator|convolution_block:conv_inst ; convolution_block ; work         ;
+;    |max_pool:maxpool_inst|       ; 163 (163)           ; 221 (221)                 ; 0                 ; 0          ; 0    ; 0            ; |FPGA_accelerator|max_pool:maxpool_inst       ; max_pool          ; work         ;
 +----------------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+-----------------------------------------------+-------------------+--------------+
 Note: For table entries with two numbers listed, the numbers in parentheses indicate the number of resources of the given type used by the specific entity alone. The numbers listed outside of parentheses indicate the total resources of the given type used by the specific entity and all of its sub-entities in the hierarchy.
 
@@ -318,9 +323,6 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 ; convolution_block:conv_inst|results[1][3][0][13] ; Merged with convolution_block:conv_inst|results[1][3][0][14] ;
 ; convolution_block:conv_inst|results[2][0][0][13] ; Merged with convolution_block:conv_inst|results[2][0][0][14] ;
 ; convolution_block:conv_inst|results[2][3][0][13] ; Merged with convolution_block:conv_inst|results[2][3][0][14] ;
-; activation_block:act_inst|input_channels[0][14]  ; Merged with activation_block:act_inst|input_channels[0][13]  ;
-; activation_block:act_inst|input_channels[1][14]  ; Merged with activation_block:act_inst|input_channels[1][13]  ;
-; activation_block:act_inst|input_channels[2][14]  ; Merged with activation_block:act_inst|input_channels[2][13]  ;
 ; convolution_block:conv_inst|conv_out[14]         ; Merged with convolution_block:conv_inst|conv_out[13]         ;
 ; convolution_block:conv_inst|conv_out[30]         ; Merged with convolution_block:conv_inst|conv_out[29]         ;
 ; convolution_block:conv_inst|conv_out[46]         ; Merged with convolution_block:conv_inst|conv_out[45]         ;
@@ -420,10 +422,371 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 ; convolution_block:conv_inst|results[2][3][2][12] ; Merged with convolution_block:conv_inst|results[2][3][2][11] ;
 ; convolution_block:conv_inst|results[2][3][2][13] ; Merged with convolution_block:conv_inst|results[2][3][2][11] ;
 ; convolution_block:conv_inst|results[2][3][2][14] ; Merged with convolution_block:conv_inst|results[2][3][2][11] ;
-; activation_block:act_inst|data_out[15,31,47]     ; Stuck at GND due to stuck port data_in                       ;
+; convolution_block:conv_inst|conv_out[8]          ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[9]          ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][0][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][3][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][0][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][3][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[10]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[11]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[12]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][1][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][2][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][1][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][2][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[13]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][0][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][1][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][1][2][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][1][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][2][2][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[0][3][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[24]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[25]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][0][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][3][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][0][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][3][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[26]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[27]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[28]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][1][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][2][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][1][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][2][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[29]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][0][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][1][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][1][2][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][1][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][2][2][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[1][3][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[40]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][0][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][1][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][2][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][3][8]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[41]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][0][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][3][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][0][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][3][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][1][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][2][9]  ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[42]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][1][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][2][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[43]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[44]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][1][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][2][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][1][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][2][12] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|conv_out[45]         ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][0][2][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][1][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][1][2][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][1][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][2][2][13] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][0][10] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][1][11] ; Lost fanout                                                  ;
+; convolution_block:conv_inst|results[2][3][2][11] ; Lost fanout                                                  ;
 ; convolution_block:conv_inst|results[0][0][3][15] ; Stuck at GND due to stuck port data_in                       ;
-; Total Number of Removed Registers = 190          ;                                                              ;
+; Total Number of Removed Registers = 370          ;                                                              ;
 +--------------------------------------------------+--------------------------------------------------------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------------+
+; Removed Registers Triggering Further Register Optimizations                                                                      ;
++--------------------------------------------------+---------------------------+---------------------------------------------------+
+; Register name                                    ; Reason for Removal        ; Registers Removed due to This Register            ;
++--------------------------------------------------+---------------------------+---------------------------------------------------+
+; convolution_block:conv_inst|conv_out[8]          ; Lost Fanouts              ; convolution_block:conv_inst|results[0][0][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][0][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][0][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][0][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][3][8]   ;
+; convolution_block:conv_inst|conv_out[24]         ; Lost Fanouts              ; convolution_block:conv_inst|results[1][0][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][0][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][0][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][0][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][3][8]   ;
+; convolution_block:conv_inst|conv_out[40]         ; Lost Fanouts              ; convolution_block:conv_inst|results[2][0][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][0][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][0][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][0][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][3][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][0][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][1][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][2][8],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][3][8]   ;
+; convolution_block:conv_inst|results[0][0][3][10] ; Stuck at GND              ; convolution_block:conv_inst|results[0][0][1][10], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[0][0][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][0][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][0][10]  ;
+; convolution_block:conv_inst|results[0][0][3][9]  ; Stuck at GND              ; convolution_block:conv_inst|results[0][0][1][9],  ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[0][0][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][0][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][1][3][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][0][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][3][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][2][9]   ;
+; convolution_block:conv_inst|results[1][0][3][10] ; Stuck at GND              ; convolution_block:conv_inst|results[1][0][1][10], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[1][0][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][0][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][0][10]  ;
+; convolution_block:conv_inst|results[1][0][3][9]  ; Stuck at GND              ; convolution_block:conv_inst|results[1][0][1][9],  ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[1][0][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][0][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][1][3][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][0][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][3][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][2][9]   ;
+; convolution_block:conv_inst|results[2][0][3][10] ; Stuck at GND              ; convolution_block:conv_inst|results[2][0][1][10], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[2][0][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][1][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][2][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][0][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][0][10], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][0][10]  ;
+; convolution_block:conv_inst|results[2][0][3][9]  ; Stuck at GND              ; convolution_block:conv_inst|results[2][0][1][9],  ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[2][0][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][0][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][1][3][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][0][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][2][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][3][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][1][9],  ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][2][9]   ;
+; convolution_block:conv_inst|results[0][0][3][11] ; Stuck at GND              ; convolution_block:conv_inst|results[0][1][1][11], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[0][1][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][0][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][0][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][3][2][11]  ;
+; convolution_block:conv_inst|results[1][0][3][11] ; Stuck at GND              ; convolution_block:conv_inst|results[1][1][1][11], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[1][1][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][0][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][0][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][3][2][11]  ;
+; convolution_block:conv_inst|results[2][0][3][11] ; Stuck at GND              ; convolution_block:conv_inst|results[2][1][1][11], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[2][1][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][0][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][0][2][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][1][11], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][3][2][11]  ;
+; convolution_block:conv_inst|results[0][0][3][13] ; Stuck at GND              ; convolution_block:conv_inst|results[0][1][1][13], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[0][1][2][13], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][1][13], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][2][13]  ;
+; convolution_block:conv_inst|results[0][0][3][12] ; Stuck at GND              ; convolution_block:conv_inst|results[0][1][1][12], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[0][1][2][12], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][1][12], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[0][2][2][12]  ;
+; convolution_block:conv_inst|results[1][0][3][13] ; Stuck at GND              ; convolution_block:conv_inst|results[1][1][1][13], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[1][1][2][13], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][1][13], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][2][13]  ;
+; convolution_block:conv_inst|results[1][0][3][12] ; Stuck at GND              ; convolution_block:conv_inst|results[1][1][1][12], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[1][1][2][12], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][1][12], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[1][2][2][12]  ;
+; convolution_block:conv_inst|results[2][0][3][13] ; Stuck at GND              ; convolution_block:conv_inst|results[2][1][1][13], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[2][1][2][13], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][1][13], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][2][13]  ;
+; convolution_block:conv_inst|results[2][0][3][12] ; Stuck at GND              ; convolution_block:conv_inst|results[2][1][1][12], ;
+;                                                  ; due to stuck port data_in ; convolution_block:conv_inst|results[2][1][2][12], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][1][12], ;
+;                                                  ;                           ; convolution_block:conv_inst|results[2][2][2][12]  ;
++--------------------------------------------------+---------------------------+---------------------------------------------------+
 
 
 +------------------------------------------------------+
@@ -431,12 +794,12 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +----------------------------------------------+-------+
 ; Statistic                                    ; Value ;
 +----------------------------------------------+-------+
-; Total registers                              ; 1119  ;
-; Number of registers using Synchronous Clear  ; 49    ;
+; Total registers                              ; 1088  ;
+; Number of registers using Synchronous Clear  ; 148   ;
 ; Number of registers using Synchronous Load   ; 1     ;
-; Number of registers using Asynchronous Clear ; 1074  ;
+; Number of registers using Asynchronous Clear ; 867   ;
 ; Number of registers using Asynchronous Load  ; 0     ;
-; Number of registers using Clock Enable       ; 1066  ;
+; Number of registers using Clock Enable       ; 1055  ;
 ; Number of registers using Preset             ; 0     ;
 +----------------------------------------------+-------+
 
@@ -446,17 +809,24 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------+
 ; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output                                 ;
 +--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------+
-; 3:1                ; 13 bits   ; 26 LEs        ; 0 LEs                ; 26 LEs                 ; Yes        ; |FPGA_accelerator|activation_block:act_inst|data_out[0]    ;
-; 3:1                ; 13 bits   ; 26 LEs        ; 0 LEs                ; 26 LEs                 ; Yes        ; |FPGA_accelerator|activation_block:act_inst|data_out[16]   ;
-; 3:1                ; 13 bits   ; 26 LEs        ; 0 LEs                ; 26 LEs                 ; Yes        ; |FPGA_accelerator|activation_block:act_inst|data_out[34]   ;
+; 4:1                ; 24 bits   ; 48 LEs        ; 48 LEs               ; 0 LEs                  ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|p2_r[6]            ;
+; 4:1                ; 24 bits   ; 48 LEs        ; 48 LEs               ; 0 LEs                  ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|p1_r[1]            ;
+; 3:1                ; 24 bits   ; 48 LEs        ; 0 LEs                ; 48 LEs                 ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|line_g[0][3]       ;
+; 3:1                ; 24 bits   ; 48 LEs        ; 0 LEs                ; 48 LEs                 ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|line_r[1][2]       ;
+; 3:1                ; 24 bits   ; 48 LEs        ; 0 LEs                ; 48 LEs                 ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|line_g[2][2]       ;
+; 3:1                ; 24 bits   ; 48 LEs        ; 0 LEs                ; 48 LEs                 ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|line_r[3][3]       ;
+; 3:1                ; 8 bits    ; 16 LEs        ; 0 LEs                ; 16 LEs                 ; Yes        ; |FPGA_accelerator|activation_block:act_inst|data_out[3]    ;
+; 3:1                ; 8 bits    ; 16 LEs        ; 0 LEs                ; 16 LEs                 ; Yes        ; |FPGA_accelerator|activation_block:act_inst|data_out[23]   ;
+; 3:1                ; 8 bits    ; 16 LEs        ; 0 LEs                ; 16 LEs                 ; Yes        ; |FPGA_accelerator|activation_block:act_inst|data_out[32]   ;
+; 4:1                ; 2 bits    ; 4 LEs         ; 4 LEs                ; 0 LEs                  ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|row_count[1]       ;
+; 4:1                ; 2 bits    ; 4 LEs         ; 4 LEs                ; 0 LEs                  ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|col_count[1]       ;
 ; 4:1                ; 2 bits    ; 4 LEs         ; 4 LEs                ; 0 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|out_col[1]   ;
 ; 4:1                ; 2 bits    ; 4 LEs         ; 4 LEs                ; 0 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|out_row[1]   ;
-; 10:1               ; 9 bits    ; 54 LEs        ; 45 LEs               ; 9 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|conv_out[12] ;
-; 16:1               ; 3 bits    ; 30 LEs        ; 30 LEs               ; 0 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|conv_out[26] ;
-; 16:1               ; 3 bits    ; 30 LEs        ; 30 LEs               ; 0 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|conv_out[25] ;
-; 16:1               ; 3 bits    ; 30 LEs        ; 24 LEs               ; 6 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|conv_out[15] ;
-; 16:1               ; 27 bits   ; 270 LEs       ; 270 LEs              ; 0 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|conv_out[5]  ;
-; 4:1                ; 6 bits    ; 12 LEs        ; 12 LEs               ; 0 LEs                  ; No         ; |FPGA_accelerator|convolution_block:conv_inst|Mux2         ;
+; 6:1                ; 8 bits    ; 32 LEs        ; 16 LEs               ; 16 LEs                 ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|pooled_r[2]        ;
+; 6:1                ; 8 bits    ; 32 LEs        ; 16 LEs               ; 16 LEs                 ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|pooled_g[7]        ;
+; 6:1                ; 8 bits    ; 32 LEs        ; 16 LEs               ; 16 LEs                 ; Yes        ; |FPGA_accelerator|max_pool:maxpool_inst|pooled_b[1]        ;
+; 16:1               ; 3 bits    ; 30 LEs        ; 24 LEs               ; 6 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|conv_out[31] ;
+; 16:1               ; 24 bits   ; 240 LEs       ; 240 LEs              ; 0 LEs                  ; Yes        ; |FPGA_accelerator|convolution_block:conv_inst|conv_out[22] ;
 +--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------+
 
 
@@ -499,39 +869,63 @@ Note: In order to hide this table in the UI and the text report file, please set
 Note: In order to hide this table in the UI and the text report file, please set the "Show Parameter Settings in Synthesis Report" option in "Analysis and Synthesis Settings -> More Settings" to "Off".
 
 
++--------------------------------------------------------------------+
+; Parameter Settings for User Entity Instance: max_pool:maxpool_inst ;
++----------------+-------+-------------------------------------------+
+; Parameter Name ; Value ; Type                                      ;
++----------------+-------+-------------------------------------------+
+; data_width     ; 8     ; Signed Integer                            ;
+; img_width      ; 4     ; Signed Integer                            ;
++----------------+-------+-------------------------------------------+
+Note: In order to hide this table in the UI and the text report file, please set the "Show Parameter Settings in Synthesis Report" option in "Analysis and Synthesis Settings -> More Settings" to "Off".
+
+
++----------------------------------------------------------------------------------------------------------------------------+
+; Port Connectivity Checks: "activation_block:act_inst"                                                                      ;
++------------------+--------+----------+-------------------------------------------------------------------------------------+
+; Port             ; Type   ; Severity ; Details                                                                             ;
++------------------+--------+----------+-------------------------------------------------------------------------------------+
+; data_out[47..40] ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
+; data_out[31..24] ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
+; data_out[15..8]  ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
++------------------+--------+----------+-------------------------------------------------------------------------------------+
+
+
 +-----------------------------------------------------+
 ; Post-Synthesis Netlist Statistics for Top Partition ;
 +-----------------------+-----------------------------+
 ; Type                  ; Count                       ;
 +-----------------------+-----------------------------+
-; arriav_ff             ; 1119                        ;
-;     CLR               ; 12                          ;
-;     CLR SCLR          ; 40                          ;
+; arriav_ff             ; 1088                        ;
+;     CLR               ; 6                           ;
+;     CLR SCLR          ; 25                          ;
 ;     CLR SLD           ; 1                           ;
-;     ENA               ; 45                          ;
-;     ENA CLR           ; 1012                        ;
-;     ENA CLR SCLR      ; 9                           ;
-; arriav_lcell_comb     ; 1420                        ;
-;     arith             ; 735                         ;
-;         0 data inputs ; 45                          ;
-;         1 data inputs ; 300                         ;
-;         2 data inputs ; 390                         ;
-;     normal            ; 262                         ;
-;         0 data inputs ; 1                           ;
-;         2 data inputs ; 7                           ;
-;         3 data inputs ; 12                          ;
-;         4 data inputs ; 8                           ;
-;         5 data inputs ; 45                          ;
-;         6 data inputs ; 189                         ;
-;     shared            ; 423                         ;
+;     ENA               ; 99                          ;
+;     ENA CLR           ; 834                         ;
+;     ENA CLR SCLR      ; 1                           ;
+;     ENA SCLR          ; 121                         ;
+;     SCLR              ; 1                           ;
+; arriav_lcell_comb     ; 1475                        ;
+;     arith             ; 720                         ;
 ;         0 data inputs ; 36                          ;
+;         1 data inputs ; 294                         ;
+;         2 data inputs ; 390                         ;
+;     normal            ; 338                         ;
+;         0 data inputs ; 1                           ;
+;         2 data inputs ; 12                          ;
+;         3 data inputs ; 9                           ;
+;         4 data inputs ; 75                          ;
+;         5 data inputs ; 15                          ;
+;         6 data inputs ; 226                         ;
+;     shared            ; 417                         ;
+;         0 data inputs ; 30                          ;
 ;         1 data inputs ; 36                          ;
 ;         2 data inputs ; 36                          ;
 ;         3 data inputs ; 315                         ;
 ; boundary_port         ; 77                          ;
 ;                       ;                             ;
 ; Max LUT depth         ; 5.30                        ;
-; Average LUT depth     ; 3.40                        ;
+; Average LUT depth     ; 3.45                        ;
 +-----------------------+-----------------------------+
 
 
@@ -550,29 +944,55 @@ Note: In order to hide this table in the UI and the text report file, please set
 Info: *******************************************************************
 Info: Running Quartus Prime Analysis & Synthesis
     Info: Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
-    Info: Processing started: Wed Sep 17 19:58:19 2025
+    Info: Processing started: Fri Sep 19 23:20:47 2025
 Info: Command: quartus_map --read_settings_files=on --write_settings_files=off FPGA_accelerator -c FPGA_accelerator
 Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
 Info (20030): Parallel compilation is enabled and will use 12 of the 12 processors detected
 Info (12021): Found 2 design units, including 1 entities, in source file fpga_accelerator.vhd
     Info (12022): Found design unit 1: FPGA_accelerator-FPGA_accelerator_arch File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 24
     Info (12023): Found entity 1: FPGA_accelerator File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 5
+Info (12021): Found 2 design units, including 1 entities, in source file max_pool.vhd
+    Info (12022): Found design unit 1: max_pool-rtl File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/max_pool.vhd Line: 25
+    Info (12023): Found entity 1: max_pool File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/max_pool.vhd Line: 5
 Info (12127): Elaborating entity "FPGA_accelerator" for the top level hierarchy
+Warning (10873): Using initial value X (don't care) for net "result_out[47..24]" at FPGA_accelerator.vhd(19) File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
 Warning (12125): Using design file convolution_block.vhd, which is not specified as a design file for the current project, but contains definitions for 2 design units and 1 entities in project
     Info (12022): Found design unit 1: convolution_block-convolution_block_arch File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd Line: 24
     Info (12023): Found entity 1: convolution_block File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd Line: 6
-Info (12128): Elaborating entity "convolution_block" for hierarchy "convolution_block:conv_inst" File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 70
+Info (12128): Elaborating entity "convolution_block" for hierarchy "convolution_block:conv_inst" File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 97
 Warning (10540): VHDL Signal Declaration warning at convolution_block.vhd(42): used explicit default value for signal "kernel" because signal was never assigned a value File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd Line: 42
 Info (10008): Verilog HDL or VHDL information: EDA Netlist Writer cannot regroup multidimensional array "image" into its bus
 Info (10008): Verilog HDL or VHDL information: EDA Netlist Writer cannot regroup multidimensional array "results" into its bus
 Warning (12125): Using design file activation_block.vhd, which is not specified as a design file for the current project, but contains definitions for 2 design units and 1 entities in project
     Info (12022): Found design unit 1: activation_block-activation_block_arch File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd Line: 22
     Info (12023): Found entity 1: activation_block File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd Line: 5
-Info (12128): Elaborating entity "activation_block" for hierarchy "activation_block:act_inst" File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 88
+Info (12128): Elaborating entity "activation_block" for hierarchy "activation_block:act_inst" File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 115
 Warning (10036): Verilog HDL or VHDL warning at activation_block.vhd(26): object "output_channels" assigned a value but never read File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd Line: 26
+Info (12128): Elaborating entity "max_pool" for hierarchy "max_pool:maxpool_inst" File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 137
 Warning (13024): Output pins are stuck at VCC or GND
-    Warning (13410): Pin "result_out[15]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[24]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[25]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[26]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[27]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[28]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[29]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[30]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
     Warning (13410): Pin "result_out[31]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[32]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[33]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[34]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[35]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[36]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[37]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[38]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[39]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[40]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[41]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[42]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[43]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[44]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[45]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
+    Warning (13410): Pin "result_out[46]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
     Warning (13410): Pin "result_out[47]" is stuck at GND File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd Line: 19
 Info (286030): Timing-Driven Synthesis is running
 Critical Warning (18061): Ignored Power-Up Level option on the following registers
@@ -613,15 +1033,16 @@ Critical Warning (18061): Ignored Power-Up Level option on the following registe
     Critical Warning (18010): Register convolution_block:conv_inst|results[2][1][1][15] will power up to Low File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd Line: 49
     Critical Warning (18010): Register convolution_block:conv_inst|results[2][1][0][15] will power up to Low File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd Line: 49
     Critical Warning (18010): Register convolution_block:conv_inst|results[2][0][2][15] will power up to Low File: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd Line: 49
+Info (17049): 186 registers lost all their fanouts during netlist optimizations.
 Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
     Info (16011): Adding 0 node(s), including 0 DDIO, 0 PLL, 0 transceiver and 0 LCELL
-Info (21057): Implemented 2163 device resources after synthesis - the final resource count might be different
+Info (21057): Implemented 2209 device resources after synthesis - the final resource count might be different
     Info (21058): Implemented 28 input pins
     Info (21059): Implemented 49 output pins
-    Info (21061): Implemented 2086 logic cells
-Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 47 warnings
-    Info: Peak virtual memory: 4932 megabytes
-    Info: Processing ended: Wed Sep 17 19:58:27 2025
+    Info (21061): Implemented 2132 logic cells
+Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 69 warnings
+    Info: Peak virtual memory: 4928 megabytes
+    Info: Processing ended: Fri Sep 19 23:20:55 2025
     Info: Elapsed time: 00:00:08
     Info: Total CPU time (on all processors): 00:00:16
 
