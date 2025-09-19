@@ -3,6 +3,7 @@
 #include "neurax/core/Conv2dBuilder.hpp"
 #include "neurax/core/PoolingBuilder.hpp"
 #include "neurax/core/ActivationBuilder.hpp"
+#include "neurax/core/DenseBuilder.hpp"
 
 namespace neurax {
 namespace core {
@@ -17,6 +18,10 @@ PoolingBuilder LayerBuilder::pool(){
 
 ActivationBuilder LayerBuilder::activation(){
     return ActivationBuilder();
+}
+
+DenseBuilder LayerBuilder::dense(){
+    return DenseBuilder();
 }
 
 
