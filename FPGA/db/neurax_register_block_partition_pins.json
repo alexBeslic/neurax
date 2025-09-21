@@ -1,0 +1,357 @@
+{
+	"partitions" : [
+		{
+			"name" : "Top",
+			"pins" : [
+				{
+					"name" : "avs_readdata_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[5]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[6]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[7]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[8]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[9]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[10]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[11]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[12]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[13]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[14]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[15]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[16]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[17]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[18]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[19]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[20]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[21]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[22]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[23]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[24]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[25]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[26]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[27]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[28]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[29]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[30]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdata_o[31]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_readdatavalid_o",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_start_o",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_layer_enable_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_layer_enable_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_layer_enable_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pooling_type_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pooling_type_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_16bit_mode_o",
+					"strict" : false
+				},
+				{
+					"name" : "avs_address_i[0]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_address_i[1]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_address_i[2]",
+					"strict" : false
+				},
+				{
+					"name" : "clk_i",
+					"strict" : false
+				},
+				{
+					"name" : "rst_i",
+					"strict" : false
+				},
+				{
+					"name" : "avs_chipselect_i",
+					"strict" : false
+				},
+				{
+					"name" : "avs_read_i",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[0]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_byteenable_i[0]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_write_i",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[1]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[2]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[3]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[4]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[5]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[6]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[7]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_finished_i",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[8]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_byteenable_i[1]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[9]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[10]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[11]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[12]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[13]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[14]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[15]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[16]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_byteenable_i[2]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[17]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[18]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[19]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[20]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[21]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[22]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[23]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[24]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_byteenable_i[3]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[25]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[26]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[27]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[28]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[29]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[30]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[31]",
+					"strict" : false
+				}
+			]
+		}
+	]
+}
