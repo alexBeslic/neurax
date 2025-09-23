@@ -57,4 +57,7 @@ dkms.conf
 build/
 .venv/
 *.bin
+*.npy
+manifest.jsonž
+*.npz
 .vscode/

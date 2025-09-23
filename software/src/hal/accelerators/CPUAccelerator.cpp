@@ -142,6 +142,54 @@ Tensor CPUAccelerator::activation(const Tensor& input,
     size_t num_elements = input.shape().numel();
 
     // Use optimized SIMD activation when possible
+    if (type == ActivationType::SOFTMAX) {
+        // Handle shape-dependent softmax here
+        const auto& s = input.shape();
+        if (s.size() == 2) {
+            size_t N = s[0];
+            size_t F = s[1];
+            for (size_t n = 0; n < N; ++n) {
+                const float* row = &input_data[n * F];
+                float* out_row = &output_data[n * F];
+                float maxv = row[0];
+                for (size_t f = 1; f < F; ++f) maxv = std::max(maxv, row[f]);
+                double sum = 0.0;
+                for (size_t f = 0; f < F; ++f) {
+                    double e = std::exp(static_cast<double>(row[f] - maxv));
+                    out_row[f] = static_cast<float>(e);
+                    sum += e;
+                }
+                for (size_t f = 0; f < F; ++f) out_row[f] = static_cast<float>(out_row[f] / sum);
+            }
+            return output;
+        } else if (s.size() == 4) {
+            size_t N = s[0];
+            size_t H = s[1];
+            size_t W = s[2];
+            size_t C = s[3];
+            for (size_t n = 0; n < N; ++n) {
+                for (size_t h = 0; h < H; ++h) {
+                    for (size_t w = 0; w < W; ++w) {
+                        const float* in_ptr = &input_data[((n * H + h) * W + w) * C];
+                        float* out_ptr = &output_data[((n * H + h) * W + w) * C];
+                        float maxv = in_ptr[0];
+                        for (size_t c = 1; c < C; ++c) maxv = std::max(maxv, in_ptr[c]);
+                        double sum = 0.0;
+                        for (size_t c = 0; c < C; ++c) {
+                            double e = std::exp(static_cast<double>(in_ptr[c] - maxv));
+                            out_ptr[c] = static_cast<float>(e);
+                            sum += e;
+                        }
+                        for (size_t c = 0; c < C; ++c) out_ptr[c] = static_cast<float>(out_ptr[c] / sum);
+                    }
+                }
+            }
+            return output;
+        } else {
+            throw std::runtime_error("CPUAccelerator::activation - SOFTMAX unsupported input rank");
+        }
+    }
+
     apply_activation_function_simd(output_data, input_data, num_elements, type);
 
     return output;
@@ -656,6 +704,15 @@ void CPUAccelerator::apply_activation_function_simd(float* output_data,
                 } else {
                     output_data[i] = std::tanh(input_data[i]);
                 }
+            }
+            break;
+
+        case ActivationType::SOFTMAX:
+            // Softmax is shape-dependent; perform scalar softmax per-row (2D) or per-spatial-location (NHWC 4D)
+            // We'll handle it outside SIMD path in scalar loops where shape is known.
+            for (size_t i = 0; i < num_elements; ++i) {
+                // initialize? consumer will replace this path with full scalar implementation in activation()
+                output_data[i] = 0.0f;
             }
             break;
 
