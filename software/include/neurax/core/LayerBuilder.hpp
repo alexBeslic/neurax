@@ -8,6 +8,7 @@
 #include "ActivationBuilder.hpp"
 #include "DenseBuilder.hpp"
 #include "FlattenBuilder.hpp"
+#include "BatchNormBuilder.hpp"
 
 namespace neurax {
 namespace core {
@@ -24,6 +25,7 @@ public:
     static ActivationBuilder activation();
     static DenseBuilder dense();
     static FlattenBuilder flatten();
+    static BatchNormBuilder batchnorm();
 };
 
 } // namespace core

@@ -96,6 +96,7 @@ add_library(neurax_core STATIC
     src/core/layers/ActivationLayer.cpp
     src/core/layers/DenseLayer.cpp
     src/core/layers/FlattenLayer.cpp
+    src/core/layers/BatchNormLayer.cpp
     src/core/network/NeuralNetwork.cpp
     src/core/NeuralNetworkBuilder.cpp
     src/core/LayerBuilder.cpp
@@ -104,6 +105,7 @@ add_library(neurax_core STATIC
     src/core/ActivationBuilder.cpp
     src/core/DenseBuilder.cpp
     src/core/FlattenBuilder.cpp
+    src/core/BatchNormBuilder.cpp
 )
 
 target_include_directories(neurax_core PUBLIC

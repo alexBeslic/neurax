@@ -29,6 +29,10 @@ FlattenBuilder LayerBuilder::flatten(){
     return FlattenBuilder();
 }
 
+BatchNormBuilder LayerBuilder::batchnorm(){
+    return BatchNormBuilder();
+}
+
 
 } // namespace core
 } // namespace neurax
