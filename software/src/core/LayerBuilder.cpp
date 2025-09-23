@@ -4,6 +4,7 @@
 #include "neurax/core/PoolingBuilder.hpp"
 #include "neurax/core/ActivationBuilder.hpp"
 #include "neurax/core/DenseBuilder.hpp"
+#include "neurax/core/FlattenBuilder.hpp"
 
 namespace neurax {
 namespace core {
@@ -22,6 +23,10 @@ ActivationBuilder LayerBuilder::activation(){
 
 DenseBuilder LayerBuilder::dense(){
     return DenseBuilder();
+}
+
+FlattenBuilder LayerBuilder::flatten(){
+    return FlattenBuilder();
 }
 
 
