@@ -34,6 +34,7 @@ enum class ActivationType {
     RELU,
     TANH,
     SIGMOID,
+    SOFTMAX,
     LINEAR
 };
 

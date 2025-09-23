@@ -12,8 +12,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Threads REQUIRED)
 
 # Include directories
-include_directories(${CMAKE_SOURCE_DIR}/../include)
-
+include_directories(${CMAKE_SOURCE_DIR}/software/include)
+include_directories(${CMAKE_SOURCE_DIR}/software)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "Source dir: ${CMAKE_SOURCE_DIR}")
 # Link directories
 link_directories(${CMAKE_SOURCE_DIR}/../build)
 
@@ -64,4 +67,18 @@ target_link_libraries(core_test_dense
         neurax_image
         neurax_core
         Threads::Threads
+)
+
+add_executable(tf_deserializer
+    tf_deserializer.cpp
+)
+
+target_link_libraries(tf_deserializer
+    PRIVATE
+        neurax_tensor
+        neurax_image
+        neurax_core
+        Threads::Threads
+        cnpy
+        nlohmann_json::nlohmann_json
 )

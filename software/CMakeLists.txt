@@ -132,6 +132,8 @@ target_link_libraries(neurax_image
     PUBLIC neurax_tensor
 )
 
+add_subdirectory(3pp/cnpy)
+add_subdirectory(3pp/json)
 
 # -------------------------
 # Installation rules

@@ -278,6 +278,53 @@ Tensor SoftwareAccelerator::activation(const Tensor& input,
             std::memcpy(output_data, input_data, input.nbytes());
             break;
 
+        case ActivationType::SOFTMAX: {
+            // Support 2D (batch x features) and 4D (NHWC) inputs.
+            const auto& s = input.shape();
+            if (s.size() == 2) {
+                size_t N = s[0];
+                size_t F = s[1];
+                for (size_t n = 0; n < N; ++n) {
+                    const float* row = &input_data[n * F];
+                    float* out_row = &output_data[n * F];
+                    // compute max for numerical stability
+                    float maxv = row[0];
+                    for (size_t f = 1; f < F; ++f) maxv = std::max(maxv, row[f]);
+                    double sum = 0.0;
+                    for (size_t f = 0; f < F; ++f) {
+                        double e = std::exp(static_cast<double>(row[f] - maxv));
+                        out_row[f] = static_cast<float>(e);
+                        sum += e;
+                    }
+                    for (size_t f = 0; f < F; ++f) out_row[f] = static_cast<float>(out_row[f] / sum);
+                }
+            } else if (s.size() == 4) {
+                size_t N = s[0];
+                size_t H = s[1];
+                size_t W = s[2];
+                size_t C = s[3];
+                for (size_t n = 0; n < N; ++n) {
+                    for (size_t h = 0; h < H; ++h) {
+                        for (size_t w = 0; w < W; ++w) {
+                            const float* in_ptr = &input_data[((n * H + h) * W + w) * C];
+                            float* out_ptr = &output_data[((n * H + h) * W + w) * C];
+                            float maxv = in_ptr[0];
+                            for (size_t c = 1; c < C; ++c) maxv = std::max(maxv, in_ptr[c]);
+                            double sum = 0.0;
+                            for (size_t c = 0; c < C; ++c) {
+                                double e = std::exp(static_cast<double>(in_ptr[c] - maxv));
+                                out_ptr[c] = static_cast<float>(e);
+                                sum += e;
+                            }
+                            for (size_t c = 0; c < C; ++c) out_ptr[c] = static_cast<float>(out_ptr[c] / sum);
+                        }
+                    }
+                }
+            } else {
+                throw std::runtime_error("SoftwareAccelerator::activation - SOFTMAX unsupported input rank");
+            }
+        } break;
+
         default:
             throw std::runtime_error("Unsupported activation type");
     }
