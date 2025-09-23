@@ -89,6 +89,12 @@ public:
                        const Tensor& weights,
                        const Tensor& bias) override;
 
+    Tensor batchnorm(const Tensor& input,
+                     const Tensor& gamma,
+                     const Tensor& beta,
+                     float epsilon,
+                     float momentum) override;
+
     // Configuration
     bool set_precision(bool use_16bit) override;
     bool is_16bit_precision() const override;

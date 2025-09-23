@@ -147,6 +147,77 @@ Tensor CPUAccelerator::activation(const Tensor& input,
     return output;
 }
 
+Tensor CPUAccelerator::batchnorm(const Tensor& input,
+                                 const Tensor& gamma,
+                                 const Tensor& beta,
+                                 float epsilon,
+                                 float momentum) {
+    const auto& s = input.shape();
+    if (s.size() == 4) {
+        size_t N = s[0];
+        size_t H = s[1];
+        size_t W = s[2];
+        size_t C = s[3];
+
+        if (gamma.empty() || beta.empty()) {
+            throw std::runtime_error("CPUAccelerator::batchnorm - gamma/beta empty");
+        }
+        if (gamma.numel() != C || beta.numel() != C) {
+            throw std::runtime_error("CPUAccelerator::batchnorm - gamma/beta size mismatch");
+        }
+
+        Tensor output = Tensor::empty(s, input.dtype());
+        const float* in_ptr = input.data_ptr<float>();
+        float* out_ptr = output.data_ptr<float>();
+        const float* gamma_ptr = gamma.data_ptr<float>();
+        const float* beta_ptr = beta.data_ptr<float>();
+
+        size_t spatial = N * H * W;
+        std::vector<double> mean(C, 0.0), var(C, 0.0);
+
+        for (size_t n = 0; n < N; ++n) for (size_t h = 0; h < H; ++h) for (size_t w = 0; w < W; ++w)
+            for (size_t c = 0; c < C; ++c) mean[c] += in_ptr[((n * H + h) * W + w) * C + c];
+        for (size_t c = 0; c < C; ++c) mean[c] /= static_cast<double>(spatial);
+
+        for (size_t n = 0; n < N; ++n) for (size_t h = 0; h < H; ++h) for (size_t w = 0; w < W; ++w)
+            for (size_t c = 0; c < C; ++c) {
+                double d = in_ptr[((n * H + h) * W + w) * C + c] - mean[c];
+                var[c] += d * d;
+            }
+        for (size_t c = 0; c < C; ++c) var[c] /= static_cast<double>(spatial);
+
+        for (size_t n = 0; n < N; ++n) for (size_t h = 0; h < H; ++h) for (size_t w = 0; w < W; ++w)
+            for (size_t c = 0; c < C; ++c) {
+                size_t idx = ((n * H + h) * W + w) * C + c;
+                float normalized = static_cast<float>((in_ptr[idx] - mean[c]) / std::sqrt(var[c] + epsilon));
+                out_ptr[idx] = normalized * gamma_ptr[c] + beta_ptr[c];
+            }
+
+        return output;
+    } else if (s.size() == 2) {
+        size_t N = s[0];
+        size_t F = s[1];
+        if (gamma.empty() || beta.empty()) throw std::runtime_error("CPUAccelerator::batchnorm - gamma/beta empty");
+        if (gamma.numel() != F || beta.numel() != F) throw std::runtime_error("CPUAccelerator::batchnorm - gamma/beta size mismatch");
+
+        Tensor output = Tensor::empty(s, input.dtype());
+        const float* in_ptr = input.data_ptr<float>();
+        float* out_ptr = output.data_ptr<float>();
+        const float* gamma_ptr = gamma.data_ptr<float>();
+        const float* beta_ptr = beta.data_ptr<float>();
+
+        std::vector<double> mean(F, 0.0), var(F, 0.0);
+        for (size_t n = 0; n < N; ++n) for (size_t f = 0; f < F; ++f) mean[f] += in_ptr[n * F + f];
+        for (size_t f = 0; f < F; ++f) mean[f] /= static_cast<double>(N);
+        for (size_t n = 0; n < N; ++n) for (size_t f = 0; f < F; ++f) { double d = in_ptr[n * F + f] - mean[f]; var[f] += d * d; }
+        for (size_t f = 0; f < F; ++f) var[f] /= static_cast<double>(N);
+        for (size_t n = 0; n < N; ++n) for (size_t f = 0; f < F; ++f) out_ptr[n * F + f] = static_cast<float>((in_ptr[n * F + f] - mean[f]) / std::sqrt(var[f] + epsilon)) * gamma_ptr[f] + beta_ptr[f];
+        return output;
+    }
+
+    throw std::runtime_error("CPUAccelerator::batchnorm - unsupported input rank");
+}
+
 Tensor CPUAccelerator::pooling(const Tensor& input,
                               const PoolingConfig& config) {
     if (!initialized_) {
