@@ -206,6 +206,14 @@ public:
      */
     static Tensor empty(const Shape& shape, DataType dtype = DataType::FLOAT32);
 
+    /**
+     * @brief Reshape tensor to new shape without copying data when possible.
+     * @param new_shape Desired shape. Must have the same number of elements as the current tensor.
+     * @return A new Tensor that shares the underlying buffer when shapes are compatible.
+     * @throws TensorException if numel differs.
+     */
+    Tensor reshape(const Shape& new_shape) const;
+
 private:
     Shape shape_;
     DataType dtype_;
