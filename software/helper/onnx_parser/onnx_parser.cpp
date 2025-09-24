@@ -4,6 +4,23 @@
 #include <google/protobuf/message_lite.h>
 #include <iostream>
 
+#include "neurax/tensor/DataType.hpp"
+#include "neurax/tensor/Shape.hpp"
+#include "neurax/tensor/Tensor.hpp"
+#include "neurax/image/ImageProcessor.hpp"
+#include "neurax/core/NeuralNetworkBuilder.hpp"
+#include "neurax/core/LayerBuilder.hpp"
+#include "neurax/core/Conv2dBuilder.hpp"
+#include "neurax/core/ActivationBuilder.hpp"
+#include "neurax/core/PoolingBuilder.hpp"
+#include "neurax/core/DenseBuilder.hpp"
+#include "neurax/hal/AcceleratorTypes.hpp"
+
+using namespace neurax;
+using namespace neurax::hal;
+using namespace neurax::image;
+using namespace neurax::core;
+
 /*
 Prepare the onnx.pb.cc and onnx.pb.h files using the protobuf compiler with the ONNX proto file:
         protoc --cpp_out=. onnx.proto
@@ -12,98 +29,9 @@ How to compile:
         g++ -std=c++17 onnx_parser.cpp onnx.pb.cc -lprotobuf -o onnx_parser
 */
 
-enum class InstructionType
+int parse_onnx_model(std::string model_path, NeuralNetworkBuilder &builder)
 {
-    CONV2D,
-    POOLING,
-    ACTIVATION,
-    ADD,
-    SUB,
-    CLIP,
-    CONCAT,
-    CONSTANT,
-    GATHER,
-    GEMM,
-    RESHAPE,
-    SHAPE,
-    UNSQUEEZE,
-    OTHER
-};
-
-enum class PoolingType
-{
-    MAX,
-    AVERAGE,
-    GLOBAL_AVERAGE,
-    UNKNOWN
-};
-
-enum class ActivationType
-{
-    RELU,
-    SIGMOID,
-    TANH,
-    UNKNOWN
-};
-
-struct LayerInstruction
-{
-    InstructionType type;
-    int index;
-    std::string name;
-    std::string op_type;
-
-    // Conv2D
-    std::vector<int> kernel_shape;
-    std::vector<int> strides;
-    std::vector<int> pads;
-    int group = 1;
-    std::vector<int> dilations;
-    float *weights = nullptr;
-    float *bias = nullptr;
-
-    // Pooling
-    PoolingType pool_type = PoolingType::UNKNOWN;
-
-    // Activation
-    ActivationType activation_type = ActivationType::UNKNOWN;
-
-    // Expanded fields
-    int input_channels = 0;
-    int output_channels = 0;
-    std::vector<int> input_shape;
-    std::vector<int> output_shape;
-    std::vector<std::string> inputs;
-    std::vector<std::string> outputs;
-
-    // Clip
-    float clip_min = 0.0f;
-    float clip_max = 0.0f;
-
-    // Concat
-    int concat_axis = 0;
-
-    // Gather
-    int gather_axis = 0;
-
-    // Gemm
-    float gemm_alpha = 1.0f;
-    float gemm_beta = 1.0f;
-    int gemm_transA = 0;
-    int gemm_transB = 0;
-
-    // Reshape
-    std::vector<int> reshape_shape;
-
-    // Unsqueeze
-    std::vector<int> unsqueeze_axes;
-
-    // Constant
-    std::vector<float> constant_value;
-};
-
-int parse_onnx_model(std::string model_path, std::vector<LayerInstruction> &layer_instructions)
-{
+    // Note: This parser assumes NHWC format for all tensor operations
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     std::ifstream input(model_path, std::ios::binary);
@@ -123,275 +51,297 @@ int parse_onnx_model(std::string model_path, std::vector<LayerInstruction> &laye
 
     const auto &graph = model.graph();
 
-    // Map initializers (weights/bias) by name
-    std::map<std::string, float *> weights_map;
+    // Map initializers (weights/bias) by name and their tensor data
+    std::map<std::string, std::pair<float *, std::vector<int64_t>>> weights_map;
     for (const auto &init : graph.initializer())
     {
         size_t num_elements = 1;
+        std::vector<int64_t> dims;
         for (int i = 0; i < init.dims_size(); ++i)
+        {
+            dims.push_back(init.dims(i));
             num_elements *= init.dims(i);
+        }
 
         float *data = new float[num_elements];
         memcpy(data, init.raw_data().data(), num_elements * sizeof(float));
-        weights_map[init.name()] = data;
+        weights_map[init.name()] = std::make_pair(data, dims);
     }
-
-    std::vector<LayerInstruction> instructions;
-    int layer_idx = 0;
 
     for (const auto &node : graph.node())
     {
-        LayerInstruction instr;
-        instr.index = layer_idx++;
-        instr.name = node.name();
-        instr.op_type = node.op_type();
+        try
+        {
+            if (node.op_type() == "Conv")
+            {
+                // Extract Conv2D parameters (only regular convolution supported, group = 1)
+                std::vector<int> kernel_shape;
+                std::vector<int> strides = {1, 1};
+                std::vector<int> pads = {0, 0, 0, 0};
+                int group = 1;
 
-        // Store input/output tensor names
-        for (const auto &in : node.input())
-            instr.inputs.push_back(in);
-        for (const auto &out : node.output())
-            instr.outputs.push_back(out);
-
-        if (node.op_type() == "Conv")
-        {
-            instr.type = InstructionType::CONV2D;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "kernel_shape")
-                    instr.kernel_shape.assign(attr.ints().begin(), attr.ints().end());
-                else if (attr.name() == "strides")
-                    instr.strides.assign(attr.ints().begin(), attr.ints().end());
-                else if (attr.name() == "pads")
-                    instr.pads.assign(attr.ints().begin(), attr.ints().end());
-                else if (attr.name() == "group")
-                    instr.group = attr.i();
-                else if (attr.name() == "dilations")
-                    instr.dilations.assign(attr.ints().begin(), attr.ints().end());
-            }
-            // Get weights and bias
-            instr.weights = weights_map.count(node.input(1)) ? weights_map[node.input(1)] : nullptr;
-            instr.bias = node.input_size() > 2 && weights_map.count(node.input(2)) ? weights_map[node.input(2)] : nullptr;
-
-            // Get input/output channels from weights initializer
-            auto it = graph.initializer().begin();
-            for (; it != graph.initializer().end(); ++it)
-            {
-                if (it->name() == node.input(1))
-                    break;
-            }
-            if (it != graph.initializer().end() && it->dims_size() >= 2)
-            {
-                instr.output_channels = it->dims(0);
-                instr.input_channels = it->dims(1) * instr.group;
-            }
-        }
-        else if (node.op_type() == "MaxPool")
-        {
-            instr.type = InstructionType::POOLING;
-            instr.pool_type = PoolingType::MAX;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "kernel_shape")
-                    instr.kernel_shape.assign(attr.ints().begin(), attr.ints().end());
-                else if (attr.name() == "strides")
-                    instr.strides.assign(attr.ints().begin(), attr.ints().end());
-                else if (attr.name() == "pads")
-                    instr.pads.assign(attr.ints().begin(), attr.ints().end());
-            }
-        }
-        else if (node.op_type() == "AveragePool")
-        {
-            instr.type = InstructionType::POOLING;
-            instr.pool_type = PoolingType::AVERAGE;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "kernel_shape")
-                    instr.kernel_shape.assign(attr.ints().begin(), attr.ints().end());
-                else if (attr.name() == "strides")
-                    instr.strides.assign(attr.ints().begin(), attr.ints().end());
-                else if (attr.name() == "pads")
-                    instr.pads.assign(attr.ints().begin(), attr.ints().end());
-            }
-        }
-        else if (node.op_type() == "Relu")
-        {
-            instr.type = InstructionType::ACTIVATION;
-            instr.activation_type = ActivationType::RELU;
-        }
-        else if (node.op_type() == "Sigmoid")
-        {
-            instr.type = InstructionType::ACTIVATION;
-            instr.activation_type = ActivationType::SIGMOID;
-        }
-        else if (node.op_type() == "Tanh")
-        {
-            instr.type = InstructionType::ACTIVATION;
-            instr.activation_type = ActivationType::TANH;
-        }
-        else if (node.op_type() == "Add")
-        {
-            instr.type = InstructionType::ADD;
-        }
-        else if (node.op_type() == "Sub")
-        {
-            instr.type = InstructionType::SUB;
-        }
-        else if (node.op_type() == "Clip")
-        {
-            instr.type = InstructionType::CLIP;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "min")
-                    instr.clip_min = attr.f();
-                else if (attr.name() == "max")
-                    instr.clip_max = attr.f();
-            }
-        }
-        else if (node.op_type() == "Concat")
-        {
-            instr.type = InstructionType::CONCAT;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "axis")
-                    instr.concat_axis = attr.i();
-            }
-        }
-        else if (node.op_type() == "Gather")
-        {
-            instr.type = InstructionType::GATHER;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "axis")
-                    instr.gather_axis = attr.i();
-            }
-        }
-        else if (node.op_type() == "Gemm")
-        {
-            instr.type = InstructionType::GEMM;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "alpha")
-                    instr.gemm_alpha = attr.f();
-                else if (attr.name() == "beta")
-                    instr.gemm_beta = attr.f();
-                else if (attr.name() == "transA")
-                    instr.gemm_transA = attr.i();
-                else if (attr.name() == "transB")
-                    instr.gemm_transB = attr.i();
-            }
-        }
-        else if (node.op_type() == "Reshape")
-        {
-            instr.type = InstructionType::RESHAPE;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "shape")
-                    instr.reshape_shape.assign(attr.ints().begin(), attr.ints().end());
-            }
-        }
-        else if (node.op_type() == "Shape")
-        {
-            instr.type = InstructionType::SHAPE;
-        }
-        else if (node.op_type() == "Unsqueeze")
-        {
-            instr.type = InstructionType::UNSQUEEZE;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "axes")
-                    instr.unsqueeze_axes.assign(attr.ints().begin(), attr.ints().end());
-            }
-        }
-        else if (node.op_type() == "Constant")
-        {
-            instr.type = InstructionType::CONSTANT;
-            for (const auto &attr : node.attribute())
-            {
-                if (attr.name() == "value" && attr.has_t())
+                for (const auto &attr : node.attribute())
                 {
-                    const auto &tensor = attr.t();
-                    if (tensor.data_type() == onnx::TensorProto_DataType_FLOAT)
+                    if (attr.name() == "kernel_shape")
+                        kernel_shape.assign(attr.ints().begin(), attr.ints().end());
+                    else if (attr.name() == "strides")
+                        strides.assign(attr.ints().begin(), attr.ints().end());
+                    else if (attr.name() == "pads")
+                        pads.assign(attr.ints().begin(), attr.ints().end());
+                    else if (attr.name() == "group")
                     {
-                        size_t num_elements = 1;
-                        for (int i = 0; i < tensor.dims_size(); ++i)
-                            num_elements *= tensor.dims(i);
-                        instr.constant_value.resize(num_elements);
-                        memcpy(instr.constant_value.data(), tensor.raw_data().data(), num_elements * sizeof(float));
+                        group = attr.i();
+                        // if (group != 1)
+                        // {
+                        //     std::cerr << "Warning: Grouped convolution (group=" << group << ") not supported, skipping layer: " << node.name() << std::endl;
+                        //     continue; // Skip this layer
+                        // }
                     }
                 }
-            }
-        }
-        else
-        {
-            instr.type = InstructionType::OTHER;
-        }
 
-        // Optionally: Parse input/output shapes from value_info
-        for (const auto &value : graph.value_info())
-        {
-            if (!instr.inputs.empty() && value.name() == instr.inputs[0])
-            {
-                for (const auto &dim : value.type().tensor_type().shape().dim())
-                    instr.input_shape.push_back(dim.dim_value());
+                // Get weights and bias tensors
+                if (node.input_size() > 1 && weights_map.count(node.input(1)))
+                {
+                    auto &weight_data = weights_map[node.input(1)];
+                    auto &weight_dims = weight_data.second;
+
+                    // Create weight tensor (using NHWC format: [height, width, input_channels, output_channels])
+                    Shape weight_shape({(size_t)weight_dims[2], (size_t)weight_dims[3],
+                                        (size_t)weight_dims[1], (size_t)weight_dims[0]});
+                    tensor::Tensor weights(weight_shape, weight_data.first, DataType::FLOAT32);
+
+                    tensor::Tensor bias;
+                    if (node.input_size() > 2 && weights_map.count(node.input(2)))
+                    {
+                        auto &bias_data = weights_map[node.input(2)];
+                        Shape bias_shape({(size_t)bias_data.second[0]});
+                        bias = tensor::Tensor(bias_shape, bias_data.first, DataType::FLOAT32);
+                    }
+                    else
+                    {
+                        // Create zero bias if not provided
+                        Shape bias_shape({(size_t)weight_dims[0]});
+                        float *zero_bias = new float[weight_dims[0]]();
+                        bias = tensor::Tensor(bias_shape, zero_bias, DataType::FLOAT32);
+                    }
+
+                    // Build Conv2D layer (regular convolution only)
+                    auto layer = LayerBuilder::conv2d()
+                                     .inputChanels(weight_dims[1] * group)
+                                     .outputChanels(weight_dims[0])
+                                     .kernelSize(kernel_shape.empty() ? 3 : kernel_shape[0])
+                                     .stride(strides.empty() ? 1 : strides[0])
+                                     .padding(pads.empty() ? 0 : pads[0])
+                                     .addWeights(weights, bias)
+                                     .build();
+
+                    builder.addLayer(layer);
+                }
             }
-            if (!instr.outputs.empty() && value.name() == instr.outputs[0])
+            else if (node.op_type() == "MaxPool")
             {
-                for (const auto &dim : value.type().tensor_type().shape().dim())
-                    instr.output_shape.push_back(dim.dim_value());
+                // Extract MaxPool parameters
+                std::vector<int> kernel_shape = {2, 2};
+                std::vector<int> strides = {2, 2};
+
+                for (const auto &attr : node.attribute())
+                {
+                    if (attr.name() == "kernel_shape")
+                        kernel_shape.assign(attr.ints().begin(), attr.ints().end());
+                    else if (attr.name() == "strides")
+                        strides.assign(attr.ints().begin(), attr.ints().end());
+                }
+
+                auto layer = LayerBuilder::pool()
+                                 .poolSize(kernel_shape.empty() ? 2 : kernel_shape[0])
+                                 .stride(strides.empty() ? 2 : strides[0])
+                                 .type(neurax::hal::PoolingType::MAX)
+                                 .build();
+
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "AveragePool")
+            {
+                // Extract AveragePool parameters
+                std::vector<int> kernel_shape = {2, 2};
+                std::vector<int> strides = {2, 2};
+
+                for (const auto &attr : node.attribute())
+                {
+                    if (attr.name() == "kernel_shape")
+                        kernel_shape.assign(attr.ints().begin(), attr.ints().end());
+                    else if (attr.name() == "strides")
+                        strides.assign(attr.ints().begin(), attr.ints().end());
+                }
+
+                auto layer = LayerBuilder::pool()
+                                 .poolSize(kernel_shape.empty() ? 2 : kernel_shape[0])
+                                 .stride(strides.empty() ? 2 : strides[0])
+                                 .type(neurax::hal::PoolingType::AVERAGE)
+                                 .build();
+
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "Relu")
+            {
+                auto layer = LayerBuilder::activation()
+                                 .type(neurax::hal::ActivationType::RELU)
+                                 .build();
+
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "Sigmoid")
+            {
+                auto layer = LayerBuilder::activation()
+                                 .type(neurax::hal::ActivationType::SIGMOID)
+                                 .build();
+
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "Tanh")
+            {
+                auto layer = LayerBuilder::activation()
+                                 .type(neurax::hal::ActivationType::TANH)
+                                 .build();
+
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "Softmax")
+            {
+                auto layer = LayerBuilder::activation()
+                                 .type(neurax::hal::ActivationType::SOFTMAX)
+                                 .build();
+
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "Gemm")
+            {
+                // Gemm is typically used for fully connected layers
+                if (node.input_size() > 1 && weights_map.count(node.input(1)))
+                {
+                    auto &weight_data = weights_map[node.input(1)];
+                    auto &weight_dims = weight_data.second;
+
+                    // Create weight tensor for dense layer (ONNX format: [input_features, output_features])
+                    Shape weight_shape({(size_t)weight_dims[0], (size_t)weight_dims[1]});
+                    tensor::Tensor weights(weight_shape, weight_data.first, DataType::FLOAT32);
+
+                    tensor::Tensor bias;
+                    if (node.input_size() > 2 && weights_map.count(node.input(2)))
+                    {
+                        auto &bias_data = weights_map[node.input(2)];
+                        Shape bias_shape({(size_t)bias_data.second[0]});
+                        bias = tensor::Tensor(bias_shape, bias_data.first, DataType::FLOAT32);
+                    }
+                    else
+                    {
+                        // Create zero bias if not provided
+                        Shape bias_shape({(size_t)weight_dims[0]});
+                        float *zero_bias = new float[weight_dims[0]]();
+                        bias = tensor::Tensor(bias_shape, zero_bias, DataType::FLOAT32);
+                    }
+
+                    auto layer = LayerBuilder::dense()
+                                     .units(weight_dims[0])
+                                     .addWeights(weights, bias)
+                                     .build();
+
+                    builder.addLayer(layer);
+                }
+            }
+            else if (node.op_type() == "Flatten" || node.op_type() == "Reshape")
+            {
+                // Add flatten layer for reshape operations that flatten the input
+                // Note: Assumes NHWC format for proper flattening order
+                auto layer = LayerBuilder::flatten().build();
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "Dropout")
+            {
+                // Skip dropout layers during inference - they're pass-through
+                std::cout << "Skipping Dropout layer (not needed for inference): " << node.name() << std::endl;
+                continue;
+            }
+            else if (node.op_type() == "BatchNormalization")
+            {
+                float epsilon = 1e-5f; // default
+                float momentum = 0.1f; // default
+
+                // Extract attributes
+                for (const auto &attr : node.attribute())
+                {
+                    if (attr.name() == "epsilon")
+                        epsilon = attr.f();
+                    else if (attr.name() == "momentum")
+                        momentum = attr.f();
+                }
+
+                // Build BatchNorm layer with your parameters
+                auto layer = LayerBuilder::batchnorm()
+                                 .epsilon(epsilon)
+                                 .momentum(momentum)
+                                 .build();
+
+                builder.addLayer(layer);
+            }
+            else if (node.op_type() == "Dropout")
+            {
+                // During inference, dropout is just a pass-through (identity operation)
+                std::cout << "Skipping Dropout layer (pass-through during inference): "
+                          << node.name() << std::endl;
+                // No layer needed - input flows directly to next layer
+            }
+            else
+            {
+                std::cout << "Skipping unsupported layer type: " << node.op_type()
+                          << " (name: " << node.name() << ")" << std::endl;
             }
         }
-
-        instructions.push_back(instr);
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error processing node " << node.name() << " (" << node.op_type()
+                      << "): " << e.what() << std::endl;
+            // Continue processing other nodes
+        }
     }
 
-    layer_instructions = instructions;
+    // Clean up allocated memory
+    for (auto &pair : weights_map)
+    {
+        delete[] pair.second.first;
+    }
 
     google::protobuf::ShutdownProtobufLibrary();
-
     return 0;
 }
 
 int main()
 {
-    std::vector<LayerInstruction> instructions;
-    std::string model_path = "mobilenetv2-10.onnx"; // specify your model path here
-    if (parse_onnx_model(model_path, instructions) != 0)
+    NeuralNetworkBuilder builder;
+    std::string model_path = "bvlcalexnet-12.onnx"; // specify your model path here
+
+    std::cout << "Parsing ONNX model: " << model_path << std::endl;
+
+    if (parse_onnx_model(model_path, builder) != 0)
     {
         std::cerr << "Failed to parse ONNX model." << std::endl;
         return 1;
     }
     else
     {
-        // Example: print summary
-        for (const auto &instr : instructions)
-        {
-            std::cout << "Layer " << instr.index << ": " << instr.name << " (" << instr.op_type << ")\n";
-            std::cout << "  Inputs: ";
-            for (const auto &in : instr.inputs)
-                std::cout << in << " ";
-            std::cout << "\n  Outputs: ";
-            for (const auto &out : instr.outputs)
-                std::cout << out << " ";
-            std::cout << "\n  Input shape: ";
-            for (const auto &s : instr.input_shape)
-                std::cout << s << " ";
-            std::cout << "\n  Output shape: ";
-            for (const auto &s : instr.output_shape)
-                std::cout << s << " ";
-            std::cout << "\n  Input channels: " << instr.input_channels << " Output channels: " << instr.output_channels << "\n";
-        }
+        std::cout << "Successfully parsed ONNX model and built neural network." << std::endl;
 
-        std::cout << instructions[0].kernel_shape[0] << std::endl; // Example access to kernel shape
-        for (const auto &s : instructions[0].strides)
-            std::cout << s << " "; // Example access to strides
-        std::cout << std::endl;
-        for (const auto &p : instructions[0].pads)
-            std::cout << p << " "; // Example access to pads
-        std::cout << std::endl;
-        std::cout << instructions[0].group << std::endl; // Example access to group
-        for (const auto &d : instructions[0].dilations)
-            std::cout << d << " "; // Example access to dilations
-        std::cout << std::endl;
+        // Build the final network
+        try
+        {
+            auto network = builder.build();
+            std::cout << "Neural network successfully built!" << std::endl;
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error building network: " << e.what() << std::endl;
+            return 1;
+        }
     }
 
     return 0;
