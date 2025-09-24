@@ -1,20 +1,38 @@
 
-
 #include "neurax/core/LayerBuilder.hpp"
-#include "layers/Conv2dLayer.hpp"
+#include "neurax/core/Conv2dBuilder.hpp"
+#include "neurax/core/PoolingBuilder.hpp"
+#include "neurax/core/ActivationBuilder.hpp"
+#include "neurax/core/DenseBuilder.hpp"
+#include "neurax/core/FlattenBuilder.hpp"
 
 namespace neurax {
 namespace core {
 
+Conv2dBuilder LayerBuilder::conv2d(){
+    return Conv2dBuilder();
+}
 
-LayerBuilder& LayerBuilder::conv2d(){
-    layer_ = new Conv2dLayer(4,4,3,1,1);
-    return *this;
+PoolingBuilder LayerBuilder::pool(){
+    return PoolingBuilder();
 }
-LayerBuilder& LayerBuilder::addWeights(const Tensor& weights, const Tensor& bias) {
-    layer_->loadWeights(weights, bias);
-    return *this;
+
+ActivationBuilder LayerBuilder::activation(){
+    return ActivationBuilder();
 }
+
+DenseBuilder LayerBuilder::dense(){
+    return DenseBuilder();
+}
+
+FlattenBuilder LayerBuilder::flatten(){
+    return FlattenBuilder();
+}
+
+BatchNormBuilder LayerBuilder::batchnorm(){
+    return BatchNormBuilder();
+}
+
 
 } // namespace core
 } // namespace neurax

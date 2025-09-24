@@ -173,5 +173,18 @@ Tensor Tensor::empty(const Shape& shape, DataType dtype) {
     return tensor;
 }
 
+Tensor Tensor::reshape(const Shape& new_shape) const {
+    if (new_shape.numel() != numel()) {
+        throw TensorException("Reshape numel mismatch");
+    }
+
+    Tensor out;
+    out.shape_ = new_shape;
+    out.dtype_ = dtype_;
+    // Share the same underlying data buffer to avoid copy
+    out.data_ = data_;
+    return out;
+}
+
 } // namespace tensor
 } // namespace neurax

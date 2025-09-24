@@ -122,6 +122,23 @@ public:
                         const Tensor& weights,
                         const Tensor& bias) = 0;
 
+    /**
+     * @brief Perform batch normalization
+     * @param input Input tensor (NHWC or 2D)
+     * @param gamma Scale parameter (per-channel)
+     * @param beta Shift parameter (per-channel)
+     * @param epsilon Small constant for numerical stability
+     * @param momentum Momentum for running statistics (optional)
+     * @return Output tensor after batch normalization
+     */
+    virtual Tensor batchnorm(const Tensor& input,
+                             const Tensor& gamma,
+                             const Tensor& beta,
+                             float epsilon,
+                             float momentum) {
+        throw std::runtime_error("batchnorm not implemented for this accelerator");
+    }
+
     // Configuration and Control
 
     /**

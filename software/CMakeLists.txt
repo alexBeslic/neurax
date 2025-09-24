@@ -91,10 +91,21 @@ target_link_libraries(neurax_hal
 # Core library
 # -------------------------
 add_library(neurax_core STATIC
-    src/core/network/NeuralNetwork.cpp
     src/core/layers/Conv2dLayer.cpp
+    src/core/layers/PoolingLayer.cpp
+    src/core/layers/ActivationLayer.cpp
+    src/core/layers/DenseLayer.cpp
+    src/core/layers/FlattenLayer.cpp
+    src/core/layers/BatchNormLayer.cpp
+    src/core/network/NeuralNetwork.cpp
     src/core/NeuralNetworkBuilder.cpp
     src/core/LayerBuilder.cpp
+    src/core/Conv2dBuilder.cpp
+    src/core/PoolingBuilder.cpp
+    src/core/ActivationBuilder.cpp
+    src/core/DenseBuilder.cpp
+    src/core/FlattenBuilder.cpp
+    src/core/BatchNormBuilder.cpp
 )
 
 target_include_directories(neurax_core PUBLIC
@@ -121,6 +132,8 @@ target_link_libraries(neurax_image
     PUBLIC neurax_tensor
 )
 
+add_subdirectory(3pp/cnpy)
+add_subdirectory(3pp/json)
 
 # -------------------------
 # Installation rules
@@ -135,9 +148,9 @@ install(TARGETS neurax_hal neurax_core neurax_image neurax_tensor neurax_bsp
 # -------------------------
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in 
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in
                    ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-    
+
     add_custom_target(docs
         ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

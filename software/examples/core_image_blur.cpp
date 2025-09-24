@@ -5,6 +5,7 @@
 #include "neurax/image/ImageProcessor.hpp"
 #include "neurax/core/NeuralNetworkBuilder.hpp"
 #include "neurax/core/LayerBuilder.hpp"
+#include "neurax/core/Conv2dBuilder.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -15,11 +16,10 @@ using namespace neurax::hal;
 using namespace neurax::image;
 using namespace neurax::core;
 
-Tensor create_gaussian_blur_kernel()
+Tensor create_gaussian_blur_kernel(unsigned long size = 50)
 {
     size_t input_channels = 4;   // RGBA
     size_t output_channels = 4;  // RGBA
-    unsigned long size = 3;
     Tensor kernel({size, size, input_channels, output_channels}, DataType::FLOAT32);
     auto data = kernel.data_ptr<float>();
 
@@ -65,20 +65,34 @@ Tensor create_gaussian_blur_kernel()
     return kernel;
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    unsigned long kernel_size = 3;
+    if (argc < 2) {
+        kernel_size = 3;
+    }
+    else {
+        kernel_size = std::stoul(argv[1]);
+        if (kernel_size % 2 == 0) {
+            std::cerr << "Kernel size must be odd, using " << kernel_size - 1 << " instead." << std::endl;
+            kernel_size -= 1;
+        }
+    }
     ImageProcessor processor;
-    ConvolutionConfig c(3,1,1,4,4); // 3x3 kernel, stride 1, padding 1, 4 in/out channels
     processor.load_bmp("examples/data/images/Lenna.bmp");
     auto input_tensor = processor.to_tensor();
-    auto blur_kernel = create_gaussian_blur_kernel();
-    LayerBuilder layerBuilder;
+    auto blur_kernel = create_gaussian_blur_kernel(kernel_size);
     NeuralNetworkBuilder builder;
-    layerBuilder.conv2d()
-                .addWeights(blur_kernel,Tensor::zeros({1,3,3,1}));
+    auto layer = LayerBuilder::conv2d();
+    layer.kernelSize(kernel_size)
+         .stride(1)
+         .padding(kernel_size/2)
+         .inputChanels(4)
+         .outputChanels(4)
+         .addWeights(blur_kernel,Tensor());
 
     builder.useAccelerator(AcceleratorType::CPU_OPTIMIZED)
-            .addLayer(layerBuilder.build());
+            .addLayer(layer.build());
     auto network = builder.build();
 
     auto start_core = std::chrono::high_resolution_clock::now();

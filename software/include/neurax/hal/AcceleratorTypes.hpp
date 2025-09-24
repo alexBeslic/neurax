@@ -34,6 +34,7 @@ enum class ActivationType {
     RELU,
     TANH,
     SIGMOID,
+    SOFTMAX,
     LINEAR
 };
 
@@ -75,15 +76,14 @@ struct PoolingConfig {
     uint32_t pool_size;     // Primary name for pool kernel size
     uint32_t stride;
     PoolingType type;
-    uint32_t kernel_size;   // Alias for pool_size for compatibility
 
     // Default constructor
     PoolingConfig()
-        : pool_size(2), stride(2), type(PoolingType::MAX), kernel_size(2) {}
+        : pool_size(2), stride(2), type(PoolingType::MAX) {}
 
     // Constructor with basic parameters
     PoolingConfig(uint32_t ps, uint32_t s, PoolingType t)
-        : pool_size(ps), stride(s), type(t), kernel_size(ps) {}
+        : pool_size(ps), stride(s), type(t) {}
 };
 
 /**
