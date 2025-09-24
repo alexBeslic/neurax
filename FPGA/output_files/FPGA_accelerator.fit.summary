@@ -1,17 +1,17 @@
-Fitter Status : Successful - Wed Sep 17 20:01:42 2025
+Fitter Status : Successful - Wed Sep 24 22:43:50 2025
 Quartus Prime Version : 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 Revision Name : FPGA_accelerator
 Top-level Entity Name : FPGA_accelerator
 Family : Cyclone V
 Device : 5CSEMA5F31C6
 Timing Models : Final
-Logic utilization (in ALMs) : 825 / 32,070 ( 3 % )
-Total registers : 1121
-Total pins : 77 / 457 ( 17 % )
+Logic utilization (in ALMs) : 2,037 / 32,070 ( 6 % )
+Total registers : 353
+Total pins : 285 / 457 ( 62 % )
 Total virtual pins : 0
 Total block memory bits : 0 / 4,065,280 ( 0 % )
 Total RAM Blocks : 0 / 397 ( 0 % )
-Total DSP Blocks : 0 / 87 ( 0 % )
+Total DSP Blocks : 1 / 87 ( 1 % )
 Total HSSI RX PCSs : 0
 Total HSSI PMA RX Deserializers : 0
 Total HSSI TX PCSs : 0
