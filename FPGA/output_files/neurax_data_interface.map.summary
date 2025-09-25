@@ -1,11 +1,11 @@
-Analysis & Synthesis Status : Successful - Mon Sep 22 14:47:08 2025
+Analysis & Synthesis Status : Successful - Thu Sep 25 13:43:40 2025
 Quartus Prime Version : 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 Revision Name : neurax_data_interface
 Top-level Entity Name : neurax_data_interface
 Family : Cyclone V
 Logic utilization (in ALMs) : N/A
-Total registers : 240058
-Total pins : 74
+Total registers : 112
+Total pins : 171
 Total virtual pins : 0
 Total block memory bits : 0
 Total DSP Blocks : 0

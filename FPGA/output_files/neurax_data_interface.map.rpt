@@ -1,5 +1,5 @@
 Analysis & Synthesis report for neurax_data_interface
-Mon Sep 22 14:47:14 2025
+Thu Sep 25 13:43:40 2025
 Quartus Prime Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 
 
@@ -13,14 +13,13 @@ Quartus Prime Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
   5. Analysis & Synthesis Source Files Read
   6. Analysis & Synthesis Resource Usage Summary
   7. Analysis & Synthesis Resource Utilization by Entity
-  8. Registers Removed During Synthesis
-  9. General Register Statistics
- 10. Inverted Register Statistics
- 11. Multiplexer Restructuring Statistics (Restructuring Performed)
- 12. Parameter Settings for User Entity Instance: Top-level Entity: |neurax_data_interface
- 13. Post-Synthesis Netlist Statistics for Top Partition
- 14. Elapsed Time Per Partition
- 15. Analysis & Synthesis Messages
+  8. General Register Statistics
+  9. Inverted Register Statistics
+ 10. Multiplexer Restructuring Statistics (Restructuring Performed)
+ 11. Parameter Settings for User Entity Instance: Top-level Entity: |neurax_data_interface
+ 12. Post-Synthesis Netlist Statistics for Top Partition
+ 13. Elapsed Time Per Partition
+ 14. Analysis & Synthesis Messages
 
 
 
@@ -47,14 +46,14 @@ on the Quartus Prime software download page.
 +-----------------------------------------------------------------------------------+
 ; Analysis & Synthesis Summary                                                      ;
 +---------------------------------+-------------------------------------------------+
-; Analysis & Synthesis Status     ; Successful - Mon Sep 22 14:47:08 2025           ;
+; Analysis & Synthesis Status     ; Successful - Thu Sep 25 13:43:40 2025           ;
 ; Quartus Prime Version           ; 24.1std.0 Build 1077 03/04/2025 SC Lite Edition ;
 ; Revision Name                   ; neurax_data_interface                           ;
 ; Top-level Entity Name           ; neurax_data_interface                           ;
 ; Family                          ; Cyclone V                                       ;
 ; Logic utilization (in ALMs)     ; N/A                                             ;
-; Total registers                 ; 240058                                          ;
-; Total pins                      ; 74                                              ;
+; Total registers                 ; 112                                             ;
+; Total pins                      ; 171                                             ;
 ; Total virtual pins              ; 0                                               ;
 ; Total block memory bits         ; 0                                               ;
 ; Total DSP Blocks                ; 0                                               ;
@@ -162,22 +161,12 @@ on the Quartus Prime software download page.
 ; Number detected on machine ; 12          ;
 ; Maximum allowed            ; 12          ;
 ;                            ;             ;
-; Average used               ; 1.54        ;
+; Average used               ; 1.00        ;
 ; Maximum used               ; 12          ;
 ;                            ;             ;
 ; Usage by Processor         ; % Time Used ;
 ;     Processor 1            ; 100.0%      ;
-;     Processor 2            ;  15.2%      ;
-;     Processor 3            ;  15.2%      ;
-;     Processor 4            ;   3.3%      ;
-;     Processor 5            ;   2.7%      ;
-;     Processor 6            ;   2.6%      ;
-;     Processor 7            ;   2.6%      ;
-;     Processor 8            ;   2.6%      ;
-;     Processor 9            ;   2.5%      ;
-;     Processor 10           ;   2.5%      ;
-;     Processor 11           ;   2.5%      ;
-;     Processor 12           ;   2.4%      ;
+;     Processors 2-12        ;   0.0%      ;
 +----------------------------+-------------+
 
 
@@ -195,25 +184,25 @@ on the Quartus Prime software download page.
 +---------------------------------------------+-------------+
 ; Resource                                    ; Usage       ;
 +---------------------------------------------+-------------+
-; Estimate of Logic utilization (ALMs needed) ; 162268      ;
+; Estimate of Logic utilization (ALMs needed) ; 65          ;
 ;                                             ;             ;
-; Combinational ALUT usage for logic          ; 90015       ;
-;     -- 7 input functions                    ; 864         ;
-;     -- 6 input functions                    ; 79579       ;
+; Combinational ALUT usage for logic          ; 67          ;
+;     -- 7 input functions                    ; 0           ;
+;     -- 6 input functions                    ; 12          ;
 ;     -- 5 input functions                    ; 5           ;
-;     -- 4 input functions                    ; 9523        ;
-;     -- <=3 input functions                  ; 44          ;
+;     -- 4 input functions                    ; 3           ;
+;     -- <=3 input functions                  ; 47          ;
 ;                                             ;             ;
-; Dedicated logic registers                   ; 240058      ;
+; Dedicated logic registers                   ; 112         ;
 ;                                             ;             ;
-; I/O pins                                    ; 74          ;
+; I/O pins                                    ; 171         ;
 ;                                             ;             ;
 ; Total DSP Blocks                            ; 0           ;
 ;                                             ;             ;
 ; Maximum fan-out node                        ; clk_i~input ;
-; Maximum fan-out                             ; 240058      ;
-; Total fan-out                               ; 1482081     ;
-; Average fan-out                             ; 4.49        ;
+; Maximum fan-out                             ; 112         ;
+; Total fan-out                               ; 878         ;
+; Average fan-out                             ; 1.69        ;
 +---------------------------------------------+-------------+
 
 
@@ -222,42 +211,24 @@ on the Quartus Prime software download page.
 +----------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+------------------------+-----------------------+--------------+
 ; Compilation Hierarchy Node ; Combinational ALUTs ; Dedicated Logic Registers ; Block Memory Bits ; DSP Blocks ; Pins ; Virtual Pins ; Full Hierarchy Name    ; Entity Name           ; Library Name ;
 +----------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+------------------------+-----------------------+--------------+
-; |neurax_data_interface     ; 90015 (90015)       ; 240058 (240058)           ; 0                 ; 0          ; 74   ; 0            ; |neurax_data_interface ; neurax_data_interface ; work         ;
+; |neurax_data_interface     ; 67 (67)             ; 112 (112)                 ; 0                 ; 0          ; 171  ; 0            ; |neurax_data_interface ; neurax_data_interface ; work         ;
 +----------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+------------------------+-----------------------+--------------+
 Note: For table entries with two numbers listed, the numbers in parentheses indicate the number of resources of the given type used by the specific entity alone. The numbers listed outside of parentheses indicate the total resources of the given type used by the specific entity and all of its sub-entities in the hierarchy.
 
 
-+--------------------------------------------------------------------------------+
-; Registers Removed During Synthesis                                             ;
-+---------------------------------------+----------------------------------------+
-; Register name                         ; Reason for Removal                     ;
-+---------------------------------------+----------------------------------------+
-; aso_data_o[31]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_data_o[30]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_data_o[29]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_data_o[28]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_data_o[27]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_data_o[26]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_data_o[25]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_data_o[24]~reg0                   ; Stuck at GND due to stuck port data_in ;
-; aso_error_o~reg0                      ; Stuck at GND due to stuck port data_in ;
-; Total Number of Removed Registers = 9 ;                                        ;
-+---------------------------------------+----------------------------------------+
-
-
-+-------------------------------------------------------+
-; General Register Statistics                           ;
-+----------------------------------------------+--------+
-; Statistic                                    ; Value  ;
-+----------------------------------------------+--------+
-; Total registers                              ; 240058 ;
-; Number of registers using Synchronous Clear  ; 28     ;
-; Number of registers using Synchronous Load   ; 0      ;
-; Number of registers using Asynchronous Clear ; 240058 ;
-; Number of registers using Asynchronous Load  ; 0      ;
-; Number of registers using Clock Enable       ; 240052 ;
-; Number of registers using Preset             ; 0      ;
-+----------------------------------------------+--------+
++------------------------------------------------------+
+; General Register Statistics                          ;
++----------------------------------------------+-------+
+; Statistic                                    ; Value ;
++----------------------------------------------+-------+
+; Total registers                              ; 112   ;
+; Number of registers using Synchronous Clear  ; 32    ;
+; Number of registers using Synchronous Load   ; 0     ;
+; Number of registers using Asynchronous Clear ; 112   ;
+; Number of registers using Asynchronous Load  ; 0     ;
+; Number of registers using Clock Enable       ; 32    ;
+; Number of registers using Preset             ; 0     ;
++----------------------------------------------+-------+
 
 
 +--------------------------------------------------+
@@ -265,20 +236,19 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +----------------------------------------+---------+
 ; Inverted Register                      ; Fan out ;
 +----------------------------------------+---------+
-; ready_reg                              ; 486     ;
+; ready_reg                              ; 5       ;
 ; Total number of inverted registers = 1 ;         ;
 +----------------------------------------+---------+
 
 
-+----------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Multiplexer Restructuring Statistics (Restructuring Performed)                                                                                           ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+--------------------------------------------+
-; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output                 ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+--------------------------------------------+
-; 10000:1            ; 24 bits   ; 159984 LEs    ; 159984 LEs           ; 0 LEs                  ; Yes        ; |neurax_data_interface|aso_data_o[23]~reg0 ;
-; 4:1                ; 14 bits   ; 28 LEs        ; 0 LEs                ; 28 LEs                 ; Yes        ; |neurax_data_interface|read_index[13]      ;
-; 5:1                ; 14 bits   ; 42 LEs        ; 0 LEs                ; 42 LEs                 ; Yes        ; |neurax_data_interface|write_index[12]     ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+--------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------+
+; Multiplexer Restructuring Statistics (Restructuring Performed)                                                                                      ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------------+
+; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output            ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------------+
+; 4:1                ; 16 bits   ; 32 LEs        ; 0 LEs                ; 32 LEs                 ; Yes        ; |neurax_data_interface|read_index[0]  ;
+; 5:1                ; 16 bits   ; 48 LEs        ; 0 LEs                ; 48 LEs                 ; Yes        ; |neurax_data_interface|write_index[3] ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------------+
 
 
 +---------------------------------------------------------------------------------------+
@@ -286,9 +256,9 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +----------------+-------+--------------------------------------------------------------+
 ; Parameter Name ; Value ; Type                                                         ;
 +----------------+-------+--------------------------------------------------------------+
-; g_PIXEL_WIDTH  ; 24    ; Signed Integer                                               ;
-; g_FB_WIDTH     ; 100   ; Signed Integer                                               ;
-; g_FB_HEIGHT    ; 100   ; Signed Integer                                               ;
+; g_DATA_WIDTH   ; 32    ; Signed Integer                                               ;
+; g_ADDR_WIDTH   ; 16    ; Signed Integer                                               ;
+; g_RAM_SIZE     ; 10000 ; Signed Integer                                               ;
 +----------------+-------+--------------------------------------------------------------+
 Note: In order to hide this table in the UI and the text report file, please set the "Show Parameter Settings in Synthesis Report" option in "Analysis and Synthesis Settings -> More Settings" to "Off".
 
@@ -298,28 +268,24 @@ Note: In order to hide this table in the UI and the text report file, please set
 +-----------------------+-----------------------------+
 ; Type                  ; Count                       ;
 +-----------------------+-----------------------------+
-; arriav_ff             ; 240058                      ;
-;     CLR               ; 6                           ;
-;     ENA CLR           ; 240024                      ;
-;     ENA CLR SCLR      ; 28                          ;
-; arriav_lcell_comb     ; 90017                       ;
-;     arith             ; 30                          ;
+; arriav_ff             ; 112                         ;
+;     CLR               ; 80                          ;
+;     ENA CLR SCLR      ; 32                          ;
+; arriav_lcell_comb     ; 68                          ;
+;     arith             ; 34                          ;
 ;         0 data inputs ; 2                           ;
-;         1 data inputs ; 28                          ;
-;     extend            ; 864                         ;
-;         7 data inputs ; 864                         ;
-;     normal            ; 89123                       ;
-;         0 data inputs ; 1                           ;
+;         1 data inputs ; 32                          ;
+;     normal            ; 34                          ;
 ;         1 data inputs ; 1                           ;
-;         2 data inputs ; 11                          ;
-;         3 data inputs ; 3                           ;
-;         4 data inputs ; 9523                        ;
+;         2 data inputs ; 6                           ;
+;         3 data inputs ; 7                           ;
+;         4 data inputs ; 3                           ;
 ;         5 data inputs ; 5                           ;
-;         6 data inputs ; 79579                       ;
-; boundary_port         ; 74                          ;
+;         6 data inputs ; 12                          ;
+; boundary_port         ; 171                         ;
 ;                       ;                             ;
-; Max LUT depth         ; 8.00                        ;
-; Average LUT depth     ; 6.67                        ;
+; Max LUT depth         ; 4.80                        ;
+; Average LUT depth     ; 1.87                        ;
 +-----------------------+-----------------------------+
 
 
@@ -328,7 +294,7 @@ Note: In order to hide this table in the UI and the text report file, please set
 +----------------+--------------+
 ; Partition Name ; Elapsed Time ;
 +----------------+--------------+
-; Top            ; 00:08:03     ;
+; Top            ; 00:00:00     ;
 +----------------+--------------+
 
 
@@ -338,46 +304,27 @@ Note: In order to hide this table in the UI and the text report file, please set
 Info: *******************************************************************
 Info: Running Quartus Prime Analysis & Synthesis
     Info: Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
-    Info: Processing started: Mon Sep 22 14:37:19 2025
+    Info: Processing started: Thu Sep 25 13:43:32 2025
 Info: Command: quartus_map --read_settings_files=on --write_settings_files=off neurax_data_interface -c neurax_data_interface
 Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
 Info (20030): Parallel compilation is enabled and will use 12 of the 12 processors detected
 Info (12021): Found 2 design units, including 1 entities, in source file neurax_data_interface.vhd
-    Info (12022): Found design unit 1: neurax_data_interface-arch File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 34
+    Info (12022): Found design unit 1: neurax_data_interface-arch File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 41
     Info (12023): Found entity 1: neurax_data_interface File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 8
 Info (12127): Elaborating entity "neurax_data_interface" for the top level hierarchy
-Warning (10036): Verilog HDL or VHDL warning at neurax_data_interface.vhd(47): object "write_complete" assigned a value but never read File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 47
-Warning (10036): Verilog HDL or VHDL warning at neurax_data_interface.vhd(53): object "buffer_empty" assigned a value but never read File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 53
-Warning (13024): Output pins are stuck at VCC or GND
-    Warning (13410): Pin "aso_data_o[24]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_data_o[25]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_data_o[26]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_data_o[27]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_data_o[28]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_data_o[29]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_data_o[30]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_data_o[31]" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 114
-    Warning (13410): Pin "aso_error_o" is stuck at GND File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 30
+Warning (10036): Verilog HDL or VHDL warning at neurax_data_interface.vhd(46): object "write_complete" assigned a value but never read File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 46
+Warning (10036): Verilog HDL or VHDL warning at neurax_data_interface.vhd(52): object "buffer_empty" assigned a value but never read File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 52
 Info (286030): Timing-Driven Synthesis is running
 Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
     Info (16011): Adding 0 node(s), including 0 DDIO, 0 PLL, 0 transceiver and 0 LCELL
-Warning (21074): Design contains 8 input pin(s) that do not drive logic
-    Warning (15610): No output dependent on input pin "asi_data_i[24]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-    Warning (15610): No output dependent on input pin "asi_data_i[25]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-    Warning (15610): No output dependent on input pin "asi_data_i[26]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-    Warning (15610): No output dependent on input pin "asi_data_i[27]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-    Warning (15610): No output dependent on input pin "asi_data_i[28]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-    Warning (15610): No output dependent on input pin "asi_data_i[29]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-    Warning (15610): No output dependent on input pin "asi_data_i[30]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-    Warning (15610): No output dependent on input pin "asi_data_i[31]" File: D:/Fax/master/neurax/neurax/FPGA/neurax_data_interface.vhd Line: 20
-Info (21057): Implemented 330110 device resources after synthesis - the final resource count might be different
-    Info (21058): Implemented 38 input pins
-    Info (21059): Implemented 36 output pins
-    Info (21061): Implemented 330036 logic cells
-Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 22 warnings
-    Info: Peak virtual memory: 7959 megabytes
-    Info: Processing ended: Mon Sep 22 14:47:14 2025
-    Info: Elapsed time: 00:09:55
-    Info: Total CPU time (on all processors): 00:13:12
+Info (21057): Implemented 335 device resources after synthesis - the final resource count might be different
+    Info (21058): Implemented 70 input pins
+    Info (21059): Implemented 101 output pins
+    Info (21061): Implemented 164 logic cells
+Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 3 warnings
+    Info: Peak virtual memory: 4899 megabytes
+    Info: Processing ended: Thu Sep 25 13:43:40 2025
+    Info: Elapsed time: 00:00:08
+    Info: Total CPU time (on all processors): 00:00:18
 
 

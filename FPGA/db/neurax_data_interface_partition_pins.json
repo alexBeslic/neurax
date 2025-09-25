@@ -8,14 +8,6 @@
 					"strict" : false
 				},
 				{
-					"name" : "aso_valid_o",
-					"strict" : false
-				},
-				{
-					"name" : "aso_channel_o",
-					"strict" : false
-				},
-				{
 					"name" : "aso_data_o[0]",
 					"strict" : false
 				},
@@ -112,27 +104,307 @@
 					"strict" : false
 				},
 				{
-					"name" : "asi_valid_i",
+					"name" : "aso_data_o[24]",
 					"strict" : false
 				},
 				{
-					"name" : "asi_channel_i",
+					"name" : "aso_data_o[25]",
 					"strict" : false
 				},
 				{
-					"name" : "asi_error_i",
+					"name" : "aso_data_o[26]",
 					"strict" : false
 				},
 				{
-					"name" : "clk_i",
+					"name" : "aso_data_o[27]",
 					"strict" : false
 				},
 				{
-					"name" : "rst_i",
+					"name" : "aso_data_o[28]",
 					"strict" : false
 				},
 				{
-					"name" : "aso_ready_i",
+					"name" : "aso_data_o[29]",
+					"strict" : false
+				},
+				{
+					"name" : "aso_data_o[30]",
+					"strict" : false
+				},
+				{
+					"name" : "aso_data_o[31]",
+					"strict" : false
+				},
+				{
+					"name" : "aso_valid_o",
+					"strict" : false
+				},
+				{
+					"name" : "aso_channel_o",
+					"strict" : false
+				},
+				{
+					"name" : "aso_error_o",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[5]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[6]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[7]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[8]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[9]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[10]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[11]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[12]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[13]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[14]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[15]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[16]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[17]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[18]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[19]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[20]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[21]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[22]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[23]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[24]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[25]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[26]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[27]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[28]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[29]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[30]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_data_o[31]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[5]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[6]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[7]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[8]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[9]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[10]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[11]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[12]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[13]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[14]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_rdaddress_o[15]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[5]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[6]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[7]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[8]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[9]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[10]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[11]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[12]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[13]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[14]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wraddress_o[15]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_wren_o",
 					"strict" : false
 				},
 				{
@@ -229,6 +501,190 @@
 				},
 				{
 					"name" : "asi_data_i[23]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[24]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[25]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[26]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[27]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[28]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[29]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[30]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_data_i[31]",
+					"strict" : false
+				},
+				{
+					"name" : "asi_valid_i",
+					"strict" : false
+				},
+				{
+					"name" : "asi_error_i",
+					"strict" : false
+				},
+				{
+					"name" : "asi_channel_i",
+					"strict" : false
+				},
+				{
+					"name" : "clk_i",
+					"strict" : false
+				},
+				{
+					"name" : "rst_i",
+					"strict" : false
+				},
+				{
+					"name" : "aso_ready_i",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[0]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[1]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[2]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[3]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[4]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[5]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[6]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[7]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[8]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[9]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[10]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[11]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[12]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[13]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[14]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[15]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[16]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[17]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[18]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[19]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[20]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[21]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[22]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[23]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[24]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[25]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[26]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[27]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[28]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[29]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[30]",
+					"strict" : false
+				},
+				{
+					"name" : "ram_q_i[31]",
 					"strict" : false
 				}
 			]
