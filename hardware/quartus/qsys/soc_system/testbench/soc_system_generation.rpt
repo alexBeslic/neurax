@@ -1,0 +1,429 @@
+Info: Starting: Create testbench Platform Designer system
+Info: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system.ipx
+Info: qsys-generate D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system.qsys --testbench=STANDARD --output-directory=D:\Fax\master\neurax\neurax\hardware\quartus\qsys --family="Cyclone V" --part=5CSEMA5F31C6
+Progress: Loading qsys/soc_system.qsys
+Progress: Reading input file
+Progress: Adding clk_0 [clock_source 24.1]
+Progress: Parameterizing module clk_0
+Progress: Adding dma_0 [altera_avalon_dma 24.1]
+Progress: Parameterizing module dma_0
+Progress: Adding hps_0 [altera_hps 24.1]
+Progress: Parameterizing module hps_0
+Progress: Adding neurax_avalon_accelerator_0 [neurax_avalon_accelerator 1.0]
+Progress: Parameterizing module neurax_avalon_accelerator_0
+Progress: Adding onchip_memory2_0 [altera_avalon_onchip_memory2 24.1]
+Progress: Parameterizing module onchip_memory2_0
+Progress: Adding pll_0 [altera_pll 24.1]
+Progress: Parameterizing module pll_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: soc_system.dma_0: DMA Controller will only be supported in Quartus Prime Standard Edition in the future release.
+Info: soc_system.hps_0: HPS Main PLL counter settings: n = 0  m = 73
+Info: soc_system.hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
+Warning: soc_system.hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
+Warning: soc_system.hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
+Warning: soc_system.hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
+Info: soc_system.pll_0: The legal reference clock frequency is 5.0 MHz..800.0 MHz
+Info: soc_system.pll_0: Able to implement PLL with user settings
+Warning: soc_system.neurax_avalon_accelerator_0: neurax_avalon_accelerator_0.conduit_end must be exported, or connected to a matching conduit.
+Warning: soc_system.dma_0: Interrupt sender dma_0.irq is not connected to an interrupt receiver
+Warning: soc_system.dma_0: dma_0.control_port_slave must be connected to an Avalon-MM master
+Warning: soc_system.onchip_memory2_0: onchip_memory2_0.s1 must be connected to an Avalon-MM master
+Info: qsys-generate succeeded.
+Info: Loading IP catalog for testbench.
+Progress: 
+Progress: 
+Progress: 
+Progress: (2) searching C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/root_components.ipx (ipx file)
+Info: Reading index C:\intelfpga_lite\24.1std\quartus\sopc_builder\bin\root_components.ipx
+Info: C:\intelfpga_lite\24.1std\quartus\sopc_builder\bin\root_components.ipx: Loading now from components.ipx
+Info: Reading index C:\intelfpga_lite\24.1std\quartus\sopc_builder\bin\ip_component_categories.ipx
+Info: C:\intelfpga_lite\24.1std\quartus\sopc_builder\bin\ip_component_categories.ipx described 0 plugins, 0 paths, in 0.00 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/ip_component_categories.ipx matched 1 files in 0.00 seconds
+Info: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/ip/**/* matched 0 files in 0.00 seconds
+Info: Reading index D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\testbench\soc_system.ipx
+Progress: Loading qsys/neurax_avalon_accelerator_hw.tcl
+Progress: Loading qsys/reg32_avalon_interface_hw.tcl
+Progress: Loading qsys/soc_system.qsys
+Info: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/* matched 8 files in 0.05 seconds
+Progress: Loading presets/de1-soc-hps-ddr.qprs
+Info: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/ip/**/* matched 2 files in 0.00 seconds
+Info: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/*/* matched 19 files in 0.00 seconds
+Info: D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\testbench\soc_system.ipx described 0 plugins, 3 paths, in 0.05 seconds
+Info: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/* matched 4 files in 0.05 seconds
+Info: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/*/* matched 0 files in 0.00 seconds
+Info: C:/Users/W10/.altera.quartus/ip/24.1/**/* matched 0 files in 0.00 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/$$QUARTUS_IP_PROJECTDIR/* matched 0 files in 0.00 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/$$QUARTUS_IP_USERDIR/* matched 0 files in 0.00 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/$$QUARTUS_IP_GLOBALDIR/* matched 0 files in 0.00 seconds
+Info: Reading index C:\intelfpga_lite\24.1std\ip\altera\altera_components.ipx
+Info: C:\intelfpga_lite\24.1std\ip\altera\altera_components.ipx described 1958 plugins, 0 paths, in 0.09 seconds
+Info: C:/intelfpga_lite/24.1std/ip/**/* matched 108 files in 0.09 seconds
+Info: C:/intelfpga_lite/ip/**/* matched 0 files in 0.00 seconds
+Info: Reading index C:\intelfpga_lite\24.1std\quartus\sopc_builder\builtin.ipx
+Info: C:\intelfpga_lite\24.1std\quartus\sopc_builder\builtin.ipx described 87 plugins, 0 paths, in 0.00 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/sopc_builder/**/* matched 8 files in 0.00 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/common/librarian/factories/**/* matched 0 files in 0.00 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/$IP_IPX_PATH matched 1 files in 0.00 seconds
+Info: C:\intelfpga_lite\24.1std\quartus\sopc_builder\bin\root_components.ipx described 0 plugins, 13 paths, in 0.14 seconds
+Info: C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/root_components.ipx matched 1 files in 0.14 seconds
+Progress: 
+Progress: 
+Progress: 
+Info: Running script C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/tbgen.tcl
+Info: send_message Info TB_Gen: QSYS Testbench Generator Rev: $Revision: #1 $
+Info: TB_Gen: QSYS Testbench Generator Rev: $Revision: #1 $
+Info: get_module_property NAME
+Info: send_message Info TB_Gen: System design is: soc_system
+Info: TB_Gen: System design is: soc_system
+Info: get_interfaces 
+Info: get_connections 
+Info: get_interface_property clk EXPORT_OF
+Info: get_instance_property clk_0 CLASS_NAME
+Info: get_instance_assignment clk_0 testbench.partner.map.clk_in
+Info: get_interface_property hps_0_ddr EXPORT_OF
+Info: get_instance_property hps_0 CLASS_NAME
+Info: get_instance_assignment hps_0 testbench.partner.map.memory
+Info: get_interface_property hps_0_io EXPORT_OF
+Info: get_instance_property hps_0 CLASS_NAME
+Info: get_instance_assignment hps_0 testbench.partner.map.hps_io
+Info: get_interface_property reset EXPORT_OF
+Info: get_instance_property clk_0 CLASS_NAME
+Info: get_instance_assignment clk_0 testbench.partner.map.clk_in_reset
+Info: send_message Info TB_Gen: Creating testbench system : soc_system_tb with all standard BFMs
+Info: TB_Gen: Creating testbench system : soc_system_tb with all standard BFMs
+Info: create_system soc_system_tb
+Info: add_instance soc_system_inst soc_system 
+Info: set_use_testbench_naming_pattern true soc_system
+Info: get_instance_interfaces soc_system_inst
+Info: get_instance_interface_property soc_system_inst clk CLASS_NAME
+Info: get_instance_interface_property soc_system_inst hps_0_ddr CLASS_NAME
+Info: get_instance_interface_property soc_system_inst hps_0_io CLASS_NAME
+Info: get_instance_interface_property soc_system_inst reset CLASS_NAME
+Info: get_instance_interface_property soc_system_inst clk CLASS_NAME
+Info: send_message Info TB_Gen: clock_sink found: clk
+Info: TB_Gen: clock_sink found: clk
+Info: get_instance_interface_property soc_system_inst clk CLASS_NAME
+Info: add_instance soc_system_inst_clk_bfm altera_avalon_clock_source 
+Info: get_instance_property soc_system_inst_clk_bfm CLASS_NAME
+Info: get_instance_interface_parameter_value soc_system_inst clk clockRate
+Info: set_instance_parameter_value soc_system_inst_clk_bfm CLOCK_RATE 50000000.0
+Info: set_instance_parameter_value soc_system_inst_clk_bfm CLOCK_UNIT 1
+Info: get_instance_property soc_system_inst_clk_bfm CLASS_NAME
+Info: get_instance_interface_property soc_system_inst clk CLASS_NAME
+Info: get_instance_interfaces soc_system_inst_clk_bfm
+Info: get_instance_interface_property soc_system_inst_clk_bfm clk CLASS_NAME
+Info: add_connection soc_system_inst_clk_bfm.clk soc_system_inst.clk
+Info: get_instance_interface_property soc_system_inst reset CLASS_NAME
+Info: send_message Info TB_Gen: reset_sink found: reset
+Info: TB_Gen: reset_sink found: reset
+Info: get_instance_interface_property soc_system_inst reset CLASS_NAME
+Info: add_instance soc_system_inst_reset_bfm altera_avalon_reset_source 
+Info: get_instance_property soc_system_inst_reset_bfm CLASS_NAME
+Info: get_instance_interface_ports soc_system_inst reset
+Info: get_instance_interface_port_property soc_system_inst reset reset_reset_n ROLE
+Info: get_instance_interface_port_property soc_system_inst reset reset_reset_n ROLE
+Info: set_instance_parameter_value soc_system_inst_reset_bfm ASSERT_HIGH_RESET 0
+Info: set_instance_parameter_value soc_system_inst_reset_bfm INITIAL_RESET_CYCLES 50
+Info: get_instance_property soc_system_inst_reset_bfm CLASS_NAME
+Info: get_instance_interfaces soc_system_inst_reset_bfm
+Info: get_instance_interface_property soc_system_inst_reset_bfm clk CLASS_NAME
+Info: get_instance_interface_property soc_system_inst_reset_bfm reset CLASS_NAME
+Info: get_instance_property soc_system_inst_reset_bfm CLASS_NAME
+Info: get_instance_interface_parameter_value soc_system_inst reset associatedClock
+Info: get_instance_interfaces soc_system_inst_clk_bfm
+Info: get_instance_interface_property soc_system_inst_clk_bfm clk CLASS_NAME
+Info: send_message Warning TB_Gen: soc_system_inst_reset_bfm is not associated to any clock; connecting soc_system_inst_reset_bfm to 'soc_system_inst_clk_bfm.clk'
+Warning: TB_Gen: soc_system_inst_reset_bfm is not associated to any clock; connecting soc_system_inst_reset_bfm to 'soc_system_inst_clk_bfm.clk'
+Info: add_connection soc_system_inst_clk_bfm.clk soc_system_inst_reset_bfm.clk
+Info: get_instance_interface_property soc_system_inst reset CLASS_NAME
+Info: get_instance_interfaces soc_system_inst_reset_bfm
+Info: get_instance_interface_property soc_system_inst_reset_bfm clk CLASS_NAME
+Info: get_instance_interface_property soc_system_inst_reset_bfm reset CLASS_NAME
+Info: add_connection soc_system_inst_reset_bfm.reset soc_system_inst.reset
+Info: get_instance_interface_property soc_system_inst hps_0_ddr CLASS_NAME
+Info: send_message Info TB_Gen: conduit_end found: hps_0_ddr
+Info: TB_Gen: conduit_end found: hps_0_ddr
+Info: get_instance_interface_property soc_system_inst hps_0_ddr CLASS_NAME
+Info: add_instance soc_system_inst_hps_0_ddr_bfm altera_conduit_bfm 
+Info: get_instance_property soc_system_inst_hps_0_ddr_bfm CLASS_NAME
+Info: get_instance_interface_parameter_value soc_system_inst hps_0_ddr associatedClock
+Info: get_instance_interface_parameter_value soc_system_inst hps_0_ddr associatedReset
+Info: get_instance_interface_ports soc_system_inst hps_0_ddr
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_a ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_a WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_a DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ba ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ba WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ba DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cas_n ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cas_n WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cas_n DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ck ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ck WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ck DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ck_n ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ck_n WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ck_n DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cke ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cke WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cke DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cs_n ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cs_n WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_cs_n DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dm ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dm WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dm DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dq ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dq WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dq DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dqs ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dqs WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dqs DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dqs_n ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dqs_n WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_dqs_n DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_odt ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_odt WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_odt DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ras_n ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ras_n WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_ras_n DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_reset_n ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_reset_n WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_reset_n DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_we_n ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_we_n WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_mem_we_n DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_oct_rzqin ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_oct_rzqin WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_ddr hps_0_ddr_oct_rzqin DIRECTION
+Info: set_instance_parameter_value soc_system_inst_hps_0_ddr_bfm CLOCKED_SIGNAL 0
+Info: set_instance_parameter_value soc_system_inst_hps_0_ddr_bfm ENABLE_RESET 0
+Info: set_instance_parameter_value soc_system_inst_hps_0_ddr_bfm SIGNAL_ROLES mem_a mem_ba mem_cas_n mem_ck mem_ck_n mem_cke mem_cs_n mem_dm mem_dq mem_dqs mem_dqs_n mem_odt mem_ras_n mem_reset_n mem_we_n oct_rzqin
+Info: set_instance_parameter_value soc_system_inst_hps_0_ddr_bfm SIGNAL_WIDTHS 15 3 1 1 1 1 1 4 32 4 4 1 1 1 1 1
+Info: set_instance_parameter_value soc_system_inst_hps_0_ddr_bfm SIGNAL_DIRECTIONS input input input input input input input input bidir bidir bidir input input input input output
+Info: get_instance_property soc_system_inst_hps_0_ddr_bfm CLASS_NAME
+Info: get_instance_interface_property soc_system_inst hps_0_ddr CLASS_NAME
+Info: get_instance_interfaces soc_system_inst_hps_0_ddr_bfm
+Info: get_instance_interface_property soc_system_inst_hps_0_ddr_bfm conduit CLASS_NAME
+Info: add_connection soc_system_inst_hps_0_ddr_bfm.conduit soc_system_inst.hps_0_ddr
+Info: get_instance_interface_property soc_system_inst hps_0_io CLASS_NAME
+Info: send_message Info TB_Gen: conduit_end found: hps_0_io
+Info: TB_Gen: conduit_end found: hps_0_io
+Info: get_instance_interface_property soc_system_inst hps_0_io CLASS_NAME
+Info: add_instance soc_system_inst_hps_0_io_bfm altera_conduit_bfm 
+Info: get_instance_property soc_system_inst_hps_0_io_bfm CLASS_NAME
+Info: get_instance_interface_parameter_value soc_system_inst hps_0_io associatedClock
+Info: get_instance_interface_parameter_value soc_system_inst hps_0_io associatedReset
+Info: get_instance_interface_ports soc_system_inst hps_0_io
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_MDC ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_MDC WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_MDC DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_MDIO ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_MDIO WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_MDIO DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD0 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD0 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD0 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD1 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD1 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD1 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD2 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD2 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD2 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD3 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD3 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RXD3 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RX_CLK ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RX_CLK WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RX_CLK DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RX_CTL ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RX_CTL WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_RX_CTL DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD0 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD0 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD0 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD1 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD1 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD1 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD2 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD2 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD2 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD3 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD3 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TXD3 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TX_CLK ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TX_CLK WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TX_CLK DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TX_CTL ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TX_CTL WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_emac1_inst_TX_CTL DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_gpio_inst_GPIO35 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_gpio_inst_GPIO35 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_gpio_inst_GPIO35 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_CLK ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_CLK WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_CLK DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_CMD ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_CMD WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_CMD DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D0 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D0 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D0 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D1 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D1 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D1 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D2 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D2 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D2 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D3 ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D3 WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_sdio_inst_D3 DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_uart0_inst_RX ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_uart0_inst_RX WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_uart0_inst_RX DIRECTION
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_uart0_inst_TX ROLE
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_uart0_inst_TX WIDTH
+Info: get_instance_interface_port_property soc_system_inst hps_0_io hps_0_io_hps_io_uart0_inst_TX DIRECTION
+Info: set_instance_parameter_value soc_system_inst_hps_0_io_bfm CLOCKED_SIGNAL 0
+Info: set_instance_parameter_value soc_system_inst_hps_0_io_bfm ENABLE_RESET 0
+Info: set_instance_parameter_value soc_system_inst_hps_0_io_bfm SIGNAL_ROLES hps_io_emac1_inst_MDC hps_io_emac1_inst_MDIO hps_io_emac1_inst_RXD0 hps_io_emac1_inst_RXD1 hps_io_emac1_inst_RXD2 hps_io_emac1_inst_RXD3 hps_io_emac1_inst_RX_CLK hps_io_emac1_inst_RX_CTL hps_io_emac1_inst_TXD0 hps_io_emac1_inst_TXD1 hps_io_emac1_inst_TXD2 hps_io_emac1_inst_TXD3 hps_io_emac1_inst_TX_CLK hps_io_emac1_inst_TX_CTL hps_io_gpio_inst_GPIO35 hps_io_sdio_inst_CLK hps_io_sdio_inst_CMD hps_io_sdio_inst_D0 hps_io_sdio_inst_D1 hps_io_sdio_inst_D2 hps_io_sdio_inst_D3 hps_io_uart0_inst_RX hps_io_uart0_inst_TX
+Info: set_instance_parameter_value soc_system_inst_hps_0_io_bfm SIGNAL_WIDTHS 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+Info: set_instance_parameter_value soc_system_inst_hps_0_io_bfm SIGNAL_DIRECTIONS input bidir output output output output output output input input input input input input bidir input bidir bidir bidir bidir bidir output input
+Info: get_instance_property soc_system_inst_hps_0_io_bfm CLASS_NAME
+Info: get_instance_interface_property soc_system_inst hps_0_io CLASS_NAME
+Info: get_instance_interfaces soc_system_inst_hps_0_io_bfm
+Info: get_instance_interface_property soc_system_inst_hps_0_io_bfm conduit CLASS_NAME
+Info: add_connection soc_system_inst_hps_0_io_bfm.conduit soc_system_inst.hps_0_io
+Info: send_message Info TB_Gen: Saving testbench system: soc_system_tb.qsys
+Info: TB_Gen: Saving testbench system: soc_system_tb.qsys
+Info: save_system soc_system_tb.qsys
+Info: send_message Info TB_Gen: TBGEN SUCCESSFUL
+Info: TB_Gen: TBGEN SUCCESSFUL
+Info: Testbench system: D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb.qsys
+Info: Done
+Info: qsys-generate D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system.qsys --simulation=VHDL --allow-mixed-language-simulation --testbench=STANDARD --testbench-simulation=VHDL --allow-mixed-language-testbench-simulation --output-directory=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\testbench\soc_system_tb\simulation --family="Cyclone V" --part=5CSEMA5F31C6
+Progress: Loading testbench/soc_system_tb.qsys
+Progress: Reading input file
+Progress: Adding soc_system_inst [soc_system 1.0]
+Progress: Parameterizing module soc_system_inst
+Progress: Adding soc_system_inst_clk_bfm [altera_avalon_clock_source 24.1]
+Progress: Parameterizing module soc_system_inst_clk_bfm
+Progress: Adding soc_system_inst_hps_0_ddr_bfm [altera_conduit_bfm 24.1]
+Progress: Parameterizing module soc_system_inst_hps_0_ddr_bfm
+Progress: Adding soc_system_inst_hps_0_io_bfm [altera_conduit_bfm 24.1]
+Progress: Parameterizing module soc_system_inst_hps_0_io_bfm
+Progress: Adding soc_system_inst_reset_bfm [altera_avalon_reset_source 24.1]
+Progress: Parameterizing module soc_system_inst_reset_bfm
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: soc_system_tb.soc_system_inst.dma_0: DMA Controller will only be supported in Quartus Prime Standard Edition in the future release.
+Info: soc_system_tb.soc_system_inst.hps_0: HPS Main PLL counter settings: n = 0  m = 73
+Info: soc_system_tb.soc_system_inst.hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
+Warning: soc_system_tb.soc_system_inst.hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
+Warning: soc_system_tb.soc_system_inst.hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
+Warning: soc_system_tb.soc_system_inst.hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
+Info: soc_system_tb.soc_system_inst.pll_0: The legal reference clock frequency is 5.0 MHz..800.0 MHz
+Info: soc_system_tb.soc_system_inst.pll_0: Able to implement PLL with user settings
+Warning: soc_system_tb.soc_system_inst.neurax_avalon_accelerator_0: neurax_avalon_accelerator_0.conduit_end must be exported, or connected to a matching conduit.
+Warning: soc_system_tb.soc_system_inst.dma_0: Interrupt sender dma_0.irq is not connected to an interrupt receiver
+Warning: soc_system_tb.soc_system_inst.dma_0: dma_0.control_port_slave must be connected to an Avalon-MM master
+Warning: soc_system_tb.soc_system_inst.onchip_memory2_0: onchip_memory2_0.s1 must be connected to an Avalon-MM master
+Info: soc_system_tb.soc_system_inst_clk_bfm: Elaborate: altera_clock_source
+Info: soc_system_tb.soc_system_inst_clk_bfm:            $Revision: #1 $
+Info: soc_system_tb.soc_system_inst_clk_bfm:            $Date: 2023/12/11 $
+Info: soc_system_tb.soc_system_inst_reset_bfm: Elaborate: altera_reset_source
+Info: soc_system_tb.soc_system_inst_reset_bfm:            $Revision: #1 $
+Info: soc_system_tb.soc_system_inst_reset_bfm:            $Date: 2023/12/11 $
+Info: soc_system_tb.soc_system_inst_reset_bfm: Reset is negatively asserted.
+Info: soc_system_tb: Generating "soc_system_tb" for SIM_VHDL
+Info: Interconnect is inserted between master hps_0.h2f_axi_master and slave neurax_avalon_accelerator_0.avalon_slave_0 because the master is of type axi and the slave is of type avalon.
+Info: soc_system_inst: "soc_system_tb" instantiated soc_system "soc_system_inst"
+Info: soc_system_inst_clk_bfm: "soc_system_tb" instantiated altera_avalon_clock_source "soc_system_inst_clk_bfm"
+Info: soc_system_inst_hps_0_ddr_bfm: "soc_system_tb" instantiated altera_conduit_bfm "soc_system_inst_hps_0_ddr_bfm"
+Info: soc_system_inst_hps_0_io_bfm: "soc_system_tb" instantiated altera_conduit_bfm "soc_system_inst_hps_0_io_bfm"
+Info: soc_system_inst_reset_bfm: "soc_system_tb" instantiated altera_avalon_reset_source "soc_system_inst_reset_bfm"
+Info: dma_0: softresetEnable = 1
+Info: dma_0: Starting RTL generation for module 'soc_system_dma_0'
+Info: dma_0:   Generation command is [exec cmd /c {set LC_ALL=C&& C:/intelFPGA_lite/24.1std/quartus/bin64//perl/bin/perl.exe -I C:/intelFPGA_lite/24.1std/quartus/bin64//perl/lib -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/europa -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/common -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_dma -- C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_dma/generate_rtl.pl --name=soc_system_dma_0 --dir=C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0068_dma_0_gen/ --quartus_dir=C:/intelfpga_lite/24.1std/quartus --vhdl --config=C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0068_dma_0_gen//soc_system_dma_0_component_configuration.pl --do_build_sim=1 --sim_dir=C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0068_dma_0_gen/}]
+Info: dma_0: # 2025.09.19 23:37:20 (*)   soc_system_dma_0: allowing these transactions: word, hw, byte_access
+Info: dma_0: Done RTL generation for module 'soc_system_dma_0'
+Info: dma_0: "soc_system_inst" instantiated altera_avalon_dma "dma_0"
+Info: hps_0: "Running  for module: hps_0"
+Info: hps_0: HPS Main PLL counter settings: n = 0  m = 73
+Info: hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
+Warning: hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
+Warning: hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
+Warning: hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
+Info: hps_0: "soc_system_inst" instantiated altera_hps "hps_0"
+Info: neurax_avalon_accelerator_0: "soc_system_inst" instantiated neurax_avalon_accelerator "neurax_avalon_accelerator_0"
+Info: onchip_memory2_0: Starting RTL generation for module 'soc_system_onchip_memory2_0'
+Info: onchip_memory2_0:   Generation command is [exec cmd /c {set LC_ALL=C&& C:/intelfpga_lite/24.1std/quartus/bin64/perl/bin/perl.exe -I C:/intelfpga_lite/24.1std/quartus/bin64/perl/lib -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/europa -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/common -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_onchip_memory2 -- C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_onchip_memory2/generate_rtl.pl --name=soc_system_onchip_memory2_0 --dir=C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0070_onchip_memory2_0_gen/ --quartus_dir=C:/intelfpga_lite/24.1std/quartus --vhdl --config=C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0070_onchip_memory2_0_gen//soc_system_onchip_memory2_0_component_configuration.pl --do_build_sim=1 --sim_dir=C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0070_onchip_memory2_0_gen/}]
+Info: onchip_memory2_0: Done RTL generation for module 'soc_system_onchip_memory2_0'
+Info: onchip_memory2_0: "soc_system_inst" instantiated altera_avalon_onchip_memory2 "onchip_memory2_0"
+Info: pll_0: Generating simgen model
+Info: pll_0: Info: ******************************************************************* Info: Running Quartus Prime Shell     Info: Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition     Info: Copyright (C) 2025  Altera Corporation. All rights reserved.     Info: Your use of Altera Corporation's design tools, logic functions      Info: and other software and tools, and any partner logic      Info: functions, and any output files from any of the foregoing      Info: (including device programming or simulation files), and any      Info: associated documentation or information are expressly subject      Info: to the terms and conditions of the Altera Program License      Info: Subscription Agreement, the Altera Quartus Prime License Agreement,     Info: the Altera IP License Agreement, or other applicable license     Info: agreement, including, without limitation, that your use is for     Info: the sole purpose of programming logic devices manufactured by     Info: Altera and sold by Altera or its authorized distributors.  Please     Info: refer to the Altera Software License Subscription Agreements      Info: on the Quartus Prime software download page.     Info: Processing started: Fri Sep 19 23:37:25 2025 Info: Command: quartus_sh -t run_simgen_cmd.tcl Info: ******************************************************************* Info: Running Quartus Prime Analysis & Synthesis     Info: Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition     Info: Copyright (C) 2025  Altera Corporation. All rights reserved.     Info: Your use of Altera Corporation's design tools, logic functions      Info: and other software and tools, and any partner logic      Info: functions, and any output files from any of the foregoing      Info: (including device programming or simulation files), and any      Info: associated documentation or information are expressly subject      Info: to the terms and conditions of the Altera Program License      Info: Subscription Agreement, the Altera Quartus Prime License Agreement,     Info: the Altera IP License Agreement, or other applicable license     Info: agreement, including, without limitation, that your use is for     Info: the sole purpose of programming logic devices manufactured by     Info: Altera and sold by Altera or its authorized distributors.  Please     Info: refer to the Altera Software License Subscription Agreements      Info: on the Quartus Prime software download page.     Info: Processing started: Fri Sep 19 23:37:26 2025 Info: Command: quartus_map soc_system_pll_0.qpf --simgen --ini=disable_check_quartus_compatibility_qsys_only=on --simgen_parameter=CBX_HDL_LANGUAGE=VHDL Info (20034): Auto device selection is not supported for Cyclone V device family. The default device, 5CGXFC7C7F23C8, is set. Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance. Info (20030): Parallel compilation is enabled and will use 12 of the 12 processors detected Info (12021): Found 1 design units, including 1 entities, in source file soc_system_pll_0.v     Info (12023): Found entity 1: soc_system_pll_0 File: C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0071_pll_0_gen/soc_system_pll_0.v Line: 2 Info (12127): Elaborating entity "soc_system_pll_0" for the top level hierarchy Info (12128): Elaborating entity "altera_pll" for hierarchy "altera_pll:altera_pll_i" File: C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0071_pll_0_gen/soc_system_pll_0.v Line: 85 Info (10008): Verilog HDL or VHDL information: EDA Netlist Writer cannot regroup multidimensional array "wire_to_nowhere_64" into its bus Info (12130): Elaborated megafunction instantiation "altera_pll:altera_pll_i" File: C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0071_pll_0_gen/soc_system_pll_0.v Line: 85 Info (12133): Instantiated megafunction "altera_pll:altera_pll_i" with the following parameter: File: C:/Users/W10/AppData/Local/Temp/alt0350_7380306550716366184.dir/0071_pll_0_gen/soc_system_pll_0.v Line: 85     Info (12134): Parameter "fractional_vco_multiplier" = "false"     Info (12134): Parameter "reference_clock_frequency" = "50.0 MHz"     Info (12134): Parameter "operation_mode" = "direct"     Info (12134): Parameter "number_of_clocks" = "1"     Info (12134): Parameter "output_clock_frequency0" = "50.000000 MHz"     Info (12134): Parameter "phase_shift0" = "0 ps"     Info (12134): Parameter "duty_cycle0" = "50"     Info (12134): Parameter "output_clock_frequency1" = "0 MHz"     Info (12134): Parameter "phase_shift1" = "0 ps"     Info (12134): Parameter "duty_cycle1" = "50"     Info (12134): Parameter "output_clock_frequency2" = "0 MHz"     Info (12134): Parameter "phase_shift2" = "0 ps"     Info (12134): Parameter "duty_cycle2" = "50"     Info (12134): Parameter "output_clock_frequency3" = "0 MHz"     Info (12134): Parameter "phase_shift3" = "0 ps"     Info (12134): Parameter "duty_cycle3" = "50"     Info (12134): Parameter "output_clock_frequency4" = "0 MHz"     Info (12134): Parameter "phase_shift4" = "0 ps"     Info (12134): Parameter "duty_cycle4" = "50"     Info (12134): Parameter "output_clock_frequency5" = "0 MHz"     Info (12134): Parameter "phase_shift5" = "0 ps"     Info (12134): Parameter "duty_cycle5" = "50"     Info (12134): Parameter "output_clock_frequency6" = "0 MHz"     Info (12134): Parameter "phase_shift6" = "0 ps"     Info (12134): Parameter "duty_cycle6" = "50"     Info (12134): Parameter "output_clock_frequency7" = "0 MHz"     Info (12134): Parameter "phase_shift7" = "0 ps"     Info (12134): Parameter "duty_cycle7" = "50"     Info (12134): Parameter "output_clock_frequency8" = "0 MHz"     Info (12134): Parameter "phase_shift8" = "0 ps"     Info (12134): Parameter "duty_cycle8" = "50"     Info (12134): Parameter "output_clock_frequency9" = "0 MHz"     Info (12134): Parameter "phase_shift9" = "0 ps"     Info (12134): Parameter "duty_cycle9" = "50"     Info (12134): Parameter "output_clock_frequency10" = "0 MHz"     Info (12134): Parameter "phase_shift10" = "0 ps"     Info (12134): Parameter "duty_cycle10" = "50"     Info (12134): Parameter "output_clock_frequency11" = "0 MHz"     Info (12134): Parameter "phase_shift11" = "0 ps"     Info (12134): Parameter "duty_cycle11" = "50"     Info (12134): Parameter "output_clock_frequency12" = "0 MHz"     Info (12134): Parameter "phase_shift12" = "0 ps"     Info (12134): Parameter "duty_cycle12" = "50"     Info (12134): Parameter "output_clock_frequency13" = "0 MHz"     Info (12134): Parameter "phase_shift13" = "0 ps"     Info (12134): Parameter "duty_cycle13" = "50"     Info (12134): Parameter "output_clock_frequency14" = "0 MHz"     Info (12134): Parameter "phase_shift14" = "0 ps"     Info (12134): Parameter "duty_cycle14" = "50"     Info (12134): Parameter "output_clock_frequency15" = "0 MHz"     Info (12134): Parameter "phase_shift15" = "0 ps"     Info (12134): Parameter "duty_cycle15" = "50"     Info (12134): Parameter "output_clock_frequency16" = "0 MHz"     Info (12134): Parameter "phase_shift16" = "0 ps"     Info (12134): Parameter "duty_cycle16" = "50"     Info (12134): Parameter "output_clock_frequency17" = "0 MHz"     Info (12134): Parameter "phase_shift17" = "0 ps"     Info (12134): Parameter "duty_cycle17" = "50"     Info (12134): Parameter "pll_type" = "General"     Info (12134): Parameter "pll_subtype" = "General" Info (281010): Generating sgate simulator netlist using Simgen SIMGEN_PROGRESS Start of Model generation -- 0% complete SIMGEN_PROGRESS Phase 1 : Internal Objects created -- 25% complete SIMGEN_PROGRESS Phase 2 : Connections between internal objects made -- 60% complete SIMGEN_PROGRESS Phase 3 : Netlist generated -- 100% complete Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 1 warning     Info: Peak virtual memory: 4794 megabytes     Info: Processing ended: Fri Sep 19 23:37:33 2025     Info: Elapsed time: 00:00:07     Info: Total CPU time (on all processors): 00:00:01 Info (23030): Evaluation of Tcl script run_simgen_cmd.tcl was successful Info: Quartus Prime Shell was successful. 0 errors, 0 warnings     Info: Peak virtual memory: 4669 megabytes     Info: Processing ended: Fri Sep 19 23:37:33 2025     Info: Elapsed time: 00:00:08     Info: Total CPU time (on all processors): 00:00:01
+Info: pll_0: Simgen was successful
+Info: pll_0: "soc_system_inst" instantiated altera_pll "pll_0"
+Info: avalon_st_adapter: Inserting error_adapter: error_adapter_0
+Info: mm_interconnect_0: "soc_system_inst" instantiated altera_mm_interconnect "mm_interconnect_0"
+Info: mm_interconnect_1: "soc_system_inst" instantiated altera_mm_interconnect "mm_interconnect_1"
+Info: rst_controller: "soc_system_inst" instantiated altera_reset_controller "rst_controller"
+Info: fpga_interfaces: "hps_0" instantiated altera_interface_generator "fpga_interfaces"
+Info: hps_io: "hps_0" instantiated altera_hps_io "hps_io"
+Info: neurax_avalon_accelerator_0_avalon_slave_0_translator: "mm_interconnect_0" instantiated altera_merlin_slave_translator "neurax_avalon_accelerator_0_avalon_slave_0_translator"
+Info: hps_0_h2f_axi_master_agent: "mm_interconnect_0" instantiated altera_merlin_axi_master_ni "hps_0_h2f_axi_master_agent"
+Info: neurax_avalon_accelerator_0_avalon_slave_0_agent: "mm_interconnect_0" instantiated altera_merlin_slave_agent "neurax_avalon_accelerator_0_avalon_slave_0_agent"
+Info: neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo: "mm_interconnect_0" instantiated altera_avalon_sc_fifo "neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo"
+Info: router: "mm_interconnect_0" instantiated altera_merlin_router "router"
+Info: router_002: "mm_interconnect_0" instantiated altera_merlin_router "router_002"
+Info: neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter: "mm_interconnect_0" instantiated altera_merlin_burst_adapter "neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_merlin_address_alignment.sv
+Info: cmd_demux: "mm_interconnect_0" instantiated altera_merlin_demultiplexer "cmd_demux"
+Info: cmd_mux: "mm_interconnect_0" instantiated altera_merlin_multiplexer "cmd_mux"
+Info: rsp_demux: "mm_interconnect_0" instantiated altera_merlin_demultiplexer "rsp_demux"
+Info: rsp_mux: "mm_interconnect_0" instantiated altera_merlin_multiplexer "rsp_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_merlin_arbitrator.sv
+Info: avalon_st_adapter: "mm_interconnect_0" instantiated altera_avalon_st_adapter "avalon_st_adapter"
+Info: dma_0_read_master_translator: "mm_interconnect_1" instantiated altera_merlin_master_translator "dma_0_read_master_translator"
+Info: dma_0_read_master_agent: "mm_interconnect_1" instantiated altera_merlin_master_agent "dma_0_read_master_agent"
+Info: hps_0_f2h_axi_slave_agent: "mm_interconnect_1" instantiated altera_merlin_axi_slave_ni "hps_0_f2h_axi_slave_agent"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_merlin_burst_uncompressor.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_avalon_sc_fifo.v
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_merlin_address_alignment.sv
+Info: router: "mm_interconnect_1" instantiated altera_merlin_router "router"
+Info: router_002: "mm_interconnect_1" instantiated altera_merlin_router "router_002"
+Info: dma_0_read_master_limiter: "mm_interconnect_1" instantiated altera_merlin_traffic_limiter "dma_0_read_master_limiter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_avalon_sc_fifo.v
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_avalon_st_pipeline_base.v
+Info: cmd_demux: "mm_interconnect_1" instantiated altera_merlin_demultiplexer "cmd_demux"
+Info: cmd_demux_001: "mm_interconnect_1" instantiated altera_merlin_demultiplexer "cmd_demux_001"
+Info: cmd_mux: "mm_interconnect_1" instantiated altera_merlin_multiplexer "cmd_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_merlin_arbitrator.sv
+Info: rsp_mux: "mm_interconnect_1" instantiated altera_merlin_multiplexer "rsp_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_merlin_arbitrator.sv
+Info: border: "hps_io" instantiated altera_interface_generator "border"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/verbosity_pkg.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/avalon_utilities_pkg.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/avalon_mm_pkg.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_avalon_mm_slave_bfm.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_avalon_interrupt_sink.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_avalon_clock_source.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/soc_system_tb/simulation/submodules/altera_avalon_reset_source.sv
+Info: error_adapter_0: "avalon_st_adapter" instantiated error_adapter "error_adapter_0"
+Info: soc_system_tb: Done "soc_system_tb" with 40 modules, 69 files
+Info: qsys-generate succeeded.
+Info: sim-script-gen --spd=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system_tb.spd --output-directory=D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/ --use-relative-paths=true
+Info: Doing: ip-make-simscript --spd=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system_tb.spd --output-directory=D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/ --use-relative-paths=true
+Info: Generating the following file(s) for RIVIERA simulator in D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/ directory:
+Info: 	aldec/rivierapro_setup.tcl
+Info: Generating the following file(s) for MODELSIM simulator in D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/ directory:
+Info: 	mentor/msim_setup.tcl
+Info: For information on how to simulate your IP, see the explanatory comments in the simulator-specific subdirectories under D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/testbench/.
+Info: Regenerate these scripts whenever you make any change to any Quartus-generated IP in your project.
+Info: Finished: Create testbench Platform Designer system

@@ -1,22 +1,24 @@
-Info: Starting: Create block symbol file (.bsf)
-Info: qsys-generate D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system.qsys --block-symbol-file --output-directory=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system --family="Cyclone V" --part=5CSEMA5F31C6
+Info: Starting: Create simulation model
+Info: qsys-generate D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system.qsys --simulation=VHDL --allow-mixed-language-simulation --output-directory=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\simulation --family="Cyclone V" --part=5CSEMA5F31C6
 Progress: Loading qsys/soc_system.qsys
 Progress: Reading input file
+Progress: Adding DMA_neurax_read [altera_msgdma 24.1]
+Progress: Parameterizing module DMA_neurax_read
+Progress: Adding DMA_neurax_write [altera_msgdma 24.1]
+Progress: Parameterizing module DMA_neurax_write
 Progress: Adding clk_0 [clock_source 24.1]
 Progress: Parameterizing module clk_0
-Progress: Adding dma_0 [altera_avalon_dma 24.1]
-Progress: Parameterizing module dma_0
 Progress: Adding hps_0 [altera_hps 24.1]
 Progress: Parameterizing module hps_0
-Progress: Adding onchip_memory2_0 [altera_avalon_onchip_memory2 24.1]
-Progress: Parameterizing module onchip_memory2_0
+Progress: Adding neurax_avalon_accelerator_0 [neurax_avalon_accelerator 1.0]
+Progress: Parameterizing module neurax_avalon_accelerator_0
 Progress: Adding pll_0 [altera_pll 24.1]
 Progress: Parameterizing module pll_0
 Progress: Building connections
 Progress: Parameterizing connections
 Progress: Validating
 Progress: Done reading input file
-Info: soc_system.dma_0: DMA Controller will only be supported in Quartus Prime Standard Edition in the future release.
+Info: soc_system.DMA_neurax_read: Response information port is disabled. Enable the response port if data transfer information is required by host
 Info: soc_system.hps_0: HPS Main PLL counter settings: n = 0  m = 73
 Info: soc_system.hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
 Warning: soc_system.hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
@@ -24,48 +26,17 @@ Warning: soc_system.hps_0: 1 or more output clock frequencies cannot be achieved
 Warning: soc_system.hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
 Info: soc_system.pll_0: The legal reference clock frequency is 5.0 MHz..800.0 MHz
 Info: soc_system.pll_0: Able to implement PLL with user settings
-Warning: soc_system.dma_0: Interrupt sender dma_0.irq is not connected to an interrupt receiver
-Warning: soc_system.dma_0: dma_0.control_port_slave must be connected to an Avalon-MM master
-Warning: soc_system.onchip_memory2_0: onchip_memory2_0.s1 must be connected to an Avalon-MM master
-Info: qsys-generate succeeded.
-Info: Finished: Create block symbol file (.bsf)
-Info: 
-Info: Starting: Create HDL design files for synthesis
-Info: qsys-generate D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system.qsys --synthesis=VHDL --output-directory=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\synthesis --family="Cyclone V" --part=5CSEMA5F31C6
-Progress: Loading qsys/soc_system.qsys
-Progress: Reading input file
-Progress: Adding clk_0 [clock_source 24.1]
-Progress: Parameterizing module clk_0
-Progress: Adding dma_0 [altera_avalon_dma 24.1]
-Progress: Parameterizing module dma_0
-Progress: Adding hps_0 [altera_hps 24.1]
-Progress: Parameterizing module hps_0
-Progress: Adding onchip_memory2_0 [altera_avalon_onchip_memory2 24.1]
-Progress: Parameterizing module onchip_memory2_0
-Progress: Adding pll_0 [altera_pll 24.1]
-Progress: Parameterizing module pll_0
-Progress: Building connections
-Progress: Parameterizing connections
-Progress: Validating
-Progress: Done reading input file
-Info: soc_system.dma_0: DMA Controller will only be supported in Quartus Prime Standard Edition in the future release.
-Info: soc_system.hps_0: HPS Main PLL counter settings: n = 0  m = 73
-Info: soc_system.hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
-Warning: soc_system.hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
-Warning: soc_system.hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
-Warning: soc_system.hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
-Info: soc_system.pll_0: The legal reference clock frequency is 5.0 MHz..800.0 MHz
-Info: soc_system.pll_0: Able to implement PLL with user settings
-Warning: soc_system.dma_0: Interrupt sender dma_0.irq is not connected to an interrupt receiver
-Warning: soc_system.dma_0: dma_0.control_port_slave must be connected to an Avalon-MM master
-Warning: soc_system.onchip_memory2_0: onchip_memory2_0.s1 must be connected to an Avalon-MM master
-Info: soc_system: Generating "soc_system" for QUARTUS_SYNTH
-Info: dma_0: softresetEnable = 1
-Info: dma_0: Starting RTL generation for module 'soc_system_dma_0'
-Info: dma_0:   Generation command is [exec cmd /c {set LC_ALL=C&& C:/intelFPGA_lite/24.1std/quartus/bin64//perl/bin/perl.exe -I C:/intelFPGA_lite/24.1std/quartus/bin64//perl/lib -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/europa -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/common -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_dma -- C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_dma/generate_rtl.pl --name=soc_system_dma_0 --dir=C:/Users/W10/AppData/Local/Temp/alt0344_5319771170837785831.dir/0002_dma_0_gen/ --quartus_dir=C:/intelfpga_lite/24.1std/quartus --verilog --config=C:/Users/W10/AppData/Local/Temp/alt0344_5319771170837785831.dir/0002_dma_0_gen//soc_system_dma_0_component_configuration.pl --do_build_sim=0}]
-Info: dma_0: # 2025.09.13 17:41:43 (*)   soc_system_dma_0: allowing these transactions: word, hw, byte_access
-Info: dma_0: Done RTL generation for module 'soc_system_dma_0'
-Info: dma_0: "soc_system" instantiated altera_avalon_dma "dma_0"
+Info: soc_system.neurax_avalon_accelerator_0.avalon_source/DMA_neurax_read.st_sink: The source has a channel signal of 1 bits, but the sink does not. Avalon-ST Adapter will be inserted.
+Info: soc_system.DMA_neurax_write.st_source/neurax_avalon_accelerator_0.avalon_sink: Max channel is 1 for source and 0 for sink. Avalon-ST Adapter will be inserted..
+Info: soc_system: Generating "soc_system" for SIM_VHDL
+Warning: hps_0.f2h_irq0: Cannot connect clock for irq_mapper.sender
+Warning: hps_0.f2h_irq0: Cannot connect reset for irq_mapper.sender
+Warning: hps_0.f2h_irq1: Cannot connect clock for irq_mapper_001.sender
+Warning: hps_0.f2h_irq1: Cannot connect reset for irq_mapper_001.sender
+Info: avalon_st_adapter: Inserting channel_adapter: channel_adapter_0
+Info: avalon_st_adapter_001: Inserting channel_adapter: channel_adapter_0
+Info: DMA_neurax_read: "soc_system" instantiated altera_msgdma "DMA_neurax_read"
+Info: DMA_neurax_write: "soc_system" instantiated altera_msgdma "DMA_neurax_write"
 Info: hps_0: "Running  for module: hps_0"
 Info: hps_0: HPS Main PLL counter settings: n = 0  m = 73
 Info: hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
@@ -73,28 +44,226 @@ Warning: hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_
 Warning: hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
 Warning: hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
 Info: hps_0: "soc_system" instantiated altera_hps "hps_0"
-Info: onchip_memory2_0: Starting RTL generation for module 'soc_system_onchip_memory2_0'
-Info: onchip_memory2_0:   Generation command is [exec cmd /c {set LC_ALL=C&& C:/intelfpga_lite/24.1std/quartus/bin64/perl/bin/perl.exe -I C:/intelfpga_lite/24.1std/quartus/bin64/perl/lib -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin/europa -I C:/intelfpga_lite/24.1std/quartus/sopc_builder/bin -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/common -I C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_onchip_memory2 -- C:/intelfpga_lite/24.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_onchip_memory2/generate_rtl.pl --name=soc_system_onchip_memory2_0 --dir=C:/Users/W10/AppData/Local/Temp/alt0344_5319771170837785831.dir/0003_onchip_memory2_0_gen/ --quartus_dir=C:/intelfpga_lite/24.1std/quartus --verilog --config=C:/Users/W10/AppData/Local/Temp/alt0344_5319771170837785831.dir/0003_onchip_memory2_0_gen//soc_system_onchip_memory2_0_component_configuration.pl --do_build_sim=0}]
-Info: onchip_memory2_0: Done RTL generation for module 'soc_system_onchip_memory2_0'
-Info: onchip_memory2_0: "soc_system" instantiated altera_avalon_onchip_memory2 "onchip_memory2_0"
+Info: neurax_avalon_accelerator_0: "soc_system" instantiated neurax_avalon_accelerator "neurax_avalon_accelerator_0"
+Info: pll_0: Generating simgen model
+Info: pll_0: Info: ******************************************************************* Info: Running Quartus Prime Shell     Info: Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition     Info: Copyright (C) 2025  Altera Corporation. All rights reserved.     Info: Your use of Altera Corporation's design tools, logic functions      Info: and other software and tools, and any partner logic      Info: functions, and any output files from any of the foregoing      Info: (including device programming or simulation files), and any      Info: associated documentation or information are expressly subject      Info: to the terms and conditions of the Altera Program License      Info: Subscription Agreement, the Altera Quartus Prime License Agreement,     Info: the Altera IP License Agreement, or other applicable license     Info: agreement, including, without limitation, that your use is for     Info: the sole purpose of programming logic devices manufactured by     Info: Altera and sold by Altera or its authorized distributors.  Please     Info: refer to the Altera Software License Subscription Agreements      Info: on the Quartus Prime software download page.     Info: Processing started: Mon Sep 22 21:57:38 2025 Info: Command: quartus_sh -t run_simgen_cmd.tcl Info: ******************************************************************* Info: Running Quartus Prime Analysis & Synthesis     Info: Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition     Info: Copyright (C) 2025  Altera Corporation. All rights reserved.     Info: Your use of Altera Corporation's design tools, logic functions      Info: and other software and tools, and any partner logic      Info: functions, and any output files from any of the foregoing      Info: (including device programming or simulation files), and any      Info: associated documentation or information are expressly subject      Info: to the terms and conditions of the Altera Program License      Info: Subscription Agreement, the Altera Quartus Prime License Agreement,     Info: the Altera IP License Agreement, or other applicable license     Info: agreement, including, without limitation, that your use is for     Info: the sole purpose of programming logic devices manufactured by     Info: Altera and sold by Altera or its authorized distributors.  Please     Info: refer to the Altera Software License Subscription Agreements      Info: on the Quartus Prime software download page.     Info: Processing started: Mon Sep 22 21:57:38 2025 Info: Command: quartus_map soc_system_pll_0.qpf --simgen --ini=disable_check_quartus_compatibility_qsys_only=on --simgen_parameter=CBX_HDL_LANGUAGE=VHDL Info (20034): Auto device selection is not supported for Cyclone V device family. The default device, 5CGXFC7C7F23C8, is set. Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance. Info (20030): Parallel compilation is enabled and will use 12 of the 12 processors detected Info (12021): Found 1 design units, including 1 entities, in source file soc_system_pll_0.v     Info (12023): Found entity 1: soc_system_pll_0 File: C:/Users/W10/AppData/Local/Temp/alt0353_6765098980010391208.dir/0003_pll_0_gen/soc_system_pll_0.v Line: 2 Info (12127): Elaborating entity "soc_system_pll_0" for the top level hierarchy Info (12128): Elaborating entity "altera_pll" for hierarchy "altera_pll:altera_pll_i" File: C:/Users/W10/AppData/Local/Temp/alt0353_6765098980010391208.dir/0003_pll_0_gen/soc_system_pll_0.v Line: 85 Info (10008): Verilog HDL or VHDL information: EDA Netlist Writer cannot regroup multidimensional array "wire_to_nowhere_64" into its bus Info (12130): Elaborated megafunction instantiation "altera_pll:altera_pll_i" File: C:/Users/W10/AppData/Local/Temp/alt0353_6765098980010391208.dir/0003_pll_0_gen/soc_system_pll_0.v Line: 85 Info (12133): Instantiated megafunction "altera_pll:altera_pll_i" with the following parameter: File: C:/Users/W10/AppData/Local/Temp/alt0353_6765098980010391208.dir/0003_pll_0_gen/soc_system_pll_0.v Line: 85     Info (12134): Parameter "fractional_vco_multiplier" = "false"     Info (12134): Parameter "reference_clock_frequency" = "50.0 MHz"     Info (12134): Parameter "operation_mode" = "direct"     Info (12134): Parameter "number_of_clocks" = "1"     Info (12134): Parameter "output_clock_frequency0" = "50.000000 MHz"     Info (12134): Parameter "phase_shift0" = "0 ps"     Info (12134): Parameter "duty_cycle0" = "50"     Info (12134): Parameter "output_clock_frequency1" = "0 MHz"     Info (12134): Parameter "phase_shift1" = "0 ps"     Info (12134): Parameter "duty_cycle1" = "50"     Info (12134): Parameter "output_clock_frequency2" = "0 MHz"     Info (12134): Parameter "phase_shift2" = "0 ps"     Info (12134): Parameter "duty_cycle2" = "50"     Info (12134): Parameter "output_clock_frequency3" = "0 MHz"     Info (12134): Parameter "phase_shift3" = "0 ps"     Info (12134): Parameter "duty_cycle3" = "50"     Info (12134): Parameter "output_clock_frequency4" = "0 MHz"     Info (12134): Parameter "phase_shift4" = "0 ps"     Info (12134): Parameter "duty_cycle4" = "50"     Info (12134): Parameter "output_clock_frequency5" = "0 MHz"     Info (12134): Parameter "phase_shift5" = "0 ps"     Info (12134): Parameter "duty_cycle5" = "50"     Info (12134): Parameter "output_clock_frequency6" = "0 MHz"     Info (12134): Parameter "phase_shift6" = "0 ps"     Info (12134): Parameter "duty_cycle6" = "50"     Info (12134): Parameter "output_clock_frequency7" = "0 MHz"     Info (12134): Parameter "phase_shift7" = "0 ps"     Info (12134): Parameter "duty_cycle7" = "50"     Info (12134): Parameter "output_clock_frequency8" = "0 MHz"     Info (12134): Parameter "phase_shift8" = "0 ps"     Info (12134): Parameter "duty_cycle8" = "50"     Info (12134): Parameter "output_clock_frequency9" = "0 MHz"     Info (12134): Parameter "phase_shift9" = "0 ps"     Info (12134): Parameter "duty_cycle9" = "50"     Info (12134): Parameter "output_clock_frequency10" = "0 MHz"     Info (12134): Parameter "phase_shift10" = "0 ps"     Info (12134): Parameter "duty_cycle10" = "50"     Info (12134): Parameter "output_clock_frequency11" = "0 MHz"     Info (12134): Parameter "phase_shift11" = "0 ps"     Info (12134): Parameter "duty_cycle11" = "50"     Info (12134): Parameter "output_clock_frequency12" = "0 MHz"     Info (12134): Parameter "phase_shift12" = "0 ps"     Info (12134): Parameter "duty_cycle12" = "50"     Info (12134): Parameter "output_clock_frequency13" = "0 MHz"     Info (12134): Parameter "phase_shift13" = "0 ps"     Info (12134): Parameter "duty_cycle13" = "50"     Info (12134): Parameter "output_clock_frequency14" = "0 MHz"     Info (12134): Parameter "phase_shift14" = "0 ps"     Info (12134): Parameter "duty_cycle14" = "50"     Info (12134): Parameter "output_clock_frequency15" = "0 MHz"     Info (12134): Parameter "phase_shift15" = "0 ps"     Info (12134): Parameter "duty_cycle15" = "50"     Info (12134): Parameter "output_clock_frequency16" = "0 MHz"     Info (12134): Parameter "phase_shift16" = "0 ps"     Info (12134): Parameter "duty_cycle16" = "50"     Info (12134): Parameter "output_clock_frequency17" = "0 MHz"     Info (12134): Parameter "phase_shift17" = "0 ps"     Info (12134): Parameter "duty_cycle17" = "50"     Info (12134): Parameter "pll_type" = "General"     Info (12134): Parameter "pll_subtype" = "General" Info (281010): Generating sgate simulator netlist using Simgen SIMGEN_PROGRESS Start of Model generation -- 0% complete SIMGEN_PROGRESS Phase 1 : Internal Objects created -- 25% complete SIMGEN_PROGRESS Phase 2 : Connections between internal objects made -- 60% complete SIMGEN_PROGRESS Phase 3 : Netlist generated -- 100% complete Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 1 warning     Info: Peak virtual memory: 4794 megabytes     Info: Processing ended: Mon Sep 22 21:57:46 2025     Info: Elapsed time: 00:00:08     Info: Total CPU time (on all processors): 00:00:01 Info (23030): Evaluation of Tcl script run_simgen_cmd.tcl was successful Info: Quartus Prime Shell was successful. 0 errors, 0 warnings     Info: Peak virtual memory: 4669 megabytes     Info: Processing ended: Mon Sep 22 21:57:46 2025     Info: Elapsed time: 00:00:08     Info: Total CPU time (on all processors): 00:00:02
+Info: pll_0: Simgen was successful
 Info: pll_0: "soc_system" instantiated altera_pll "pll_0"
+Info: avalon_st_adapter: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_001: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_002: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_003: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_004: Inserting error_adapter: error_adapter_0
 Info: mm_interconnect_0: "soc_system" instantiated altera_mm_interconnect "mm_interconnect_0"
+Info: mm_interconnect_1: "soc_system" instantiated altera_mm_interconnect "mm_interconnect_1"
+Info: irq_mapper: "soc_system" instantiated altera_irq_mapper "irq_mapper"
+Info: avalon_st_adapter: "soc_system" instantiated altera_avalon_st_adapter "avalon_st_adapter"
+Info: avalon_st_adapter_001: "soc_system" instantiated altera_avalon_st_adapter "avalon_st_adapter_001"
 Info: rst_controller: "soc_system" instantiated altera_reset_controller "rst_controller"
+Info: dispatcher_internal: "DMA_neurax_read" instantiated modular_sgdma_dispatcher "dispatcher_internal"
+Info: write_mstr_internal: "DMA_neurax_read" instantiated dma_write_master "write_mstr_internal"
+Info: read_mstr_internal: "DMA_neurax_write" instantiated dma_read_master "read_mstr_internal"
 Info: fpga_interfaces: "hps_0" instantiated altera_interface_generator "fpga_interfaces"
 Info: hps_io: "hps_0" instantiated altera_hps_io "hps_io"
-Info: dma_0_read_master_translator: "mm_interconnect_0" instantiated altera_merlin_master_translator "dma_0_read_master_translator"
-Info: dma_0_read_master_agent: "mm_interconnect_0" instantiated altera_merlin_master_agent "dma_0_read_master_agent"
-Info: hps_0_f2h_axi_slave_agent: "mm_interconnect_0" instantiated altera_merlin_axi_slave_ni "hps_0_f2h_axi_slave_agent"
+Info: neurax_avalon_accelerator_0_avalon_slave_translator: "mm_interconnect_0" instantiated altera_merlin_slave_translator "neurax_avalon_accelerator_0_avalon_slave_translator"
+Info: hps_0_h2f_axi_master_agent: "mm_interconnect_0" instantiated altera_merlin_axi_master_ni "hps_0_h2f_axi_master_agent"
+Info: neurax_avalon_accelerator_0_avalon_slave_agent: "mm_interconnect_0" instantiated altera_merlin_slave_agent "neurax_avalon_accelerator_0_avalon_slave_agent"
+Info: neurax_avalon_accelerator_0_avalon_slave_agent_rsp_fifo: "mm_interconnect_0" instantiated altera_avalon_sc_fifo "neurax_avalon_accelerator_0_avalon_slave_agent_rsp_fifo"
 Info: router: "mm_interconnect_0" instantiated altera_merlin_router "router"
 Info: router_002: "mm_interconnect_0" instantiated altera_merlin_router "router_002"
-Info: dma_0_read_master_limiter: "mm_interconnect_0" instantiated altera_merlin_traffic_limiter "dma_0_read_master_limiter"
-Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_avalon_sc_fifo.v
+Info: router_005: "mm_interconnect_0" instantiated altera_merlin_router "router_005"
+Info: hps_0_h2f_axi_master_wr_limiter: "mm_interconnect_0" instantiated altera_merlin_traffic_limiter "hps_0_h2f_axi_master_wr_limiter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_avalon_sc_fifo.v
+Info: neurax_avalon_accelerator_0_avalon_slave_burst_adapter: "mm_interconnect_0" instantiated altera_merlin_burst_adapter "neurax_avalon_accelerator_0_avalon_slave_burst_adapter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_address_alignment.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_avalon_st_pipeline_base.v
 Info: cmd_demux: "mm_interconnect_0" instantiated altera_merlin_demultiplexer "cmd_demux"
-Info: cmd_demux_001: "mm_interconnect_0" instantiated altera_merlin_demultiplexer "cmd_demux_001"
 Info: cmd_mux: "mm_interconnect_0" instantiated altera_merlin_multiplexer "cmd_mux"
+Info: rsp_demux: "mm_interconnect_0" instantiated altera_merlin_demultiplexer "rsp_demux"
+Info: rsp_mux: "mm_interconnect_0" instantiated altera_merlin_multiplexer "rsp_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_arbitrator.sv
+Info: DMA_neurax_write_descriptor_slave_rsp_width_adapter: "mm_interconnect_0" instantiated altera_merlin_width_adapter "DMA_neurax_write_descriptor_slave_rsp_width_adapter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_address_alignment.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_burst_uncompressor.sv
+Info: avalon_st_adapter: "mm_interconnect_0" instantiated altera_avalon_st_adapter "avalon_st_adapter"
+Info: avalon_st_adapter_003: "mm_interconnect_0" instantiated altera_avalon_st_adapter "avalon_st_adapter_003"
+Info: DMA_neurax_write_mm_read_translator: "mm_interconnect_1" instantiated altera_merlin_master_translator "DMA_neurax_write_mm_read_translator"
+Info: DMA_neurax_write_mm_read_agent: "mm_interconnect_1" instantiated altera_merlin_master_agent "DMA_neurax_write_mm_read_agent"
+Info: hps_0_f2h_axi_slave_agent: "mm_interconnect_1" instantiated altera_merlin_axi_slave_ni "hps_0_f2h_axi_slave_agent"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_burst_uncompressor.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_avalon_sc_fifo.v
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_address_alignment.sv
+Info: router: "mm_interconnect_1" instantiated altera_merlin_router "router"
+Info: router_002: "mm_interconnect_1" instantiated altera_merlin_router "router_002"
+Info: cmd_demux: "mm_interconnect_1" instantiated altera_merlin_demultiplexer "cmd_demux"
+Info: cmd_demux_001: "mm_interconnect_1" instantiated altera_merlin_demultiplexer "cmd_demux_001"
+Info: cmd_mux: "mm_interconnect_1" instantiated altera_merlin_multiplexer "cmd_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_arbitrator.sv
+Info: rsp_mux: "mm_interconnect_1" instantiated altera_merlin_multiplexer "rsp_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_merlin_arbitrator.sv
+Info: channel_adapter_0: "avalon_st_adapter" instantiated channel_adapter "channel_adapter_0"
+Info: channel_adapter_0: "avalon_st_adapter_001" instantiated channel_adapter "channel_adapter_0"
+Info: border: "hps_io" instantiated altera_interface_generator "border"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/verbosity_pkg.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/avalon_utilities_pkg.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/avalon_mm_pkg.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_avalon_mm_slave_bfm.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_avalon_interrupt_sink.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_avalon_clock_source.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/submodules/altera_avalon_reset_source.sv
+Info: error_adapter_0: "avalon_st_adapter" instantiated error_adapter "error_adapter_0"
+Info: error_adapter_0: "avalon_st_adapter_003" instantiated error_adapter "error_adapter_0"
+Info: soc_system: Done "soc_system" with 47 modules, 83 files
+Info: qsys-generate succeeded.
+Info: Finished: Create simulation model
+Info: Starting: Create Modelsim Project.
+Info: sim-script-gen --spd=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\soc_system.spd --output-directory=D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/ --use-relative-paths=true
+Info: Doing: ip-make-simscript --spd=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\soc_system.spd --output-directory=D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/ --use-relative-paths=true
+Info: Generating the following file(s) for MODELSIM simulator in D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/ directory:
+Info: 	mentor/msim_setup.tcl
+Info: Generating the following file(s) for RIVIERA simulator in D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/ directory:
+Info: 	aldec/rivierapro_setup.tcl
+Info: For information on how to simulate your IP, see the explanatory comments in the simulator-specific subdirectories under D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/simulation/.
+Info: Regenerate these scripts whenever you make any change to any Quartus-generated IP in your project.
+Info: Finished: Create Modelsim Project.
+Info: Starting: Create block symbol file (.bsf)
+Info: qsys-generate D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system.qsys --block-symbol-file --output-directory=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system --family="Cyclone V" --part=5CSEMA5F31C6
+Progress: Loading qsys/soc_system.qsys
+Progress: Reading input file
+Progress: Adding DMA_neurax_read [altera_msgdma 24.1]
+Progress: Parameterizing module DMA_neurax_read
+Progress: Adding DMA_neurax_write [altera_msgdma 24.1]
+Progress: Parameterizing module DMA_neurax_write
+Progress: Adding clk_0 [clock_source 24.1]
+Progress: Parameterizing module clk_0
+Progress: Adding hps_0 [altera_hps 24.1]
+Progress: Parameterizing module hps_0
+Progress: Adding neurax_avalon_accelerator_0 [neurax_avalon_accelerator 1.0]
+Progress: Parameterizing module neurax_avalon_accelerator_0
+Progress: Adding pll_0 [altera_pll 24.1]
+Progress: Parameterizing module pll_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: soc_system.DMA_neurax_read: Response information port is disabled. Enable the response port if data transfer information is required by host
+Info: soc_system.hps_0: HPS Main PLL counter settings: n = 0  m = 73
+Info: soc_system.hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
+Warning: soc_system.hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
+Warning: soc_system.hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
+Warning: soc_system.hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
+Info: soc_system.pll_0: The legal reference clock frequency is 5.0 MHz..800.0 MHz
+Info: soc_system.pll_0: Able to implement PLL with user settings
+Info: soc_system.neurax_avalon_accelerator_0.avalon_source/DMA_neurax_read.st_sink: The source has a channel signal of 1 bits, but the sink does not. Avalon-ST Adapter will be inserted.
+Info: soc_system.DMA_neurax_write.st_source/neurax_avalon_accelerator_0.avalon_sink: Max channel is 1 for source and 0 for sink. Avalon-ST Adapter will be inserted..
+Info: qsys-generate succeeded.
+Info: Finished: Create block symbol file (.bsf)
+Info: 
+Info: Starting: Create HDL design files for synthesis
+Info: qsys-generate D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system.qsys --synthesis=VHDL --output-directory=D:\Fax\master\neurax\neurax\hardware\quartus\qsys\soc_system\synthesis --family="Cyclone V" --part=5CSEMA5F31C6
+Progress: Loading qsys/soc_system.qsys
+Progress: Reading input file
+Progress: Adding DMA_neurax_read [altera_msgdma 24.1]
+Progress: Parameterizing module DMA_neurax_read
+Progress: Adding DMA_neurax_write [altera_msgdma 24.1]
+Progress: Parameterizing module DMA_neurax_write
+Progress: Adding clk_0 [clock_source 24.1]
+Progress: Parameterizing module clk_0
+Progress: Adding hps_0 [altera_hps 24.1]
+Progress: Parameterizing module hps_0
+Progress: Adding neurax_avalon_accelerator_0 [neurax_avalon_accelerator 1.0]
+Progress: Parameterizing module neurax_avalon_accelerator_0
+Progress: Adding pll_0 [altera_pll 24.1]
+Progress: Parameterizing module pll_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: soc_system.DMA_neurax_read: Response information port is disabled. Enable the response port if data transfer information is required by host
+Info: soc_system.hps_0: HPS Main PLL counter settings: n = 0  m = 73
+Info: soc_system.hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
+Warning: soc_system.hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
+Warning: soc_system.hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
+Warning: soc_system.hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
+Info: soc_system.pll_0: The legal reference clock frequency is 5.0 MHz..800.0 MHz
+Info: soc_system.pll_0: Able to implement PLL with user settings
+Info: soc_system.neurax_avalon_accelerator_0.avalon_source/DMA_neurax_read.st_sink: The source has a channel signal of 1 bits, but the sink does not. Avalon-ST Adapter will be inserted.
+Info: soc_system.DMA_neurax_write.st_source/neurax_avalon_accelerator_0.avalon_sink: Max channel is 1 for source and 0 for sink. Avalon-ST Adapter will be inserted..
+Info: soc_system: Generating "soc_system" for QUARTUS_SYNTH
+Warning: hps_0.f2h_irq0: Cannot connect clock for irq_mapper.sender
+Warning: hps_0.f2h_irq0: Cannot connect reset for irq_mapper.sender
+Warning: hps_0.f2h_irq1: Cannot connect clock for irq_mapper_001.sender
+Warning: hps_0.f2h_irq1: Cannot connect reset for irq_mapper_001.sender
+Info: avalon_st_adapter: Inserting channel_adapter: channel_adapter_0
+Info: avalon_st_adapter_001: Inserting channel_adapter: channel_adapter_0
+Info: DMA_neurax_read: "soc_system" instantiated altera_msgdma "DMA_neurax_read"
+Info: DMA_neurax_write: "soc_system" instantiated altera_msgdma "DMA_neurax_write"
+Info: hps_0: "Running  for module: hps_0"
+Info: hps_0: HPS Main PLL counter settings: n = 0  m = 73
+Info: hps_0: HPS peripherial PLL counter settings: n = 0  m = 39
+Warning: hps_0: "Configuration/HPS-to-FPGA user 0 clock frequency" (desired_cfg_clk_mhz) requested 100.0 MHz, but only achieved 97.368421 MHz
+Warning: hps_0: 1 or more output clock frequencies cannot be achieved precisely, consider revising desired output clock frequencies.
+Warning: hps_0: HPS model no longer supports simulation for HPS FPGA Bridges.
+Info: hps_0: "soc_system" instantiated altera_hps "hps_0"
+Info: neurax_avalon_accelerator_0: "soc_system" instantiated neurax_avalon_accelerator "neurax_avalon_accelerator_0"
+Info: pll_0: "soc_system" instantiated altera_pll "pll_0"
+Info: avalon_st_adapter: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_001: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_002: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_003: Inserting error_adapter: error_adapter_0
+Info: avalon_st_adapter_004: Inserting error_adapter: error_adapter_0
+Info: mm_interconnect_0: "soc_system" instantiated altera_mm_interconnect "mm_interconnect_0"
+Info: mm_interconnect_1: "soc_system" instantiated altera_mm_interconnect "mm_interconnect_1"
+Info: irq_mapper: "soc_system" instantiated altera_irq_mapper "irq_mapper"
+Info: avalon_st_adapter: "soc_system" instantiated altera_avalon_st_adapter "avalon_st_adapter"
+Info: avalon_st_adapter_001: "soc_system" instantiated altera_avalon_st_adapter "avalon_st_adapter_001"
+Info: rst_controller: "soc_system" instantiated altera_reset_controller "rst_controller"
+Info: dispatcher_internal: "DMA_neurax_read" instantiated modular_sgdma_dispatcher "dispatcher_internal"
+Info: write_mstr_internal: "DMA_neurax_read" instantiated dma_write_master "write_mstr_internal"
+Info: read_mstr_internal: "DMA_neurax_write" instantiated dma_read_master "read_mstr_internal"
+Info: fpga_interfaces: "hps_0" instantiated altera_interface_generator "fpga_interfaces"
+Info: hps_io: "hps_0" instantiated altera_hps_io "hps_io"
+Info: neurax_avalon_accelerator_0_avalon_slave_translator: "mm_interconnect_0" instantiated altera_merlin_slave_translator "neurax_avalon_accelerator_0_avalon_slave_translator"
+Info: hps_0_h2f_axi_master_agent: "mm_interconnect_0" instantiated altera_merlin_axi_master_ni "hps_0_h2f_axi_master_agent"
+Info: neurax_avalon_accelerator_0_avalon_slave_agent: "mm_interconnect_0" instantiated altera_merlin_slave_agent "neurax_avalon_accelerator_0_avalon_slave_agent"
+Info: neurax_avalon_accelerator_0_avalon_slave_agent_rsp_fifo: "mm_interconnect_0" instantiated altera_avalon_sc_fifo "neurax_avalon_accelerator_0_avalon_slave_agent_rsp_fifo"
+Info: router: "mm_interconnect_0" instantiated altera_merlin_router "router"
+Info: router_002: "mm_interconnect_0" instantiated altera_merlin_router "router_002"
+Info: router_005: "mm_interconnect_0" instantiated altera_merlin_router "router_005"
+Info: hps_0_h2f_axi_master_wr_limiter: "mm_interconnect_0" instantiated altera_merlin_traffic_limiter "hps_0_h2f_axi_master_wr_limiter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_avalon_sc_fifo.v
+Info: neurax_avalon_accelerator_0_avalon_slave_burst_adapter: "mm_interconnect_0" instantiated altera_merlin_burst_adapter "neurax_avalon_accelerator_0_avalon_slave_burst_adapter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_address_alignment.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_avalon_st_pipeline_base.v
+Info: cmd_demux: "mm_interconnect_0" instantiated altera_merlin_demultiplexer "cmd_demux"
+Info: cmd_mux: "mm_interconnect_0" instantiated altera_merlin_multiplexer "cmd_mux"
+Info: rsp_demux: "mm_interconnect_0" instantiated altera_merlin_demultiplexer "rsp_demux"
 Info: rsp_mux: "mm_interconnect_0" instantiated altera_merlin_multiplexer "rsp_mux"
 Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_arbitrator.sv
+Info: DMA_neurax_write_descriptor_slave_rsp_width_adapter: "mm_interconnect_0" instantiated altera_merlin_width_adapter "DMA_neurax_write_descriptor_slave_rsp_width_adapter"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_address_alignment.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_burst_uncompressor.sv
+Info: avalon_st_adapter: "mm_interconnect_0" instantiated altera_avalon_st_adapter "avalon_st_adapter"
+Info: avalon_st_adapter_003: "mm_interconnect_0" instantiated altera_avalon_st_adapter "avalon_st_adapter_003"
+Info: DMA_neurax_write_mm_read_translator: "mm_interconnect_1" instantiated altera_merlin_master_translator "DMA_neurax_write_mm_read_translator"
+Info: DMA_neurax_write_mm_read_agent: "mm_interconnect_1" instantiated altera_merlin_master_agent "DMA_neurax_write_mm_read_agent"
+Info: hps_0_f2h_axi_slave_agent: "mm_interconnect_1" instantiated altera_merlin_axi_slave_ni "hps_0_f2h_axi_slave_agent"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_burst_uncompressor.sv
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_avalon_sc_fifo.v
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_address_alignment.sv
+Info: router: "mm_interconnect_1" instantiated altera_merlin_router "router"
+Info: router_002: "mm_interconnect_1" instantiated altera_merlin_router "router_002"
+Info: cmd_demux: "mm_interconnect_1" instantiated altera_merlin_demultiplexer "cmd_demux"
+Info: cmd_demux_001: "mm_interconnect_1" instantiated altera_merlin_demultiplexer "cmd_demux_001"
+Info: cmd_mux: "mm_interconnect_1" instantiated altera_merlin_multiplexer "cmd_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_arbitrator.sv
+Info: rsp_mux: "mm_interconnect_1" instantiated altera_merlin_multiplexer "rsp_mux"
+Info: Reusing file D:/Fax/master/neurax/neurax/hardware/quartus/qsys/soc_system/synthesis/submodules/altera_merlin_arbitrator.sv
+Info: channel_adapter_0: "avalon_st_adapter" instantiated channel_adapter "channel_adapter_0"
+Info: channel_adapter_0: "avalon_st_adapter_001" instantiated channel_adapter "channel_adapter_0"
 Info: border: "hps_io" instantiated altera_interface_generator "border"
-Info: soc_system: Done "soc_system" with 20 modules, 75 files
+Info: error_adapter_0: "avalon_st_adapter" instantiated error_adapter "error_adapter_0"
+Info: error_adapter_0: "avalon_st_adapter_003" instantiated error_adapter "error_adapter_0"
+Info: soc_system: Done "soc_system" with 47 modules, 118 files
 Info: qsys-generate succeeded.
 Info: Finished: Create HDL design files for synthesis

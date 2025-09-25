@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preferences>
+ <debug showDebugMenu="0" />
+ <systemtable filter="All Interfaces">
+  <columns>
+   <connections preferredWidth="207" />
+   <irq preferredWidth="47" />
+  </columns>
+ </systemtable>
+ <library
+   expandedCategories="Library/Basic Functions,Library,Library/Basic Functions/Bridges and Adaptors/Memory Mapped,Library/Basic Functions/Simulation; Debug and Verification,Library/Basic Functions/On Chip Memory,Library/DSP/Video and Image Processing,Library/Qsys Interconnect/Memory-Mapped,Project,Library/Basic Functions/Simulation; Debug and Verification/Simulation,Library/Basic Functions/Bridges and Adaptors,Library/University Program/Audio &amp; Video/Video,Library/Basic Functions/Bridges and Adaptors/Streaming,Library/Interface Protocols/PCI Express/Example Design Components,Library/Interface Protocols,Library/Qsys Interconnect,Library/Interface Protocols/Serial,Library/Basic Functions/Simulation; Debug and Verification/Verification,Library/University Program,Library/DSP,Library/Interface Protocols/PCI Express,Library/Processors and Peripherals/Peripherals,Library/Qsys Interconnect/Memory-Mapped Alpha,Library/Processors and Peripherals,Library/University Program/Audio &amp; Video" />
+ <window width="1920" height="1030" x="0" y="0" />
+ <generation
+   synthesis="VHDL"
+   path="_PROJECT_NAME_/"
+   simulation="VHDL"
+   testbench_simulation="VHDL" />
+ <hdlexample language="VHDL" />
+</preferences>
