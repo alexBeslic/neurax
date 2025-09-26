@@ -136,39 +136,319 @@
 					"strict" : false
 				},
 				{
-					"name" : "neurax_start_o",
+					"name" : "neurax_enable_o",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_layer_enable_o[0]",
+					"name" : "neurax_operation_select_o[0]",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_layer_enable_o[1]",
+					"name" : "neurax_operation_select_o[1]",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_layer_enable_o[2]",
+					"name" : "neurax_start_operation_o",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_pooling_type_o[0]",
+					"name" : "neurax_conv_kernel_size_o[0]",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_pooling_type_o[1]",
+					"name" : "neurax_conv_kernel_size_o[1]",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_activation_type_o[0]",
+					"name" : "neurax_conv_kernel_size_o[2]",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_activation_type_o[1]",
+					"name" : "neurax_conv_stride_o[0]",
 					"strict" : false
 				},
 				{
-					"name" : "neurax_16bit_mode_o",
+					"name" : "neurax_conv_stride_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_stride_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_padding_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_padding_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_input_channels_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_input_channels_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_input_channels_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_input_channels_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_input_channels_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_output_channels_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_output_channels_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_output_channels_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_output_channels_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_conv_output_channels_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_size_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_size_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_size_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_size_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_stride_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_stride_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_stride_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_stride_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_type_o.MAX_POOL",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_type_o.AVERAGE_POOL",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_type_o.MIN_POOL",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_type_o.SUM_POOL",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_channels_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_channels_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_channels_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_channels_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_pool_channels_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o.RELU",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o.SIGMOID",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o.TANH",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o.LINEAR",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o.LEAKY_RELU",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_activation_type_o.ELU",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[5]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[6]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[7]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[8]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[9]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[10]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[11]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_tensor_size_o[12]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[3]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[4]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[5]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[6]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[7]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[8]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[9]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[10]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[11]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[12]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[13]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[14]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_alpha_o[15]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_batch_size_o[0]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_batch_size_o[1]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_batch_size_o[2]",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_weight_valid_o",
+					"strict" : false
+				},
+				{
+					"name" : "neurax_bias_valid_o",
 					"strict" : false
 				},
 				{
@@ -181,6 +461,10 @@
 				},
 				{
 					"name" : "avs_address_i[2]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_address_i[3]",
 					"strict" : false
 				},
 				{
@@ -204,11 +488,11 @@
 					"strict" : false
 				},
 				{
-					"name" : "avs_byteenable_i[0]",
+					"name" : "avs_write_i",
 					"strict" : false
 				},
 				{
-					"name" : "avs_write_i",
+					"name" : "avs_byteenable_i[0]",
 					"strict" : false
 				},
 				{
@@ -224,15 +508,39 @@
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[4]",
+					"name" : "avs_writedata_i[24]",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[5]",
+					"name" : "avs_byteenable_i[3]",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[6]",
+					"name" : "avs_writedata_i[26]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[25]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[31]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[30]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[29]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[28]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[27]",
 					"strict" : false
 				},
 				{
@@ -240,7 +548,15 @@
 					"strict" : false
 				},
 				{
-					"name" : "neurax_finished_i",
+					"name" : "avs_writedata_i[6]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[5]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[4]",
 					"strict" : false
 				},
 				{
@@ -256,19 +572,7 @@
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[10]",
-					"strict" : false
-				},
-				{
-					"name" : "avs_writedata_i[11]",
-					"strict" : false
-				},
-				{
-					"name" : "avs_writedata_i[12]",
-					"strict" : false
-				},
-				{
-					"name" : "avs_writedata_i[13]",
+					"name" : "avs_writedata_i[15]",
 					"strict" : false
 				},
 				{
@@ -276,7 +580,19 @@
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[15]",
+					"name" : "avs_writedata_i[13]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[12]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[11]",
+					"strict" : false
+				},
+				{
+					"name" : "avs_writedata_i[10]",
 					"strict" : false
 				},
 				{
@@ -300,11 +616,7 @@
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[20]",
-					"strict" : false
-				},
-				{
-					"name" : "avs_writedata_i[21]",
+					"name" : "avs_writedata_i[23]",
 					"strict" : false
 				},
 				{
@@ -312,43 +624,43 @@
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[23]",
+					"name" : "avs_writedata_i[21]",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[24]",
+					"name" : "avs_writedata_i[20]",
 					"strict" : false
 				},
 				{
-					"name" : "avs_byteenable_i[3]",
+					"name" : "neurax_input_ready_i",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[25]",
+					"name" : "neurax_output_valid_i",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[26]",
+					"name" : "neurax_operation_done_i",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[27]",
+					"name" : "neurax_operation_busy_i",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[28]",
+					"name" : "neurax_current_operation_i[0]",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[29]",
+					"name" : "neurax_current_operation_i[1]",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[30]",
+					"name" : "neurax_weight_ready_i",
 					"strict" : false
 				},
 				{
-					"name" : "avs_writedata_i[31]",
+					"name" : "neurax_bias_ready_i",
 					"strict" : false
 				}
 			]
