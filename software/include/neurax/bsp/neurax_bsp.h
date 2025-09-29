@@ -17,19 +17,35 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "socal/hps.h"
+
+#include "neurax/bsp/hps_soc_system.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Hardware register addresses and offsets */
-#define NEURAX_BASE_ADDR        0xFF200000
-#define NEURAX_CTRL_REG         (NEURAX_BASE_ADDR + 0x00)
-#define NEURAX_STATUS_REG       (NEURAX_BASE_ADDR + 0x04)
-#define NEURAX_CONFIG_REG       (NEURAX_BASE_ADDR + 0x08)
-#define NEURAX_DATA_IN_REG      (NEURAX_BASE_ADDR + 0x10)
-#define NEURAX_DATA_OUT_REG     (NEURAX_BASE_ADDR + 0x14)
-#define NEURAX_DMA_CTRL_REG     (NEURAX_BASE_ADDR + 0x20)
+#define H2F_AXI_MASTER_SPAN          ALT_H2F_UB_ADDR - ALT_H2F_LB_ADDR + 1
+#define H2F_AXI_MASTER_OFFSET        ALT_H2F_OFST
+#define NEURAX_BASE_ADDR             NEURAX_AVALON_ACCELERATOR_0_BASE
+#define NEURAX_REG_SPAN              NEURAX_AVALON_ACCELERATOR_0_SPAN
+#define NEURAX_CMD_OFFSET               (0x00)
+#define NEURAX_STATUS_OFFSET            (0x04)
+#define NEURAX_CONFIG_OFFSET            (0x08)
+#define NEURAX_CONV_CONFIG_0_OFFSET     (0x0C)
+#define NEURAX_CONV_CONFIG_1_OFFSET     (0x10)
+#define NEURAX_POOL_CONFIG_OFFSET       (0x14)
+#define NEURAX_ACTIVATION_CONFIG_OFFSET (0x18)
+#define NEURAX_ACTIVATION_ALPHA_OFFSET  (0x1C)
+#define NEURAX_BATCH_SIZE_OFFSET        (0x20)
+#define NEURAX_TEMP_0_OFFSET            (0x24)
+#define NEURAX_TEMP_1_OFFSET            (0x28)
+#define NEURAX_TEMP_2_OFFSET            (0x2C)
+#define NEURAX_TEMP_3_OFFSET            (0x30)
+#define NEURAX_DEBUG_CYCLES_OFFSET      (0x34)
+#define NEURAX_DEBUG_STATUS_OFFSET      (0x38)
+#define NEURAX_READ_ONLY_OFFSET         (0x3C)
 
 /* Control register bit definitions */
 #define NEURAX_CTRL_ENABLE      (1 << 0)
@@ -44,6 +60,9 @@ extern "C" {
 #define NEURAX_STATUS_BUSY      (1 << 1)
 #define NEURAX_STATUS_DONE      (1 << 2)
 #define NEURAX_STATUS_ERROR     (1 << 3)
+
+/* Read only registers */
+#define NEURAX_READ_ONLY_ID     0xCAB00D1E 
 
 /* Data types */
 typedef enum {

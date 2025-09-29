@@ -24,7 +24,7 @@
 /* Static variables for memory mapping */
 static int mem_fd = -1;
 static void *mapped_base = NULL;
-static volatile uint32_t *reg_base = NULL;
+static volatile uint32_t *neurax_reg_base = NULL;
 
 /* Helper function to map physical memory */
 static int map_physical_memory(void) {
@@ -33,24 +33,24 @@ static int map_physical_memory(void) {
         return -errno;
     }
 
-    mapped_base = mmap(0, 4096, PROT_READ | PROT_WRITE, MAP_SHARED,
-                      mem_fd, NEURAX_BASE_ADDR);
+    mapped_base = mmap(0, H2F_AXI_MASTER_SPAN, PROT_READ | PROT_WRITE, MAP_SHARED,
+                      mem_fd, H2F_AXI_MASTER_OFFSET);
     if (mapped_base == MAP_FAILED) {
         close(mem_fd);
         mem_fd = -1;
         return -errno;
     }
 
-    reg_base = (volatile uint32_t *)mapped_base;
+    neurax_reg_base = (volatile uint32_t *)(mapped_base + NEURAX_BASE_ADDR);
     return 0;
 }
 
 /* Helper function to unmap physical memory */
 static void unmap_physical_memory(void) {
     if (mapped_base != NULL) {
-        munmap(mapped_base, 4096);
+        munmap(mapped_base, H2F_AXI_MASTER_OFFSET);
         mapped_base = NULL;
-        reg_base = NULL;
+        neurax_reg_base = NULL;
     }
     if (mem_fd != -1) {
         close(mem_fd);
@@ -65,13 +65,14 @@ int neurax_bsp_init(void) {
     }
 
     /* Reset the accelerator on initialization */
-    return neurax_bsp_reset();
+    /* TODO: Uncoment */
+    // return neurax_bsp_reset();
 }
 
 int neurax_bsp_deinit(void) {
     /* Disable accelerator before cleanup */
-    if (reg_base != NULL) {
-        reg_base[0] = 0; /* Clear control register */
+    if (neurax_reg_base != NULL) {
+        neurax_reg_base[0] = 0; /* Clear control register */
     }
 
     unmap_physical_memory();
@@ -79,50 +80,50 @@ int neurax_bsp_deinit(void) {
 }
 
 int neurax_bsp_reset(void) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
     /* Assert reset */
-    reg_base[0] = NEURAX_CTRL_RESET;
+    neurax_reg_base[0] = NEURAX_CTRL_RESET;
 
     /* Small delay */
     usleep(1000);
 
     /* Deassert reset and enable */
-    reg_base[0] = NEURAX_CTRL_ENABLE;
+    neurax_reg_base[0] = NEURAX_CTRL_ENABLE;
 
     return 0;
 }
 
 int neurax_bsp_write_reg(uint32_t offset, uint32_t value) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
-    if (offset >= 4096) {
+    if (offset >= NEURAX_REG_SPAN) {
         return -2; /* Offset out of range */
     }
 
-    reg_base[offset / 4] = value;
+    neurax_reg_base[offset] = value;
     return 0;
 }
 
 int neurax_bsp_read_reg(uint32_t offset, uint32_t *value) {
-    if (reg_base == NULL || value == NULL) {
+    if (neurax_reg_base == NULL || value == NULL) {
         return -1;
     }
 
-    if (offset >= 4096) {
+    if (offset >= NEURAX_REG_SPAN) {
         return -2; /* Offset out of range */
     }
 
-    *value = reg_base[offset / 4];
+    *value = neurax_reg_base[offset];
     return 0;
 }
 
 int neurax_bsp_config_conv(const neurax_conv_config_t *config) {
-    if (config == NULL || reg_base == NULL) {
+    if (config == NULL || neurax_reg_base == NULL) {
         return -1;
     }
 
@@ -134,30 +135,30 @@ int neurax_bsp_config_conv(const neurax_conv_config_t *config) {
                           (config->padding << 8) |
                           (config->input_channels & 0xFF);
 
-    reg_base[2] = conv_config; /* Assuming offset 0x08 for config */
+    neurax_reg_base[2] = conv_config; /* Assuming offset 0x08 for config */
 
     return 0;
 }
 
 int neurax_bsp_config_activation(neurax_activation_t activation) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
     uint32_t current_config;
-    current_config = reg_base[2];
+    current_config = neurax_reg_base[2];
 
     /* Clear activation bits and set new value */
     current_config &= ~(0x3 << 4);
     current_config |= (activation & 0x3) << 4;
 
-    reg_base[2] = current_config;
+    neurax_reg_base[2] = current_config;
 
     return 0;
 }
 
 int neurax_bsp_config_pooling(const neurax_pool_config_t *config) {
-    if (config == NULL || reg_base == NULL) {
+    if (config == NULL || neurax_reg_base == NULL) {
         return -1;
     }
 
@@ -166,17 +167,17 @@ int neurax_bsp_config_pooling(const neurax_pool_config_t *config) {
                           (config->stride << 8) |
                           (config->type & 0x1);
 
-    reg_base[3] = pool_config; /* Assuming another config register */
+    neurax_reg_base[3] = pool_config; /* Assuming another config register */
 
     return 0;
 }
 
 int neurax_bsp_set_data_width(neurax_data_width_t width) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
-    uint32_t ctrl_reg = reg_base[0];
+    uint32_t ctrl_reg = neurax_reg_base[0];
 
     if (width == NEURAX_DATA_16BIT) {
         ctrl_reg |= (1 << 7); /* Set 16-bit mode */
@@ -184,43 +185,43 @@ int neurax_bsp_set_data_width(neurax_data_width_t width) {
         ctrl_reg &= ~(1 << 7); /* Clear for 8-bit mode */
     }
 
-    reg_base[0] = ctrl_reg;
+    neurax_reg_base[0] = ctrl_reg;
 
     return 0;
 }
 
 int neurax_bsp_start(void) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
-    uint32_t ctrl_reg = reg_base[0];
+    uint32_t ctrl_reg = neurax_reg_base[0];
     ctrl_reg |= NEURAX_CTRL_START;
-    reg_base[0] = ctrl_reg;
+    neurax_reg_base[0] = ctrl_reg;
 
     return 0;
 }
 
 bool neurax_bsp_is_ready(void) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return false;
     }
 
-    uint32_t status = reg_base[1]; /* Status register */
+    uint32_t status = neurax_reg_base[1]; /* Status register */
     return (status & NEURAX_STATUS_READY) != 0;
 }
 
 bool neurax_bsp_is_busy(void) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return false;
     }
 
-    uint32_t status = reg_base[1]; /* Status register */
+    uint32_t status = neurax_reg_base[1]; /* Status register */
     return (status & NEURAX_STATUS_BUSY) != 0;
 }
 
 int neurax_bsp_wait_done(uint32_t timeout_ms) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
@@ -228,7 +229,7 @@ int neurax_bsp_wait_done(uint32_t timeout_ms) {
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     while (1) {
-        uint32_t status = reg_base[1];
+        uint32_t status = neurax_reg_base[1];
         if (status & NEURAX_STATUS_DONE) {
             return 0; /* Operation completed */
         }
@@ -250,32 +251,32 @@ int neurax_bsp_wait_done(uint32_t timeout_ms) {
 }
 
 int neurax_bsp_dma_setup(uint32_t src_addr, uint32_t dst_addr, size_t size) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
     /* Configure DMA registers - simplified implementation */
-    reg_base[8] = src_addr;   /* DMA source address */
-    reg_base[9] = dst_addr;   /* DMA destination address */
-    reg_base[10] = size;      /* DMA transfer size */
+    neurax_reg_base[8] = src_addr;   /* DMA source address */
+    neurax_reg_base[9] = dst_addr;   /* DMA destination address */
+    neurax_reg_base[10] = size;      /* DMA transfer size */
 
     return 0;
 }
 
 int neurax_bsp_dma_start(void) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
-    uint32_t dma_ctrl = reg_base[8]; /* DMA control register */
+    uint32_t dma_ctrl = neurax_reg_base[8]; /* DMA control register */
     dma_ctrl |= 0x1; /* Start DMA */
-    reg_base[8] = dma_ctrl;
+    neurax_reg_base[8] = dma_ctrl;
 
     return 0;
 }
 
 int neurax_bsp_dma_wait(uint32_t timeout_ms) {
-    if (reg_base == NULL) {
+    if (neurax_reg_base == NULL) {
         return -1;
     }
 
@@ -283,7 +284,7 @@ int neurax_bsp_dma_wait(uint32_t timeout_ms) {
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     while (1) {
-        uint32_t dma_status = reg_base[8];
+        uint32_t dma_status = neurax_reg_base[8];
         if ((dma_status & 0x2) == 0) { /* DMA done bit cleared */
             return 0;
         }
