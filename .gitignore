@@ -56,32 +56,28 @@ Thumbs.db
 *.log
 *.out
 
-# Backup files
-*.bak
-*.backup
-*_backup.*
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
 
-# Temporary files
-tmp/
-temp/
-*.tmp
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
 
-# Model files (potentially large)
-*.onnx
-*.pb
-*.tflite
-*.pth
-*.h5
+# debug information files
+*.dwo
 
-# Data files
+build/
+.venv/
 *.bin
-*.dat
-*.raw
-
-# Generated files
-*_generated.*
-*_auto.*
-
-# Dependency files
-*.d
-*.dep
+*.npy
+manifest.jsonž
+*.npz
+.vscode/

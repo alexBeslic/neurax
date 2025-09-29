@@ -1,0 +1,160 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# Object files
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+!CMakeLists.txt
+*.cmake
+!cmake/*.cmake
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.orig
+
+# Documentation generated files
+docs/html/
+docs/latex/
+docs/man/
+*.pdf
+
+# Test results
+Testing/
+CTestTestfile.cmake
+
+# Package files
+*.tar.gz
+*.zip
+*.deb
+*.rpm
+
+# Hardware specific files
+*.qpf
+*.qsf
+*.qws
+*.rpt
+*.summary
+*.pin
+*.jdi
+*.sof
+*.pof
+db/
+incremental_db/
+simulation/
+timing/
+*.qip
+*.bsf
+*.cmp
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*~
+*.backup
+
+# Binary executables
+neurax_demo_cpp
+neurax_demo_c
+test_bsp
+test_core
+test_c_api
+
+# Library files
+libneurax*
+
+# Generated files
+*.d
+*.map
+*.lst
+
+# Python files (for future Python bindings)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Jupyter notebooks (for analysis)
+.ipynb_checkpoints/
+
+# Configuration files with sensitive data
+config.local.*
+secrets.*
+
+# Lock files
+package-lock.json
+yarn.lock
+
+# Coverage reports
+*.gcov
+*.gcda
+*.gcno
+coverage/
+*.coverage
+
+# Profiling data
+*.prof
+gmon.out
+
+# Valgrind output
+vgcore.*
+*.log.*
+
+# Core dumps
+core.*
+
+# GDB history
+.gdb_history
+
+# Compiler specific
+.ccls-cache/
+.clangd/
+
+# Static analysis
+.scan-build/
+cppcheck-report.*
