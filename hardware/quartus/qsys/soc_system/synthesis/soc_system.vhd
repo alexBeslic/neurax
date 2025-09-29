@@ -238,34 +238,35 @@ architecture rtl of soc_system is
 
 	component neurax is
 		generic (
-			g_WIDTH       : natural := 32;
-			g_ADDR_WIDTH  : natural := 3;
-			g_PIXEL_WIDTH : natural := 24;
-			g_FB_WIDTH    : natural := 100;
-			g_FB_HEIGHT   : natural := 100
+			g_WIDTH        : natural := 32;
+			g_ADDR_WIDTH   : natural := 3;
+			g_PIXEL_WIDTH  : natural := 24;
+			g_FB_WIDTH     : natural := 100;
+			g_FB_HEIGHT    : natural := 100;
+			PARALLEL_UNITS : integer := 4
 		);
 		port (
 			rst_i               : in  std_logic                     := 'X';             -- reset
 			clk_i               : in  std_logic                     := 'X';             -- clk
 			asi_channel_i       : in  std_logic                     := 'X';             -- channel
 			asi_data_i          : in  std_logic_vector(31 downto 0) := (others => 'X'); -- data
-			asi_valid_i         : in  std_logic                     := 'X';             -- valid
 			asi_error_i         : in  std_logic                     := 'X';             -- error
+			asi_valid_i         : in  std_logic                     := 'X';             -- valid
 			asi_ready_o         : out std_logic;                                        -- ready
-			aso_data_o          : out std_logic_vector(31 downto 0);                    -- data
-			aso_valid_o         : out std_logic;                                        -- valid
 			aso_channel_o       : out std_logic;                                        -- channel
+			aso_data_o          : out std_logic_vector(31 downto 0);                    -- data
 			aso_error_o         : out std_logic;                                        -- error
+			aso_valid_o         : out std_logic;                                        -- valid
 			aso_ready_i         : in  std_logic                     := 'X';             -- ready
-			avs_readdata_o      : out std_logic_vector(31 downto 0);                    -- readdata
-			avs_readdatavalid_o : out std_logic;                                        -- readdatavalid
-			avs_waitrequest_o   : out std_logic;                                        -- waitrequest
-			avs_address_i       : in  std_logic_vector(2 downto 0)  := (others => 'X'); -- address
+			avs_address_i       : in  std_logic_vector(3 downto 0)  := (others => 'X'); -- address
 			avs_byteenable_i    : in  std_logic_vector(3 downto 0)  := (others => 'X'); -- byteenable
 			avs_chipselect_i    : in  std_logic                     := 'X';             -- chipselect
 			avs_read_i          : in  std_logic                     := 'X';             -- read
 			avs_write_i         : in  std_logic                     := 'X';             -- write
-			avs_writedata_i     : in  std_logic_vector(31 downto 0) := (others => 'X')  -- writedata
+			avs_writedata_i     : in  std_logic_vector(31 downto 0) := (others => 'X'); -- writedata
+			avs_readdata_o      : out std_logic_vector(31 downto 0);                    -- readdata
+			avs_readdatavalid_o : out std_logic;                                        -- readdatavalid
+			avs_waitrequest_o   : out std_logic                                         -- waitrequest
 		);
 	end component neurax;
 
@@ -317,6 +318,7 @@ architecture rtl of soc_system is
 			hps_0_h2f_axi_master_rvalid                                      : out std_logic;                                         -- rvalid
 			hps_0_h2f_axi_master_rready                                      : in  std_logic                      := 'X';             -- rready
 			pll_0_outclk0_clk                                                : in  std_logic                      := 'X';             -- clk
+			DMA_neurax_read_reset_n_reset_bridge_in_reset_reset              : in  std_logic                      := 'X';             -- reset
 			hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset_reset : in  std_logic                      := 'X';             -- reset
 			neurax_avalon_accelerator_0_reset_reset_bridge_in_reset_reset    : in  std_logic                      := 'X';             -- reset
 			DMA_neurax_read_csr_address                                      : out std_logic_vector(2 downto 0);                      -- address
@@ -339,15 +341,15 @@ architecture rtl of soc_system is
 			DMA_neurax_write_descriptor_slave_writedata                      : out std_logic_vector(127 downto 0);                    -- writedata
 			DMA_neurax_write_descriptor_slave_byteenable                     : out std_logic_vector(15 downto 0);                     -- byteenable
 			DMA_neurax_write_descriptor_slave_waitrequest                    : in  std_logic                      := 'X';             -- waitrequest
-			neurax_avalon_accelerator_0_avalon_slave_address                 : out std_logic_vector(2 downto 0);                      -- address
-			neurax_avalon_accelerator_0_avalon_slave_write                   : out std_logic;                                         -- write
-			neurax_avalon_accelerator_0_avalon_slave_read                    : out std_logic;                                         -- read
-			neurax_avalon_accelerator_0_avalon_slave_readdata                : in  std_logic_vector(31 downto 0)  := (others => 'X'); -- readdata
-			neurax_avalon_accelerator_0_avalon_slave_writedata               : out std_logic_vector(31 downto 0);                     -- writedata
-			neurax_avalon_accelerator_0_avalon_slave_byteenable              : out std_logic_vector(3 downto 0);                      -- byteenable
-			neurax_avalon_accelerator_0_avalon_slave_readdatavalid           : in  std_logic                      := 'X';             -- readdatavalid
-			neurax_avalon_accelerator_0_avalon_slave_waitrequest             : in  std_logic                      := 'X';             -- waitrequest
-			neurax_avalon_accelerator_0_avalon_slave_chipselect              : out std_logic                                          -- chipselect
+			neurax_avalon_accelerator_0_avalon_slave_0_address               : out std_logic_vector(3 downto 0);                      -- address
+			neurax_avalon_accelerator_0_avalon_slave_0_write                 : out std_logic;                                         -- write
+			neurax_avalon_accelerator_0_avalon_slave_0_read                  : out std_logic;                                         -- read
+			neurax_avalon_accelerator_0_avalon_slave_0_readdata              : in  std_logic_vector(31 downto 0)  := (others => 'X'); -- readdata
+			neurax_avalon_accelerator_0_avalon_slave_0_writedata             : out std_logic_vector(31 downto 0);                     -- writedata
+			neurax_avalon_accelerator_0_avalon_slave_0_byteenable            : out std_logic_vector(3 downto 0);                      -- byteenable
+			neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid         : in  std_logic                      := 'X';             -- readdatavalid
+			neurax_avalon_accelerator_0_avalon_slave_0_waitrequest           : in  std_logic                      := 'X';             -- waitrequest
+			neurax_avalon_accelerator_0_avalon_slave_0_chipselect            : out std_logic                                          -- chipselect
 		);
 	end component soc_system_mm_interconnect_0;
 
@@ -618,150 +620,151 @@ architecture rtl of soc_system is
 		);
 	end component soc_system_rst_controller_001;
 
-	signal pll_0_outclk0_clk                                                        : std_logic;                      -- pll_0:outclk_0 -> [DMA_neurax_read:clock_clk, DMA_neurax_write:clock_clk, avalon_st_adapter:in_clk_0_clk, avalon_st_adapter_001:in_clk_0_clk, hps_0:f2h_axi_clk, hps_0:h2f_axi_clk, mm_interconnect_0:pll_0_outclk0_clk, mm_interconnect_1:pll_0_outclk0_clk, neurax_avalon_accelerator_0:clk_i, rst_controller:clk, rst_controller_001:clk]
-	signal hps_0_h2f_axi_master_awburst                                             : std_logic_vector(1 downto 0);   -- hps_0:h2f_AWBURST -> mm_interconnect_0:hps_0_h2f_axi_master_awburst
-	signal hps_0_h2f_axi_master_arlen                                               : std_logic_vector(3 downto 0);   -- hps_0:h2f_ARLEN -> mm_interconnect_0:hps_0_h2f_axi_master_arlen
-	signal hps_0_h2f_axi_master_wstrb                                               : std_logic_vector(3 downto 0);   -- hps_0:h2f_WSTRB -> mm_interconnect_0:hps_0_h2f_axi_master_wstrb
-	signal hps_0_h2f_axi_master_wready                                              : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_wready -> hps_0:h2f_WREADY
-	signal hps_0_h2f_axi_master_rid                                                 : std_logic_vector(11 downto 0);  -- mm_interconnect_0:hps_0_h2f_axi_master_rid -> hps_0:h2f_RID
-	signal hps_0_h2f_axi_master_rready                                              : std_logic;                      -- hps_0:h2f_RREADY -> mm_interconnect_0:hps_0_h2f_axi_master_rready
-	signal hps_0_h2f_axi_master_awlen                                               : std_logic_vector(3 downto 0);   -- hps_0:h2f_AWLEN -> mm_interconnect_0:hps_0_h2f_axi_master_awlen
-	signal hps_0_h2f_axi_master_wid                                                 : std_logic_vector(11 downto 0);  -- hps_0:h2f_WID -> mm_interconnect_0:hps_0_h2f_axi_master_wid
-	signal hps_0_h2f_axi_master_arcache                                             : std_logic_vector(3 downto 0);   -- hps_0:h2f_ARCACHE -> mm_interconnect_0:hps_0_h2f_axi_master_arcache
-	signal hps_0_h2f_axi_master_wvalid                                              : std_logic;                      -- hps_0:h2f_WVALID -> mm_interconnect_0:hps_0_h2f_axi_master_wvalid
-	signal hps_0_h2f_axi_master_araddr                                              : std_logic_vector(29 downto 0);  -- hps_0:h2f_ARADDR -> mm_interconnect_0:hps_0_h2f_axi_master_araddr
-	signal hps_0_h2f_axi_master_arprot                                              : std_logic_vector(2 downto 0);   -- hps_0:h2f_ARPROT -> mm_interconnect_0:hps_0_h2f_axi_master_arprot
-	signal hps_0_h2f_axi_master_awprot                                              : std_logic_vector(2 downto 0);   -- hps_0:h2f_AWPROT -> mm_interconnect_0:hps_0_h2f_axi_master_awprot
-	signal hps_0_h2f_axi_master_wdata                                               : std_logic_vector(31 downto 0);  -- hps_0:h2f_WDATA -> mm_interconnect_0:hps_0_h2f_axi_master_wdata
-	signal hps_0_h2f_axi_master_arvalid                                             : std_logic;                      -- hps_0:h2f_ARVALID -> mm_interconnect_0:hps_0_h2f_axi_master_arvalid
-	signal hps_0_h2f_axi_master_awcache                                             : std_logic_vector(3 downto 0);   -- hps_0:h2f_AWCACHE -> mm_interconnect_0:hps_0_h2f_axi_master_awcache
-	signal hps_0_h2f_axi_master_arid                                                : std_logic_vector(11 downto 0);  -- hps_0:h2f_ARID -> mm_interconnect_0:hps_0_h2f_axi_master_arid
-	signal hps_0_h2f_axi_master_arlock                                              : std_logic_vector(1 downto 0);   -- hps_0:h2f_ARLOCK -> mm_interconnect_0:hps_0_h2f_axi_master_arlock
-	signal hps_0_h2f_axi_master_awlock                                              : std_logic_vector(1 downto 0);   -- hps_0:h2f_AWLOCK -> mm_interconnect_0:hps_0_h2f_axi_master_awlock
-	signal hps_0_h2f_axi_master_awaddr                                              : std_logic_vector(29 downto 0);  -- hps_0:h2f_AWADDR -> mm_interconnect_0:hps_0_h2f_axi_master_awaddr
-	signal hps_0_h2f_axi_master_bresp                                               : std_logic_vector(1 downto 0);   -- mm_interconnect_0:hps_0_h2f_axi_master_bresp -> hps_0:h2f_BRESP
-	signal hps_0_h2f_axi_master_arready                                             : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_arready -> hps_0:h2f_ARREADY
-	signal hps_0_h2f_axi_master_rdata                                               : std_logic_vector(31 downto 0);  -- mm_interconnect_0:hps_0_h2f_axi_master_rdata -> hps_0:h2f_RDATA
-	signal hps_0_h2f_axi_master_awready                                             : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_awready -> hps_0:h2f_AWREADY
-	signal hps_0_h2f_axi_master_arburst                                             : std_logic_vector(1 downto 0);   -- hps_0:h2f_ARBURST -> mm_interconnect_0:hps_0_h2f_axi_master_arburst
-	signal hps_0_h2f_axi_master_arsize                                              : std_logic_vector(2 downto 0);   -- hps_0:h2f_ARSIZE -> mm_interconnect_0:hps_0_h2f_axi_master_arsize
-	signal hps_0_h2f_axi_master_bready                                              : std_logic;                      -- hps_0:h2f_BREADY -> mm_interconnect_0:hps_0_h2f_axi_master_bready
-	signal hps_0_h2f_axi_master_rlast                                               : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_rlast -> hps_0:h2f_RLAST
-	signal hps_0_h2f_axi_master_wlast                                               : std_logic;                      -- hps_0:h2f_WLAST -> mm_interconnect_0:hps_0_h2f_axi_master_wlast
-	signal hps_0_h2f_axi_master_rresp                                               : std_logic_vector(1 downto 0);   -- mm_interconnect_0:hps_0_h2f_axi_master_rresp -> hps_0:h2f_RRESP
-	signal hps_0_h2f_axi_master_awid                                                : std_logic_vector(11 downto 0);  -- hps_0:h2f_AWID -> mm_interconnect_0:hps_0_h2f_axi_master_awid
-	signal hps_0_h2f_axi_master_bid                                                 : std_logic_vector(11 downto 0);  -- mm_interconnect_0:hps_0_h2f_axi_master_bid -> hps_0:h2f_BID
-	signal hps_0_h2f_axi_master_bvalid                                              : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_bvalid -> hps_0:h2f_BVALID
-	signal hps_0_h2f_axi_master_awsize                                              : std_logic_vector(2 downto 0);   -- hps_0:h2f_AWSIZE -> mm_interconnect_0:hps_0_h2f_axi_master_awsize
-	signal hps_0_h2f_axi_master_awvalid                                             : std_logic;                      -- hps_0:h2f_AWVALID -> mm_interconnect_0:hps_0_h2f_axi_master_awvalid
-	signal hps_0_h2f_axi_master_rvalid                                              : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_rvalid -> hps_0:h2f_RVALID
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_chipselect    : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_chipselect -> neurax_avalon_accelerator_0:avs_chipselect_i
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_readdata      : std_logic_vector(31 downto 0);  -- neurax_avalon_accelerator_0:avs_readdata_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_readdata
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_waitrequest   : std_logic;                      -- neurax_avalon_accelerator_0:avs_waitrequest_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_waitrequest
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_address       : std_logic_vector(2 downto 0);   -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_address -> neurax_avalon_accelerator_0:avs_address_i
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_read          : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_read -> neurax_avalon_accelerator_0:avs_read_i
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_byteenable    : std_logic_vector(3 downto 0);   -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_byteenable -> neurax_avalon_accelerator_0:avs_byteenable_i
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_readdatavalid : std_logic;                      -- neurax_avalon_accelerator_0:avs_readdatavalid_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_readdatavalid
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_write         : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_write -> neurax_avalon_accelerator_0:avs_write_i
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_writedata     : std_logic_vector(31 downto 0);  -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_writedata -> neurax_avalon_accelerator_0:avs_writedata_i
-	signal mm_interconnect_0_dma_neurax_read_csr_readdata                           : std_logic_vector(31 downto 0);  -- DMA_neurax_read:csr_readdata -> mm_interconnect_0:DMA_neurax_read_csr_readdata
-	signal mm_interconnect_0_dma_neurax_read_csr_address                            : std_logic_vector(2 downto 0);   -- mm_interconnect_0:DMA_neurax_read_csr_address -> DMA_neurax_read:csr_address
-	signal mm_interconnect_0_dma_neurax_read_csr_read                               : std_logic;                      -- mm_interconnect_0:DMA_neurax_read_csr_read -> DMA_neurax_read:csr_read
-	signal mm_interconnect_0_dma_neurax_read_csr_byteenable                         : std_logic_vector(3 downto 0);   -- mm_interconnect_0:DMA_neurax_read_csr_byteenable -> DMA_neurax_read:csr_byteenable
-	signal mm_interconnect_0_dma_neurax_read_csr_write                              : std_logic;                      -- mm_interconnect_0:DMA_neurax_read_csr_write -> DMA_neurax_read:csr_write
-	signal mm_interconnect_0_dma_neurax_read_csr_writedata                          : std_logic_vector(31 downto 0);  -- mm_interconnect_0:DMA_neurax_read_csr_writedata -> DMA_neurax_read:csr_writedata
-	signal mm_interconnect_0_dma_neurax_write_csr_readdata                          : std_logic_vector(31 downto 0);  -- DMA_neurax_write:csr_readdata -> mm_interconnect_0:DMA_neurax_write_csr_readdata
-	signal mm_interconnect_0_dma_neurax_write_csr_address                           : std_logic_vector(2 downto 0);   -- mm_interconnect_0:DMA_neurax_write_csr_address -> DMA_neurax_write:csr_address
-	signal mm_interconnect_0_dma_neurax_write_csr_read                              : std_logic;                      -- mm_interconnect_0:DMA_neurax_write_csr_read -> DMA_neurax_write:csr_read
-	signal mm_interconnect_0_dma_neurax_write_csr_byteenable                        : std_logic_vector(3 downto 0);   -- mm_interconnect_0:DMA_neurax_write_csr_byteenable -> DMA_neurax_write:csr_byteenable
-	signal mm_interconnect_0_dma_neurax_write_csr_write                             : std_logic;                      -- mm_interconnect_0:DMA_neurax_write_csr_write -> DMA_neurax_write:csr_write
-	signal mm_interconnect_0_dma_neurax_write_csr_writedata                         : std_logic_vector(31 downto 0);  -- mm_interconnect_0:DMA_neurax_write_csr_writedata -> DMA_neurax_write:csr_writedata
-	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_waitrequest          : std_logic;                      -- DMA_neurax_write:descriptor_slave_waitrequest -> mm_interconnect_0:DMA_neurax_write_descriptor_slave_waitrequest
-	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_byteenable           : std_logic_vector(15 downto 0);  -- mm_interconnect_0:DMA_neurax_write_descriptor_slave_byteenable -> DMA_neurax_write:descriptor_slave_byteenable
-	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_write                : std_logic;                      -- mm_interconnect_0:DMA_neurax_write_descriptor_slave_write -> DMA_neurax_write:descriptor_slave_write
-	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_writedata            : std_logic_vector(127 downto 0); -- mm_interconnect_0:DMA_neurax_write_descriptor_slave_writedata -> DMA_neurax_write:descriptor_slave_writedata
-	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_waitrequest           : std_logic;                      -- DMA_neurax_read:descriptor_slave_waitrequest -> mm_interconnect_0:DMA_neurax_read_descriptor_slave_waitrequest
-	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_byteenable            : std_logic_vector(15 downto 0);  -- mm_interconnect_0:DMA_neurax_read_descriptor_slave_byteenable -> DMA_neurax_read:descriptor_slave_byteenable
-	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_write                 : std_logic;                      -- mm_interconnect_0:DMA_neurax_read_descriptor_slave_write -> DMA_neurax_read:descriptor_slave_write
-	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_writedata             : std_logic_vector(127 downto 0); -- mm_interconnect_0:DMA_neurax_read_descriptor_slave_writedata -> DMA_neurax_read:descriptor_slave_writedata
-	signal dma_neurax_write_mm_read_readdata                                        : std_logic_vector(31 downto 0);  -- mm_interconnect_1:DMA_neurax_write_mm_read_readdata -> DMA_neurax_write:mm_read_readdata
-	signal dma_neurax_write_mm_read_waitrequest                                     : std_logic;                      -- mm_interconnect_1:DMA_neurax_write_mm_read_waitrequest -> DMA_neurax_write:mm_read_waitrequest
-	signal dma_neurax_write_mm_read_address                                         : std_logic_vector(31 downto 0);  -- DMA_neurax_write:mm_read_address -> mm_interconnect_1:DMA_neurax_write_mm_read_address
-	signal dma_neurax_write_mm_read_read                                            : std_logic;                      -- DMA_neurax_write:mm_read_read -> mm_interconnect_1:DMA_neurax_write_mm_read_read
-	signal dma_neurax_write_mm_read_byteenable                                      : std_logic_vector(3 downto 0);   -- DMA_neurax_write:mm_read_byteenable -> mm_interconnect_1:DMA_neurax_write_mm_read_byteenable
-	signal dma_neurax_write_mm_read_readdatavalid                                   : std_logic;                      -- mm_interconnect_1:DMA_neurax_write_mm_read_readdatavalid -> DMA_neurax_write:mm_read_readdatavalid
-	signal dma_neurax_read_mm_write_waitrequest                                     : std_logic;                      -- mm_interconnect_1:DMA_neurax_read_mm_write_waitrequest -> DMA_neurax_read:mm_write_waitrequest
-	signal dma_neurax_read_mm_write_address                                         : std_logic_vector(31 downto 0);  -- DMA_neurax_read:mm_write_address -> mm_interconnect_1:DMA_neurax_read_mm_write_address
-	signal dma_neurax_read_mm_write_byteenable                                      : std_logic_vector(3 downto 0);   -- DMA_neurax_read:mm_write_byteenable -> mm_interconnect_1:DMA_neurax_read_mm_write_byteenable
-	signal dma_neurax_read_mm_write_write                                           : std_logic;                      -- DMA_neurax_read:mm_write_write -> mm_interconnect_1:DMA_neurax_read_mm_write_write
-	signal dma_neurax_read_mm_write_writedata                                       : std_logic_vector(31 downto 0);  -- DMA_neurax_read:mm_write_writedata -> mm_interconnect_1:DMA_neurax_read_mm_write_writedata
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awburst                            : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awburst -> hps_0:f2h_AWBURST
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awuser                             : std_logic_vector(4 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awuser -> hps_0:f2h_AWUSER
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arlen                              : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arlen -> hps_0:f2h_ARLEN
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_wstrb                              : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_wstrb -> hps_0:f2h_WSTRB
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_wready                             : std_logic;                      -- hps_0:f2h_WREADY -> mm_interconnect_1:hps_0_f2h_axi_slave_wready
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_rid                                : std_logic_vector(7 downto 0);   -- hps_0:f2h_RID -> mm_interconnect_1:hps_0_f2h_axi_slave_rid
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_rready                             : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_rready -> hps_0:f2h_RREADY
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awlen                              : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awlen -> hps_0:f2h_AWLEN
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_wid                                : std_logic_vector(7 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_wid -> hps_0:f2h_WID
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arcache                            : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arcache -> hps_0:f2h_ARCACHE
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_wvalid                             : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_wvalid -> hps_0:f2h_WVALID
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_araddr                             : std_logic_vector(31 downto 0);  -- mm_interconnect_1:hps_0_f2h_axi_slave_araddr -> hps_0:f2h_ARADDR
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arprot                             : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arprot -> hps_0:f2h_ARPROT
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awprot                             : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awprot -> hps_0:f2h_AWPROT
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_wdata                              : std_logic_vector(31 downto 0);  -- mm_interconnect_1:hps_0_f2h_axi_slave_wdata -> hps_0:f2h_WDATA
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arvalid                            : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_arvalid -> hps_0:f2h_ARVALID
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awcache                            : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awcache -> hps_0:f2h_AWCACHE
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arid                               : std_logic_vector(7 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arid -> hps_0:f2h_ARID
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arlock                             : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arlock -> hps_0:f2h_ARLOCK
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awlock                             : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awlock -> hps_0:f2h_AWLOCK
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awaddr                             : std_logic_vector(31 downto 0);  -- mm_interconnect_1:hps_0_f2h_axi_slave_awaddr -> hps_0:f2h_AWADDR
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_bresp                              : std_logic_vector(1 downto 0);   -- hps_0:f2h_BRESP -> mm_interconnect_1:hps_0_f2h_axi_slave_bresp
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arready                            : std_logic;                      -- hps_0:f2h_ARREADY -> mm_interconnect_1:hps_0_f2h_axi_slave_arready
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_rdata                              : std_logic_vector(31 downto 0);  -- hps_0:f2h_RDATA -> mm_interconnect_1:hps_0_f2h_axi_slave_rdata
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awready                            : std_logic;                      -- hps_0:f2h_AWREADY -> mm_interconnect_1:hps_0_f2h_axi_slave_awready
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arburst                            : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arburst -> hps_0:f2h_ARBURST
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_arsize                             : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arsize -> hps_0:f2h_ARSIZE
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_bready                             : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_bready -> hps_0:f2h_BREADY
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_rlast                              : std_logic;                      -- hps_0:f2h_RLAST -> mm_interconnect_1:hps_0_f2h_axi_slave_rlast
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_wlast                              : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_wlast -> hps_0:f2h_WLAST
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_rresp                              : std_logic_vector(1 downto 0);   -- hps_0:f2h_RRESP -> mm_interconnect_1:hps_0_f2h_axi_slave_rresp
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awid                               : std_logic_vector(7 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awid -> hps_0:f2h_AWID
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_bid                                : std_logic_vector(7 downto 0);   -- hps_0:f2h_BID -> mm_interconnect_1:hps_0_f2h_axi_slave_bid
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_bvalid                             : std_logic;                      -- hps_0:f2h_BVALID -> mm_interconnect_1:hps_0_f2h_axi_slave_bvalid
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awsize                             : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awsize -> hps_0:f2h_AWSIZE
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_awvalid                            : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_awvalid -> hps_0:f2h_AWVALID
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_aruser                             : std_logic_vector(4 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_aruser -> hps_0:f2h_ARUSER
-	signal mm_interconnect_1_hps_0_f2h_axi_slave_rvalid                             : std_logic;                      -- hps_0:f2h_RVALID -> mm_interconnect_1:hps_0_f2h_axi_slave_rvalid
-	signal irq_mapper_receiver0_irq                                                 : std_logic;                      -- DMA_neurax_write:csr_irq_irq -> irq_mapper:receiver0_irq
-	signal hps_0_f2h_irq0_irq                                                       : std_logic_vector(31 downto 0);  -- irq_mapper:sender_irq -> hps_0:f2h_irq_p0
-	signal irq_mapper_001_receiver0_irq                                             : std_logic;                      -- DMA_neurax_read:csr_irq_irq -> irq_mapper_001:receiver0_irq
-	signal hps_0_f2h_irq1_irq                                                       : std_logic_vector(31 downto 0);  -- irq_mapper_001:sender_irq -> hps_0:f2h_irq_p1
-	signal neurax_avalon_accelerator_0_avalon_source_valid                          : std_logic;                      -- neurax_avalon_accelerator_0:aso_valid_o -> avalon_st_adapter:in_0_valid
-	signal neurax_avalon_accelerator_0_avalon_source_data                           : std_logic_vector(31 downto 0);  -- neurax_avalon_accelerator_0:aso_data_o -> avalon_st_adapter:in_0_data
-	signal neurax_avalon_accelerator_0_avalon_source_ready                          : std_logic;                      -- avalon_st_adapter:in_0_ready -> neurax_avalon_accelerator_0:aso_ready_i
-	signal neurax_avalon_accelerator_0_avalon_source_channel                        : std_logic;                      -- neurax_avalon_accelerator_0:aso_channel_o -> avalon_st_adapter:in_0_channel
-	signal neurax_avalon_accelerator_0_avalon_source_error                          : std_logic;                      -- neurax_avalon_accelerator_0:aso_error_o -> avalon_st_adapter:in_0_error
-	signal avalon_st_adapter_out_0_valid                                            : std_logic;                      -- avalon_st_adapter:out_0_valid -> DMA_neurax_read:st_sink_valid
-	signal avalon_st_adapter_out_0_data                                             : std_logic_vector(31 downto 0);  -- avalon_st_adapter:out_0_data -> DMA_neurax_read:st_sink_data
-	signal avalon_st_adapter_out_0_ready                                            : std_logic;                      -- DMA_neurax_read:st_sink_ready -> avalon_st_adapter:out_0_ready
-	signal avalon_st_adapter_out_0_error                                            : std_logic;                      -- avalon_st_adapter:out_0_error -> DMA_neurax_read:st_sink_error
-	signal dma_neurax_write_st_source_valid                                         : std_logic;                      -- DMA_neurax_write:st_source_valid -> avalon_st_adapter_001:in_0_valid
-	signal dma_neurax_write_st_source_data                                          : std_logic_vector(31 downto 0);  -- DMA_neurax_write:st_source_data -> avalon_st_adapter_001:in_0_data
-	signal dma_neurax_write_st_source_ready                                         : std_logic;                      -- avalon_st_adapter_001:in_0_ready -> DMA_neurax_write:st_source_ready
-	signal dma_neurax_write_st_source_channel                                       : std_logic;                      -- DMA_neurax_write:st_source_channel -> avalon_st_adapter_001:in_0_channel
-	signal dma_neurax_write_st_source_error                                         : std_logic;                      -- DMA_neurax_write:st_source_error -> avalon_st_adapter_001:in_0_error
-	signal avalon_st_adapter_001_out_0_valid                                        : std_logic;                      -- avalon_st_adapter_001:out_0_valid -> neurax_avalon_accelerator_0:asi_valid_i
-	signal avalon_st_adapter_001_out_0_data                                         : std_logic_vector(31 downto 0);  -- avalon_st_adapter_001:out_0_data -> neurax_avalon_accelerator_0:asi_data_i
-	signal avalon_st_adapter_001_out_0_ready                                        : std_logic;                      -- neurax_avalon_accelerator_0:asi_ready_o -> avalon_st_adapter_001:out_0_ready
-	signal avalon_st_adapter_001_out_0_channel                                      : std_logic;                      -- avalon_st_adapter_001:out_0_channel -> neurax_avalon_accelerator_0:asi_channel_i
-	signal avalon_st_adapter_001_out_0_error                                        : std_logic;                      -- avalon_st_adapter_001:out_0_error -> neurax_avalon_accelerator_0:asi_error_i
-	signal rst_controller_reset_out_reset                                           : std_logic;                      -- rst_controller:reset_out -> [avalon_st_adapter:in_rst_0_reset, avalon_st_adapter_001:in_rst_0_reset, mm_interconnect_0:neurax_avalon_accelerator_0_reset_reset_bridge_in_reset_reset, mm_interconnect_1:DMA_neurax_write_reset_n_reset_bridge_in_reset_reset, neurax_avalon_accelerator_0:rst_i, rst_controller_reset_out_reset:in]
-	signal hps_0_h2f_reset_reset                                                    : std_logic;                      -- hps_0:h2f_rst_n -> hps_0_h2f_reset_reset:in
-	signal rst_controller_001_reset_out_reset                                       : std_logic;                      -- rst_controller_001:reset_out -> [mm_interconnect_0:hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset_reset, mm_interconnect_1:hps_0_f2h_axi_slave_agent_reset_sink_reset_bridge_in_reset_reset]
-	signal reset_reset_n_ports_inv                                                  : std_logic;                      -- reset_reset_n:inv -> [pll_0:rst, rst_controller:reset_in0]
-	signal rst_controller_reset_out_reset_ports_inv                                 : std_logic;                      -- rst_controller_reset_out_reset:inv -> [DMA_neurax_read:reset_n_reset_n, DMA_neurax_write:reset_n_reset_n]
-	signal hps_0_h2f_reset_reset_ports_inv                                          : std_logic;                      -- hps_0_h2f_reset_reset:inv -> [rst_controller:reset_in1, rst_controller_001:reset_in0]
+	signal pll_0_outclk0_clk                                                          : std_logic;                      -- pll_0:outclk_0 -> [DMA_neurax_read:clock_clk, DMA_neurax_write:clock_clk, avalon_st_adapter:in_clk_0_clk, avalon_st_adapter_001:in_clk_0_clk, hps_0:f2h_axi_clk, hps_0:h2f_axi_clk, mm_interconnect_0:pll_0_outclk0_clk, mm_interconnect_1:pll_0_outclk0_clk, neurax_avalon_accelerator_0:clk_i, rst_controller:clk, rst_controller_001:clk, rst_controller_002:clk]
+	signal hps_0_h2f_axi_master_awburst                                               : std_logic_vector(1 downto 0);   -- hps_0:h2f_AWBURST -> mm_interconnect_0:hps_0_h2f_axi_master_awburst
+	signal hps_0_h2f_axi_master_arlen                                                 : std_logic_vector(3 downto 0);   -- hps_0:h2f_ARLEN -> mm_interconnect_0:hps_0_h2f_axi_master_arlen
+	signal hps_0_h2f_axi_master_wstrb                                                 : std_logic_vector(3 downto 0);   -- hps_0:h2f_WSTRB -> mm_interconnect_0:hps_0_h2f_axi_master_wstrb
+	signal hps_0_h2f_axi_master_wready                                                : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_wready -> hps_0:h2f_WREADY
+	signal hps_0_h2f_axi_master_rid                                                   : std_logic_vector(11 downto 0);  -- mm_interconnect_0:hps_0_h2f_axi_master_rid -> hps_0:h2f_RID
+	signal hps_0_h2f_axi_master_rready                                                : std_logic;                      -- hps_0:h2f_RREADY -> mm_interconnect_0:hps_0_h2f_axi_master_rready
+	signal hps_0_h2f_axi_master_awlen                                                 : std_logic_vector(3 downto 0);   -- hps_0:h2f_AWLEN -> mm_interconnect_0:hps_0_h2f_axi_master_awlen
+	signal hps_0_h2f_axi_master_wid                                                   : std_logic_vector(11 downto 0);  -- hps_0:h2f_WID -> mm_interconnect_0:hps_0_h2f_axi_master_wid
+	signal hps_0_h2f_axi_master_arcache                                               : std_logic_vector(3 downto 0);   -- hps_0:h2f_ARCACHE -> mm_interconnect_0:hps_0_h2f_axi_master_arcache
+	signal hps_0_h2f_axi_master_wvalid                                                : std_logic;                      -- hps_0:h2f_WVALID -> mm_interconnect_0:hps_0_h2f_axi_master_wvalid
+	signal hps_0_h2f_axi_master_araddr                                                : std_logic_vector(29 downto 0);  -- hps_0:h2f_ARADDR -> mm_interconnect_0:hps_0_h2f_axi_master_araddr
+	signal hps_0_h2f_axi_master_arprot                                                : std_logic_vector(2 downto 0);   -- hps_0:h2f_ARPROT -> mm_interconnect_0:hps_0_h2f_axi_master_arprot
+	signal hps_0_h2f_axi_master_awprot                                                : std_logic_vector(2 downto 0);   -- hps_0:h2f_AWPROT -> mm_interconnect_0:hps_0_h2f_axi_master_awprot
+	signal hps_0_h2f_axi_master_wdata                                                 : std_logic_vector(31 downto 0);  -- hps_0:h2f_WDATA -> mm_interconnect_0:hps_0_h2f_axi_master_wdata
+	signal hps_0_h2f_axi_master_arvalid                                               : std_logic;                      -- hps_0:h2f_ARVALID -> mm_interconnect_0:hps_0_h2f_axi_master_arvalid
+	signal hps_0_h2f_axi_master_awcache                                               : std_logic_vector(3 downto 0);   -- hps_0:h2f_AWCACHE -> mm_interconnect_0:hps_0_h2f_axi_master_awcache
+	signal hps_0_h2f_axi_master_arid                                                  : std_logic_vector(11 downto 0);  -- hps_0:h2f_ARID -> mm_interconnect_0:hps_0_h2f_axi_master_arid
+	signal hps_0_h2f_axi_master_arlock                                                : std_logic_vector(1 downto 0);   -- hps_0:h2f_ARLOCK -> mm_interconnect_0:hps_0_h2f_axi_master_arlock
+	signal hps_0_h2f_axi_master_awlock                                                : std_logic_vector(1 downto 0);   -- hps_0:h2f_AWLOCK -> mm_interconnect_0:hps_0_h2f_axi_master_awlock
+	signal hps_0_h2f_axi_master_awaddr                                                : std_logic_vector(29 downto 0);  -- hps_0:h2f_AWADDR -> mm_interconnect_0:hps_0_h2f_axi_master_awaddr
+	signal hps_0_h2f_axi_master_bresp                                                 : std_logic_vector(1 downto 0);   -- mm_interconnect_0:hps_0_h2f_axi_master_bresp -> hps_0:h2f_BRESP
+	signal hps_0_h2f_axi_master_arready                                               : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_arready -> hps_0:h2f_ARREADY
+	signal hps_0_h2f_axi_master_rdata                                                 : std_logic_vector(31 downto 0);  -- mm_interconnect_0:hps_0_h2f_axi_master_rdata -> hps_0:h2f_RDATA
+	signal hps_0_h2f_axi_master_awready                                               : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_awready -> hps_0:h2f_AWREADY
+	signal hps_0_h2f_axi_master_arburst                                               : std_logic_vector(1 downto 0);   -- hps_0:h2f_ARBURST -> mm_interconnect_0:hps_0_h2f_axi_master_arburst
+	signal hps_0_h2f_axi_master_arsize                                                : std_logic_vector(2 downto 0);   -- hps_0:h2f_ARSIZE -> mm_interconnect_0:hps_0_h2f_axi_master_arsize
+	signal hps_0_h2f_axi_master_bready                                                : std_logic;                      -- hps_0:h2f_BREADY -> mm_interconnect_0:hps_0_h2f_axi_master_bready
+	signal hps_0_h2f_axi_master_rlast                                                 : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_rlast -> hps_0:h2f_RLAST
+	signal hps_0_h2f_axi_master_wlast                                                 : std_logic;                      -- hps_0:h2f_WLAST -> mm_interconnect_0:hps_0_h2f_axi_master_wlast
+	signal hps_0_h2f_axi_master_rresp                                                 : std_logic_vector(1 downto 0);   -- mm_interconnect_0:hps_0_h2f_axi_master_rresp -> hps_0:h2f_RRESP
+	signal hps_0_h2f_axi_master_awid                                                  : std_logic_vector(11 downto 0);  -- hps_0:h2f_AWID -> mm_interconnect_0:hps_0_h2f_axi_master_awid
+	signal hps_0_h2f_axi_master_bid                                                   : std_logic_vector(11 downto 0);  -- mm_interconnect_0:hps_0_h2f_axi_master_bid -> hps_0:h2f_BID
+	signal hps_0_h2f_axi_master_bvalid                                                : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_bvalid -> hps_0:h2f_BVALID
+	signal hps_0_h2f_axi_master_awsize                                                : std_logic_vector(2 downto 0);   -- hps_0:h2f_AWSIZE -> mm_interconnect_0:hps_0_h2f_axi_master_awsize
+	signal hps_0_h2f_axi_master_awvalid                                               : std_logic;                      -- hps_0:h2f_AWVALID -> mm_interconnect_0:hps_0_h2f_axi_master_awvalid
+	signal hps_0_h2f_axi_master_rvalid                                                : std_logic;                      -- mm_interconnect_0:hps_0_h2f_axi_master_rvalid -> hps_0:h2f_RVALID
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_chipselect    : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_chipselect -> neurax_avalon_accelerator_0:avs_chipselect_i
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdata      : std_logic_vector(31 downto 0);  -- neurax_avalon_accelerator_0:avs_readdata_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_readdata
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_waitrequest   : std_logic;                      -- neurax_avalon_accelerator_0:avs_waitrequest_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_waitrequest
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_address       : std_logic_vector(3 downto 0);   -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_address -> neurax_avalon_accelerator_0:avs_address_i
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_read          : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_read -> neurax_avalon_accelerator_0:avs_read_i
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_byteenable    : std_logic_vector(3 downto 0);   -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_byteenable -> neurax_avalon_accelerator_0:avs_byteenable_i
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid : std_logic;                      -- neurax_avalon_accelerator_0:avs_readdatavalid_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_write         : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_write -> neurax_avalon_accelerator_0:avs_write_i
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_writedata     : std_logic_vector(31 downto 0);  -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_writedata -> neurax_avalon_accelerator_0:avs_writedata_i
+	signal mm_interconnect_0_dma_neurax_read_csr_readdata                             : std_logic_vector(31 downto 0);  -- DMA_neurax_read:csr_readdata -> mm_interconnect_0:DMA_neurax_read_csr_readdata
+	signal mm_interconnect_0_dma_neurax_read_csr_address                              : std_logic_vector(2 downto 0);   -- mm_interconnect_0:DMA_neurax_read_csr_address -> DMA_neurax_read:csr_address
+	signal mm_interconnect_0_dma_neurax_read_csr_read                                 : std_logic;                      -- mm_interconnect_0:DMA_neurax_read_csr_read -> DMA_neurax_read:csr_read
+	signal mm_interconnect_0_dma_neurax_read_csr_byteenable                           : std_logic_vector(3 downto 0);   -- mm_interconnect_0:DMA_neurax_read_csr_byteenable -> DMA_neurax_read:csr_byteenable
+	signal mm_interconnect_0_dma_neurax_read_csr_write                                : std_logic;                      -- mm_interconnect_0:DMA_neurax_read_csr_write -> DMA_neurax_read:csr_write
+	signal mm_interconnect_0_dma_neurax_read_csr_writedata                            : std_logic_vector(31 downto 0);  -- mm_interconnect_0:DMA_neurax_read_csr_writedata -> DMA_neurax_read:csr_writedata
+	signal mm_interconnect_0_dma_neurax_write_csr_readdata                            : std_logic_vector(31 downto 0);  -- DMA_neurax_write:csr_readdata -> mm_interconnect_0:DMA_neurax_write_csr_readdata
+	signal mm_interconnect_0_dma_neurax_write_csr_address                             : std_logic_vector(2 downto 0);   -- mm_interconnect_0:DMA_neurax_write_csr_address -> DMA_neurax_write:csr_address
+	signal mm_interconnect_0_dma_neurax_write_csr_read                                : std_logic;                      -- mm_interconnect_0:DMA_neurax_write_csr_read -> DMA_neurax_write:csr_read
+	signal mm_interconnect_0_dma_neurax_write_csr_byteenable                          : std_logic_vector(3 downto 0);   -- mm_interconnect_0:DMA_neurax_write_csr_byteenable -> DMA_neurax_write:csr_byteenable
+	signal mm_interconnect_0_dma_neurax_write_csr_write                               : std_logic;                      -- mm_interconnect_0:DMA_neurax_write_csr_write -> DMA_neurax_write:csr_write
+	signal mm_interconnect_0_dma_neurax_write_csr_writedata                           : std_logic_vector(31 downto 0);  -- mm_interconnect_0:DMA_neurax_write_csr_writedata -> DMA_neurax_write:csr_writedata
+	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_waitrequest            : std_logic;                      -- DMA_neurax_write:descriptor_slave_waitrequest -> mm_interconnect_0:DMA_neurax_write_descriptor_slave_waitrequest
+	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_byteenable             : std_logic_vector(15 downto 0);  -- mm_interconnect_0:DMA_neurax_write_descriptor_slave_byteenable -> DMA_neurax_write:descriptor_slave_byteenable
+	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_write                  : std_logic;                      -- mm_interconnect_0:DMA_neurax_write_descriptor_slave_write -> DMA_neurax_write:descriptor_slave_write
+	signal mm_interconnect_0_dma_neurax_write_descriptor_slave_writedata              : std_logic_vector(127 downto 0); -- mm_interconnect_0:DMA_neurax_write_descriptor_slave_writedata -> DMA_neurax_write:descriptor_slave_writedata
+	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_waitrequest             : std_logic;                      -- DMA_neurax_read:descriptor_slave_waitrequest -> mm_interconnect_0:DMA_neurax_read_descriptor_slave_waitrequest
+	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_byteenable              : std_logic_vector(15 downto 0);  -- mm_interconnect_0:DMA_neurax_read_descriptor_slave_byteenable -> DMA_neurax_read:descriptor_slave_byteenable
+	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_write                   : std_logic;                      -- mm_interconnect_0:DMA_neurax_read_descriptor_slave_write -> DMA_neurax_read:descriptor_slave_write
+	signal mm_interconnect_0_dma_neurax_read_descriptor_slave_writedata               : std_logic_vector(127 downto 0); -- mm_interconnect_0:DMA_neurax_read_descriptor_slave_writedata -> DMA_neurax_read:descriptor_slave_writedata
+	signal dma_neurax_write_mm_read_readdata                                          : std_logic_vector(31 downto 0);  -- mm_interconnect_1:DMA_neurax_write_mm_read_readdata -> DMA_neurax_write:mm_read_readdata
+	signal dma_neurax_write_mm_read_waitrequest                                       : std_logic;                      -- mm_interconnect_1:DMA_neurax_write_mm_read_waitrequest -> DMA_neurax_write:mm_read_waitrequest
+	signal dma_neurax_write_mm_read_address                                           : std_logic_vector(31 downto 0);  -- DMA_neurax_write:mm_read_address -> mm_interconnect_1:DMA_neurax_write_mm_read_address
+	signal dma_neurax_write_mm_read_read                                              : std_logic;                      -- DMA_neurax_write:mm_read_read -> mm_interconnect_1:DMA_neurax_write_mm_read_read
+	signal dma_neurax_write_mm_read_byteenable                                        : std_logic_vector(3 downto 0);   -- DMA_neurax_write:mm_read_byteenable -> mm_interconnect_1:DMA_neurax_write_mm_read_byteenable
+	signal dma_neurax_write_mm_read_readdatavalid                                     : std_logic;                      -- mm_interconnect_1:DMA_neurax_write_mm_read_readdatavalid -> DMA_neurax_write:mm_read_readdatavalid
+	signal dma_neurax_read_mm_write_waitrequest                                       : std_logic;                      -- mm_interconnect_1:DMA_neurax_read_mm_write_waitrequest -> DMA_neurax_read:mm_write_waitrequest
+	signal dma_neurax_read_mm_write_address                                           : std_logic_vector(31 downto 0);  -- DMA_neurax_read:mm_write_address -> mm_interconnect_1:DMA_neurax_read_mm_write_address
+	signal dma_neurax_read_mm_write_byteenable                                        : std_logic_vector(3 downto 0);   -- DMA_neurax_read:mm_write_byteenable -> mm_interconnect_1:DMA_neurax_read_mm_write_byteenable
+	signal dma_neurax_read_mm_write_write                                             : std_logic;                      -- DMA_neurax_read:mm_write_write -> mm_interconnect_1:DMA_neurax_read_mm_write_write
+	signal dma_neurax_read_mm_write_writedata                                         : std_logic_vector(31 downto 0);  -- DMA_neurax_read:mm_write_writedata -> mm_interconnect_1:DMA_neurax_read_mm_write_writedata
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awburst                              : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awburst -> hps_0:f2h_AWBURST
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awuser                               : std_logic_vector(4 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awuser -> hps_0:f2h_AWUSER
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arlen                                : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arlen -> hps_0:f2h_ARLEN
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_wstrb                                : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_wstrb -> hps_0:f2h_WSTRB
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_wready                               : std_logic;                      -- hps_0:f2h_WREADY -> mm_interconnect_1:hps_0_f2h_axi_slave_wready
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_rid                                  : std_logic_vector(7 downto 0);   -- hps_0:f2h_RID -> mm_interconnect_1:hps_0_f2h_axi_slave_rid
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_rready                               : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_rready -> hps_0:f2h_RREADY
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awlen                                : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awlen -> hps_0:f2h_AWLEN
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_wid                                  : std_logic_vector(7 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_wid -> hps_0:f2h_WID
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arcache                              : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arcache -> hps_0:f2h_ARCACHE
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_wvalid                               : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_wvalid -> hps_0:f2h_WVALID
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_araddr                               : std_logic_vector(31 downto 0);  -- mm_interconnect_1:hps_0_f2h_axi_slave_araddr -> hps_0:f2h_ARADDR
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arprot                               : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arprot -> hps_0:f2h_ARPROT
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awprot                               : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awprot -> hps_0:f2h_AWPROT
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_wdata                                : std_logic_vector(31 downto 0);  -- mm_interconnect_1:hps_0_f2h_axi_slave_wdata -> hps_0:f2h_WDATA
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arvalid                              : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_arvalid -> hps_0:f2h_ARVALID
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awcache                              : std_logic_vector(3 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awcache -> hps_0:f2h_AWCACHE
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arid                                 : std_logic_vector(7 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arid -> hps_0:f2h_ARID
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arlock                               : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arlock -> hps_0:f2h_ARLOCK
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awlock                               : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awlock -> hps_0:f2h_AWLOCK
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awaddr                               : std_logic_vector(31 downto 0);  -- mm_interconnect_1:hps_0_f2h_axi_slave_awaddr -> hps_0:f2h_AWADDR
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_bresp                                : std_logic_vector(1 downto 0);   -- hps_0:f2h_BRESP -> mm_interconnect_1:hps_0_f2h_axi_slave_bresp
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arready                              : std_logic;                      -- hps_0:f2h_ARREADY -> mm_interconnect_1:hps_0_f2h_axi_slave_arready
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_rdata                                : std_logic_vector(31 downto 0);  -- hps_0:f2h_RDATA -> mm_interconnect_1:hps_0_f2h_axi_slave_rdata
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awready                              : std_logic;                      -- hps_0:f2h_AWREADY -> mm_interconnect_1:hps_0_f2h_axi_slave_awready
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arburst                              : std_logic_vector(1 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arburst -> hps_0:f2h_ARBURST
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_arsize                               : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_arsize -> hps_0:f2h_ARSIZE
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_bready                               : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_bready -> hps_0:f2h_BREADY
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_rlast                                : std_logic;                      -- hps_0:f2h_RLAST -> mm_interconnect_1:hps_0_f2h_axi_slave_rlast
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_wlast                                : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_wlast -> hps_0:f2h_WLAST
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_rresp                                : std_logic_vector(1 downto 0);   -- hps_0:f2h_RRESP -> mm_interconnect_1:hps_0_f2h_axi_slave_rresp
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awid                                 : std_logic_vector(7 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awid -> hps_0:f2h_AWID
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_bid                                  : std_logic_vector(7 downto 0);   -- hps_0:f2h_BID -> mm_interconnect_1:hps_0_f2h_axi_slave_bid
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_bvalid                               : std_logic;                      -- hps_0:f2h_BVALID -> mm_interconnect_1:hps_0_f2h_axi_slave_bvalid
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awsize                               : std_logic_vector(2 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_awsize -> hps_0:f2h_AWSIZE
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_awvalid                              : std_logic;                      -- mm_interconnect_1:hps_0_f2h_axi_slave_awvalid -> hps_0:f2h_AWVALID
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_aruser                               : std_logic_vector(4 downto 0);   -- mm_interconnect_1:hps_0_f2h_axi_slave_aruser -> hps_0:f2h_ARUSER
+	signal mm_interconnect_1_hps_0_f2h_axi_slave_rvalid                               : std_logic;                      -- hps_0:f2h_RVALID -> mm_interconnect_1:hps_0_f2h_axi_slave_rvalid
+	signal irq_mapper_receiver0_irq                                                   : std_logic;                      -- DMA_neurax_write:csr_irq_irq -> irq_mapper:receiver0_irq
+	signal hps_0_f2h_irq0_irq                                                         : std_logic_vector(31 downto 0);  -- irq_mapper:sender_irq -> hps_0:f2h_irq_p0
+	signal irq_mapper_001_receiver0_irq                                               : std_logic;                      -- DMA_neurax_read:csr_irq_irq -> irq_mapper_001:receiver0_irq
+	signal hps_0_f2h_irq1_irq                                                         : std_logic_vector(31 downto 0);  -- irq_mapper_001:sender_irq -> hps_0:f2h_irq_p1
+	signal neurax_avalon_accelerator_0_avalon_source_valid                            : std_logic;                      -- neurax_avalon_accelerator_0:aso_valid_o -> avalon_st_adapter:in_0_valid
+	signal neurax_avalon_accelerator_0_avalon_source_data                             : std_logic_vector(31 downto 0);  -- neurax_avalon_accelerator_0:aso_data_o -> avalon_st_adapter:in_0_data
+	signal neurax_avalon_accelerator_0_avalon_source_ready                            : std_logic;                      -- avalon_st_adapter:in_0_ready -> neurax_avalon_accelerator_0:aso_ready_i
+	signal neurax_avalon_accelerator_0_avalon_source_channel                          : std_logic;                      -- neurax_avalon_accelerator_0:aso_channel_o -> avalon_st_adapter:in_0_channel
+	signal neurax_avalon_accelerator_0_avalon_source_error                            : std_logic;                      -- neurax_avalon_accelerator_0:aso_error_o -> avalon_st_adapter:in_0_error
+	signal avalon_st_adapter_out_0_valid                                              : std_logic;                      -- avalon_st_adapter:out_0_valid -> DMA_neurax_read:st_sink_valid
+	signal avalon_st_adapter_out_0_data                                               : std_logic_vector(31 downto 0);  -- avalon_st_adapter:out_0_data -> DMA_neurax_read:st_sink_data
+	signal avalon_st_adapter_out_0_ready                                              : std_logic;                      -- DMA_neurax_read:st_sink_ready -> avalon_st_adapter:out_0_ready
+	signal avalon_st_adapter_out_0_error                                              : std_logic;                      -- avalon_st_adapter:out_0_error -> DMA_neurax_read:st_sink_error
+	signal dma_neurax_write_st_source_valid                                           : std_logic;                      -- DMA_neurax_write:st_source_valid -> avalon_st_adapter_001:in_0_valid
+	signal dma_neurax_write_st_source_data                                            : std_logic_vector(31 downto 0);  -- DMA_neurax_write:st_source_data -> avalon_st_adapter_001:in_0_data
+	signal dma_neurax_write_st_source_ready                                           : std_logic;                      -- avalon_st_adapter_001:in_0_ready -> DMA_neurax_write:st_source_ready
+	signal dma_neurax_write_st_source_channel                                         : std_logic;                      -- DMA_neurax_write:st_source_channel -> avalon_st_adapter_001:in_0_channel
+	signal dma_neurax_write_st_source_error                                           : std_logic;                      -- DMA_neurax_write:st_source_error -> avalon_st_adapter_001:in_0_error
+	signal avalon_st_adapter_001_out_0_valid                                          : std_logic;                      -- avalon_st_adapter_001:out_0_valid -> neurax_avalon_accelerator_0:asi_valid_i
+	signal avalon_st_adapter_001_out_0_data                                           : std_logic_vector(31 downto 0);  -- avalon_st_adapter_001:out_0_data -> neurax_avalon_accelerator_0:asi_data_i
+	signal avalon_st_adapter_001_out_0_ready                                          : std_logic;                      -- neurax_avalon_accelerator_0:asi_ready_o -> avalon_st_adapter_001:out_0_ready
+	signal avalon_st_adapter_001_out_0_channel                                        : std_logic;                      -- avalon_st_adapter_001:out_0_channel -> neurax_avalon_accelerator_0:asi_channel_i
+	signal avalon_st_adapter_001_out_0_error                                          : std_logic;                      -- avalon_st_adapter_001:out_0_error -> neurax_avalon_accelerator_0:asi_error_i
+	signal rst_controller_reset_out_reset                                             : std_logic;                      -- rst_controller:reset_out -> [avalon_st_adapter_001:in_rst_0_reset, mm_interconnect_0:DMA_neurax_read_reset_n_reset_bridge_in_reset_reset, mm_interconnect_1:DMA_neurax_write_reset_n_reset_bridge_in_reset_reset, rst_controller_reset_out_reset:in]
+	signal hps_0_h2f_reset_reset                                                      : std_logic;                      -- hps_0:h2f_rst_n -> hps_0_h2f_reset_reset:in
+	signal rst_controller_001_reset_out_reset                                         : std_logic;                      -- rst_controller_001:reset_out -> [avalon_st_adapter:in_rst_0_reset, mm_interconnect_0:neurax_avalon_accelerator_0_reset_reset_bridge_in_reset_reset, neurax_avalon_accelerator_0:rst_i]
+	signal rst_controller_002_reset_out_reset                                         : std_logic;                      -- rst_controller_002:reset_out -> [mm_interconnect_0:hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset_reset, mm_interconnect_1:hps_0_f2h_axi_slave_agent_reset_sink_reset_bridge_in_reset_reset]
+	signal reset_reset_n_ports_inv                                                    : std_logic;                      -- reset_reset_n:inv -> [pll_0:rst, rst_controller:reset_in0, rst_controller_001:reset_in0]
+	signal rst_controller_reset_out_reset_ports_inv                                   : std_logic;                      -- rst_controller_reset_out_reset:inv -> [DMA_neurax_read:reset_n_reset_n, DMA_neurax_write:reset_n_reset_n]
+	signal hps_0_h2f_reset_reset_ports_inv                                            : std_logic;                      -- hps_0_h2f_reset_reset:inv -> [rst_controller:reset_in1, rst_controller_002:reset_in0]
 
 begin
 
@@ -947,34 +950,35 @@ begin
 
 	neurax_avalon_accelerator_0 : component neurax
 		generic map (
-			g_WIDTH       => 32,
-			g_ADDR_WIDTH  => 3,
-			g_PIXEL_WIDTH => 24,
-			g_FB_WIDTH    => 100,
-			g_FB_HEIGHT   => 100
+			g_WIDTH        => 32,
+			g_ADDR_WIDTH   => 4,
+			g_PIXEL_WIDTH  => 24,
+			g_FB_WIDTH     => 100,
+			g_FB_HEIGHT    => 100,
+			PARALLEL_UNITS => 4
 		)
 		port map (
-			rst_i               => rst_controller_reset_out_reset,                                           --         reset.reset
-			clk_i               => pll_0_outclk0_clk,                                                        --           clk.clk
-			asi_channel_i       => avalon_st_adapter_001_out_0_channel,                                      --   avalon_sink.channel
-			asi_data_i          => avalon_st_adapter_001_out_0_data,                                         --              .data
-			asi_valid_i         => avalon_st_adapter_001_out_0_valid,                                        --              .valid
-			asi_error_i         => avalon_st_adapter_001_out_0_error,                                        --              .error
-			asi_ready_o         => avalon_st_adapter_001_out_0_ready,                                        --              .ready
-			aso_data_o          => neurax_avalon_accelerator_0_avalon_source_data,                           -- avalon_source.data
-			aso_valid_o         => neurax_avalon_accelerator_0_avalon_source_valid,                          --              .valid
-			aso_channel_o       => neurax_avalon_accelerator_0_avalon_source_channel,                        --              .channel
-			aso_error_o         => neurax_avalon_accelerator_0_avalon_source_error,                          --              .error
-			aso_ready_i         => neurax_avalon_accelerator_0_avalon_source_ready,                          --              .ready
-			avs_readdata_o      => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_readdata,      --  avalon_slave.readdata
-			avs_readdatavalid_o => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_readdatavalid, --              .readdatavalid
-			avs_waitrequest_o   => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_waitrequest,   --              .waitrequest
-			avs_address_i       => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_address,       --              .address
-			avs_byteenable_i    => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_byteenable,    --              .byteenable
-			avs_chipselect_i    => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_chipselect,    --              .chipselect
-			avs_read_i          => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_read,          --              .read
-			avs_write_i         => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_write,         --              .write
-			avs_writedata_i     => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_writedata      --              .writedata
+			rst_i               => rst_controller_001_reset_out_reset,                                         --          reset.reset
+			clk_i               => pll_0_outclk0_clk,                                                          --            clk.clk
+			asi_channel_i       => avalon_st_adapter_001_out_0_channel,                                        --    avalon_sink.channel
+			asi_data_i          => avalon_st_adapter_001_out_0_data,                                           --               .data
+			asi_error_i         => avalon_st_adapter_001_out_0_error,                                          --               .error
+			asi_valid_i         => avalon_st_adapter_001_out_0_valid,                                          --               .valid
+			asi_ready_o         => avalon_st_adapter_001_out_0_ready,                                          --               .ready
+			aso_channel_o       => neurax_avalon_accelerator_0_avalon_source_channel,                          --  avalon_source.channel
+			aso_data_o          => neurax_avalon_accelerator_0_avalon_source_data,                             --               .data
+			aso_error_o         => neurax_avalon_accelerator_0_avalon_source_error,                            --               .error
+			aso_valid_o         => neurax_avalon_accelerator_0_avalon_source_valid,                            --               .valid
+			aso_ready_i         => neurax_avalon_accelerator_0_avalon_source_ready,                            --               .ready
+			avs_address_i       => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_address,       -- avalon_slave_0.address
+			avs_byteenable_i    => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_byteenable,    --               .byteenable
+			avs_chipselect_i    => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_chipselect,    --               .chipselect
+			avs_read_i          => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_read,          --               .read
+			avs_write_i         => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_write,         --               .write
+			avs_writedata_i     => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_writedata,     --               .writedata
+			avs_readdata_o      => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdata,      --               .readdata
+			avs_readdatavalid_o => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid, --               .readdatavalid
+			avs_waitrequest_o   => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_waitrequest    --               .waitrequest
 		);
 
 	pll_0 : component soc_system_pll_0
@@ -987,74 +991,75 @@ begin
 
 	mm_interconnect_0 : component soc_system_mm_interconnect_0
 		port map (
-			hps_0_h2f_axi_master_awid                                        => hps_0_h2f_axi_master_awid,                                                --                                       hps_0_h2f_axi_master.awid
-			hps_0_h2f_axi_master_awaddr                                      => hps_0_h2f_axi_master_awaddr,                                              --                                                           .awaddr
-			hps_0_h2f_axi_master_awlen                                       => hps_0_h2f_axi_master_awlen,                                               --                                                           .awlen
-			hps_0_h2f_axi_master_awsize                                      => hps_0_h2f_axi_master_awsize,                                              --                                                           .awsize
-			hps_0_h2f_axi_master_awburst                                     => hps_0_h2f_axi_master_awburst,                                             --                                                           .awburst
-			hps_0_h2f_axi_master_awlock                                      => hps_0_h2f_axi_master_awlock,                                              --                                                           .awlock
-			hps_0_h2f_axi_master_awcache                                     => hps_0_h2f_axi_master_awcache,                                             --                                                           .awcache
-			hps_0_h2f_axi_master_awprot                                      => hps_0_h2f_axi_master_awprot,                                              --                                                           .awprot
-			hps_0_h2f_axi_master_awvalid                                     => hps_0_h2f_axi_master_awvalid,                                             --                                                           .awvalid
-			hps_0_h2f_axi_master_awready                                     => hps_0_h2f_axi_master_awready,                                             --                                                           .awready
-			hps_0_h2f_axi_master_wid                                         => hps_0_h2f_axi_master_wid,                                                 --                                                           .wid
-			hps_0_h2f_axi_master_wdata                                       => hps_0_h2f_axi_master_wdata,                                               --                                                           .wdata
-			hps_0_h2f_axi_master_wstrb                                       => hps_0_h2f_axi_master_wstrb,                                               --                                                           .wstrb
-			hps_0_h2f_axi_master_wlast                                       => hps_0_h2f_axi_master_wlast,                                               --                                                           .wlast
-			hps_0_h2f_axi_master_wvalid                                      => hps_0_h2f_axi_master_wvalid,                                              --                                                           .wvalid
-			hps_0_h2f_axi_master_wready                                      => hps_0_h2f_axi_master_wready,                                              --                                                           .wready
-			hps_0_h2f_axi_master_bid                                         => hps_0_h2f_axi_master_bid,                                                 --                                                           .bid
-			hps_0_h2f_axi_master_bresp                                       => hps_0_h2f_axi_master_bresp,                                               --                                                           .bresp
-			hps_0_h2f_axi_master_bvalid                                      => hps_0_h2f_axi_master_bvalid,                                              --                                                           .bvalid
-			hps_0_h2f_axi_master_bready                                      => hps_0_h2f_axi_master_bready,                                              --                                                           .bready
-			hps_0_h2f_axi_master_arid                                        => hps_0_h2f_axi_master_arid,                                                --                                                           .arid
-			hps_0_h2f_axi_master_araddr                                      => hps_0_h2f_axi_master_araddr,                                              --                                                           .araddr
-			hps_0_h2f_axi_master_arlen                                       => hps_0_h2f_axi_master_arlen,                                               --                                                           .arlen
-			hps_0_h2f_axi_master_arsize                                      => hps_0_h2f_axi_master_arsize,                                              --                                                           .arsize
-			hps_0_h2f_axi_master_arburst                                     => hps_0_h2f_axi_master_arburst,                                             --                                                           .arburst
-			hps_0_h2f_axi_master_arlock                                      => hps_0_h2f_axi_master_arlock,                                              --                                                           .arlock
-			hps_0_h2f_axi_master_arcache                                     => hps_0_h2f_axi_master_arcache,                                             --                                                           .arcache
-			hps_0_h2f_axi_master_arprot                                      => hps_0_h2f_axi_master_arprot,                                              --                                                           .arprot
-			hps_0_h2f_axi_master_arvalid                                     => hps_0_h2f_axi_master_arvalid,                                             --                                                           .arvalid
-			hps_0_h2f_axi_master_arready                                     => hps_0_h2f_axi_master_arready,                                             --                                                           .arready
-			hps_0_h2f_axi_master_rid                                         => hps_0_h2f_axi_master_rid,                                                 --                                                           .rid
-			hps_0_h2f_axi_master_rdata                                       => hps_0_h2f_axi_master_rdata,                                               --                                                           .rdata
-			hps_0_h2f_axi_master_rresp                                       => hps_0_h2f_axi_master_rresp,                                               --                                                           .rresp
-			hps_0_h2f_axi_master_rlast                                       => hps_0_h2f_axi_master_rlast,                                               --                                                           .rlast
-			hps_0_h2f_axi_master_rvalid                                      => hps_0_h2f_axi_master_rvalid,                                              --                                                           .rvalid
-			hps_0_h2f_axi_master_rready                                      => hps_0_h2f_axi_master_rready,                                              --                                                           .rready
-			pll_0_outclk0_clk                                                => pll_0_outclk0_clk,                                                        --                                              pll_0_outclk0.clk
-			hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset_reset => rst_controller_001_reset_out_reset,                                       -- hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset.reset
-			neurax_avalon_accelerator_0_reset_reset_bridge_in_reset_reset    => rst_controller_reset_out_reset,                                           --    neurax_avalon_accelerator_0_reset_reset_bridge_in_reset.reset
-			DMA_neurax_read_csr_address                                      => mm_interconnect_0_dma_neurax_read_csr_address,                            --                                        DMA_neurax_read_csr.address
-			DMA_neurax_read_csr_write                                        => mm_interconnect_0_dma_neurax_read_csr_write,                              --                                                           .write
-			DMA_neurax_read_csr_read                                         => mm_interconnect_0_dma_neurax_read_csr_read,                               --                                                           .read
-			DMA_neurax_read_csr_readdata                                     => mm_interconnect_0_dma_neurax_read_csr_readdata,                           --                                                           .readdata
-			DMA_neurax_read_csr_writedata                                    => mm_interconnect_0_dma_neurax_read_csr_writedata,                          --                                                           .writedata
-			DMA_neurax_read_csr_byteenable                                   => mm_interconnect_0_dma_neurax_read_csr_byteenable,                         --                                                           .byteenable
-			DMA_neurax_read_descriptor_slave_write                           => mm_interconnect_0_dma_neurax_read_descriptor_slave_write,                 --                           DMA_neurax_read_descriptor_slave.write
-			DMA_neurax_read_descriptor_slave_writedata                       => mm_interconnect_0_dma_neurax_read_descriptor_slave_writedata,             --                                                           .writedata
-			DMA_neurax_read_descriptor_slave_byteenable                      => mm_interconnect_0_dma_neurax_read_descriptor_slave_byteenable,            --                                                           .byteenable
-			DMA_neurax_read_descriptor_slave_waitrequest                     => mm_interconnect_0_dma_neurax_read_descriptor_slave_waitrequest,           --                                                           .waitrequest
-			DMA_neurax_write_csr_address                                     => mm_interconnect_0_dma_neurax_write_csr_address,                           --                                       DMA_neurax_write_csr.address
-			DMA_neurax_write_csr_write                                       => mm_interconnect_0_dma_neurax_write_csr_write,                             --                                                           .write
-			DMA_neurax_write_csr_read                                        => mm_interconnect_0_dma_neurax_write_csr_read,                              --                                                           .read
-			DMA_neurax_write_csr_readdata                                    => mm_interconnect_0_dma_neurax_write_csr_readdata,                          --                                                           .readdata
-			DMA_neurax_write_csr_writedata                                   => mm_interconnect_0_dma_neurax_write_csr_writedata,                         --                                                           .writedata
-			DMA_neurax_write_csr_byteenable                                  => mm_interconnect_0_dma_neurax_write_csr_byteenable,                        --                                                           .byteenable
-			DMA_neurax_write_descriptor_slave_write                          => mm_interconnect_0_dma_neurax_write_descriptor_slave_write,                --                          DMA_neurax_write_descriptor_slave.write
-			DMA_neurax_write_descriptor_slave_writedata                      => mm_interconnect_0_dma_neurax_write_descriptor_slave_writedata,            --                                                           .writedata
-			DMA_neurax_write_descriptor_slave_byteenable                     => mm_interconnect_0_dma_neurax_write_descriptor_slave_byteenable,           --                                                           .byteenable
-			DMA_neurax_write_descriptor_slave_waitrequest                    => mm_interconnect_0_dma_neurax_write_descriptor_slave_waitrequest,          --                                                           .waitrequest
-			neurax_avalon_accelerator_0_avalon_slave_address                 => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_address,       --                   neurax_avalon_accelerator_0_avalon_slave.address
-			neurax_avalon_accelerator_0_avalon_slave_write                   => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_write,         --                                                           .write
-			neurax_avalon_accelerator_0_avalon_slave_read                    => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_read,          --                                                           .read
-			neurax_avalon_accelerator_0_avalon_slave_readdata                => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_readdata,      --                                                           .readdata
-			neurax_avalon_accelerator_0_avalon_slave_writedata               => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_writedata,     --                                                           .writedata
-			neurax_avalon_accelerator_0_avalon_slave_byteenable              => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_byteenable,    --                                                           .byteenable
-			neurax_avalon_accelerator_0_avalon_slave_readdatavalid           => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_readdatavalid, --                                                           .readdatavalid
-			neurax_avalon_accelerator_0_avalon_slave_waitrequest             => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_waitrequest,   --                                                           .waitrequest
-			neurax_avalon_accelerator_0_avalon_slave_chipselect              => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_chipselect     --                                                           .chipselect
+			hps_0_h2f_axi_master_awid                                        => hps_0_h2f_axi_master_awid,                                                  --                                       hps_0_h2f_axi_master.awid
+			hps_0_h2f_axi_master_awaddr                                      => hps_0_h2f_axi_master_awaddr,                                                --                                                           .awaddr
+			hps_0_h2f_axi_master_awlen                                       => hps_0_h2f_axi_master_awlen,                                                 --                                                           .awlen
+			hps_0_h2f_axi_master_awsize                                      => hps_0_h2f_axi_master_awsize,                                                --                                                           .awsize
+			hps_0_h2f_axi_master_awburst                                     => hps_0_h2f_axi_master_awburst,                                               --                                                           .awburst
+			hps_0_h2f_axi_master_awlock                                      => hps_0_h2f_axi_master_awlock,                                                --                                                           .awlock
+			hps_0_h2f_axi_master_awcache                                     => hps_0_h2f_axi_master_awcache,                                               --                                                           .awcache
+			hps_0_h2f_axi_master_awprot                                      => hps_0_h2f_axi_master_awprot,                                                --                                                           .awprot
+			hps_0_h2f_axi_master_awvalid                                     => hps_0_h2f_axi_master_awvalid,                                               --                                                           .awvalid
+			hps_0_h2f_axi_master_awready                                     => hps_0_h2f_axi_master_awready,                                               --                                                           .awready
+			hps_0_h2f_axi_master_wid                                         => hps_0_h2f_axi_master_wid,                                                   --                                                           .wid
+			hps_0_h2f_axi_master_wdata                                       => hps_0_h2f_axi_master_wdata,                                                 --                                                           .wdata
+			hps_0_h2f_axi_master_wstrb                                       => hps_0_h2f_axi_master_wstrb,                                                 --                                                           .wstrb
+			hps_0_h2f_axi_master_wlast                                       => hps_0_h2f_axi_master_wlast,                                                 --                                                           .wlast
+			hps_0_h2f_axi_master_wvalid                                      => hps_0_h2f_axi_master_wvalid,                                                --                                                           .wvalid
+			hps_0_h2f_axi_master_wready                                      => hps_0_h2f_axi_master_wready,                                                --                                                           .wready
+			hps_0_h2f_axi_master_bid                                         => hps_0_h2f_axi_master_bid,                                                   --                                                           .bid
+			hps_0_h2f_axi_master_bresp                                       => hps_0_h2f_axi_master_bresp,                                                 --                                                           .bresp
+			hps_0_h2f_axi_master_bvalid                                      => hps_0_h2f_axi_master_bvalid,                                                --                                                           .bvalid
+			hps_0_h2f_axi_master_bready                                      => hps_0_h2f_axi_master_bready,                                                --                                                           .bready
+			hps_0_h2f_axi_master_arid                                        => hps_0_h2f_axi_master_arid,                                                  --                                                           .arid
+			hps_0_h2f_axi_master_araddr                                      => hps_0_h2f_axi_master_araddr,                                                --                                                           .araddr
+			hps_0_h2f_axi_master_arlen                                       => hps_0_h2f_axi_master_arlen,                                                 --                                                           .arlen
+			hps_0_h2f_axi_master_arsize                                      => hps_0_h2f_axi_master_arsize,                                                --                                                           .arsize
+			hps_0_h2f_axi_master_arburst                                     => hps_0_h2f_axi_master_arburst,                                               --                                                           .arburst
+			hps_0_h2f_axi_master_arlock                                      => hps_0_h2f_axi_master_arlock,                                                --                                                           .arlock
+			hps_0_h2f_axi_master_arcache                                     => hps_0_h2f_axi_master_arcache,                                               --                                                           .arcache
+			hps_0_h2f_axi_master_arprot                                      => hps_0_h2f_axi_master_arprot,                                                --                                                           .arprot
+			hps_0_h2f_axi_master_arvalid                                     => hps_0_h2f_axi_master_arvalid,                                               --                                                           .arvalid
+			hps_0_h2f_axi_master_arready                                     => hps_0_h2f_axi_master_arready,                                               --                                                           .arready
+			hps_0_h2f_axi_master_rid                                         => hps_0_h2f_axi_master_rid,                                                   --                                                           .rid
+			hps_0_h2f_axi_master_rdata                                       => hps_0_h2f_axi_master_rdata,                                                 --                                                           .rdata
+			hps_0_h2f_axi_master_rresp                                       => hps_0_h2f_axi_master_rresp,                                                 --                                                           .rresp
+			hps_0_h2f_axi_master_rlast                                       => hps_0_h2f_axi_master_rlast,                                                 --                                                           .rlast
+			hps_0_h2f_axi_master_rvalid                                      => hps_0_h2f_axi_master_rvalid,                                                --                                                           .rvalid
+			hps_0_h2f_axi_master_rready                                      => hps_0_h2f_axi_master_rready,                                                --                                                           .rready
+			pll_0_outclk0_clk                                                => pll_0_outclk0_clk,                                                          --                                              pll_0_outclk0.clk
+			DMA_neurax_read_reset_n_reset_bridge_in_reset_reset              => rst_controller_reset_out_reset,                                             --              DMA_neurax_read_reset_n_reset_bridge_in_reset.reset
+			hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset_reset => rst_controller_002_reset_out_reset,                                         -- hps_0_h2f_axi_master_agent_clk_reset_reset_bridge_in_reset.reset
+			neurax_avalon_accelerator_0_reset_reset_bridge_in_reset_reset    => rst_controller_001_reset_out_reset,                                         --    neurax_avalon_accelerator_0_reset_reset_bridge_in_reset.reset
+			DMA_neurax_read_csr_address                                      => mm_interconnect_0_dma_neurax_read_csr_address,                              --                                        DMA_neurax_read_csr.address
+			DMA_neurax_read_csr_write                                        => mm_interconnect_0_dma_neurax_read_csr_write,                                --                                                           .write
+			DMA_neurax_read_csr_read                                         => mm_interconnect_0_dma_neurax_read_csr_read,                                 --                                                           .read
+			DMA_neurax_read_csr_readdata                                     => mm_interconnect_0_dma_neurax_read_csr_readdata,                             --                                                           .readdata
+			DMA_neurax_read_csr_writedata                                    => mm_interconnect_0_dma_neurax_read_csr_writedata,                            --                                                           .writedata
+			DMA_neurax_read_csr_byteenable                                   => mm_interconnect_0_dma_neurax_read_csr_byteenable,                           --                                                           .byteenable
+			DMA_neurax_read_descriptor_slave_write                           => mm_interconnect_0_dma_neurax_read_descriptor_slave_write,                   --                           DMA_neurax_read_descriptor_slave.write
+			DMA_neurax_read_descriptor_slave_writedata                       => mm_interconnect_0_dma_neurax_read_descriptor_slave_writedata,               --                                                           .writedata
+			DMA_neurax_read_descriptor_slave_byteenable                      => mm_interconnect_0_dma_neurax_read_descriptor_slave_byteenable,              --                                                           .byteenable
+			DMA_neurax_read_descriptor_slave_waitrequest                     => mm_interconnect_0_dma_neurax_read_descriptor_slave_waitrequest,             --                                                           .waitrequest
+			DMA_neurax_write_csr_address                                     => mm_interconnect_0_dma_neurax_write_csr_address,                             --                                       DMA_neurax_write_csr.address
+			DMA_neurax_write_csr_write                                       => mm_interconnect_0_dma_neurax_write_csr_write,                               --                                                           .write
+			DMA_neurax_write_csr_read                                        => mm_interconnect_0_dma_neurax_write_csr_read,                                --                                                           .read
+			DMA_neurax_write_csr_readdata                                    => mm_interconnect_0_dma_neurax_write_csr_readdata,                            --                                                           .readdata
+			DMA_neurax_write_csr_writedata                                   => mm_interconnect_0_dma_neurax_write_csr_writedata,                           --                                                           .writedata
+			DMA_neurax_write_csr_byteenable                                  => mm_interconnect_0_dma_neurax_write_csr_byteenable,                          --                                                           .byteenable
+			DMA_neurax_write_descriptor_slave_write                          => mm_interconnect_0_dma_neurax_write_descriptor_slave_write,                  --                          DMA_neurax_write_descriptor_slave.write
+			DMA_neurax_write_descriptor_slave_writedata                      => mm_interconnect_0_dma_neurax_write_descriptor_slave_writedata,              --                                                           .writedata
+			DMA_neurax_write_descriptor_slave_byteenable                     => mm_interconnect_0_dma_neurax_write_descriptor_slave_byteenable,             --                                                           .byteenable
+			DMA_neurax_write_descriptor_slave_waitrequest                    => mm_interconnect_0_dma_neurax_write_descriptor_slave_waitrequest,            --                                                           .waitrequest
+			neurax_avalon_accelerator_0_avalon_slave_0_address               => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_address,       --                 neurax_avalon_accelerator_0_avalon_slave_0.address
+			neurax_avalon_accelerator_0_avalon_slave_0_write                 => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_write,         --                                                           .write
+			neurax_avalon_accelerator_0_avalon_slave_0_read                  => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_read,          --                                                           .read
+			neurax_avalon_accelerator_0_avalon_slave_0_readdata              => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdata,      --                                                           .readdata
+			neurax_avalon_accelerator_0_avalon_slave_0_writedata             => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_writedata,     --                                                           .writedata
+			neurax_avalon_accelerator_0_avalon_slave_0_byteenable            => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_byteenable,    --                                                           .byteenable
+			neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid         => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid, --                                                           .readdatavalid
+			neurax_avalon_accelerator_0_avalon_slave_0_waitrequest           => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_waitrequest,   --                                                           .waitrequest
+			neurax_avalon_accelerator_0_avalon_slave_0_chipselect            => mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_chipselect     --                                                           .chipselect
 		);
 
 	mm_interconnect_1 : component soc_system_mm_interconnect_1
@@ -1099,7 +1104,7 @@ begin
 			hps_0_f2h_axi_slave_rready                                       => mm_interconnect_1_hps_0_f2h_axi_slave_rready,  --                                                           .rready
 			pll_0_outclk0_clk                                                => pll_0_outclk0_clk,                             --                                              pll_0_outclk0.clk
 			DMA_neurax_write_reset_n_reset_bridge_in_reset_reset             => rst_controller_reset_out_reset,                --             DMA_neurax_write_reset_n_reset_bridge_in_reset.reset
-			hps_0_f2h_axi_slave_agent_reset_sink_reset_bridge_in_reset_reset => rst_controller_001_reset_out_reset,            -- hps_0_f2h_axi_slave_agent_reset_sink_reset_bridge_in_reset.reset
+			hps_0_f2h_axi_slave_agent_reset_sink_reset_bridge_in_reset_reset => rst_controller_002_reset_out_reset,            -- hps_0_f2h_axi_slave_agent_reset_sink_reset_bridge_in_reset.reset
 			DMA_neurax_read_mm_write_address                                 => dma_neurax_read_mm_write_address,              --                                   DMA_neurax_read_mm_write.address
 			DMA_neurax_read_mm_write_waitrequest                             => dma_neurax_read_mm_write_waitrequest,          --                                                           .waitrequest
 			DMA_neurax_read_mm_write_byteenable                              => dma_neurax_read_mm_write_byteenable,           --                                                           .byteenable
@@ -1150,7 +1155,7 @@ begin
 		)
 		port map (
 			in_clk_0_clk   => pll_0_outclk0_clk,                                 -- in_clk_0.clk
-			in_rst_0_reset => rst_controller_reset_out_reset,                    -- in_rst_0.reset
+			in_rst_0_reset => rst_controller_001_reset_out_reset,                -- in_rst_0.reset
 			in_0_data      => neurax_avalon_accelerator_0_avalon_source_data,    --     in_0.data
 			in_0_valid     => neurax_avalon_accelerator_0_avalon_source_valid,   --         .valid
 			in_0_ready     => neurax_avalon_accelerator_0_avalon_source_ready,   --         .ready
@@ -1289,9 +1294,74 @@ begin
 			ADAPT_RESET_REQUEST       => 0
 		)
 		port map (
-			reset_in0      => hps_0_h2f_reset_reset_ports_inv,    -- reset_in0.reset
+			reset_in0      => reset_reset_n_ports_inv,            -- reset_in0.reset
 			clk            => pll_0_outclk0_clk,                  --       clk.clk
 			reset_out      => rst_controller_001_reset_out_reset, -- reset_out.reset
+			reset_req      => open,                               -- (terminated)
+			reset_req_in0  => '0',                                -- (terminated)
+			reset_in1      => '0',                                -- (terminated)
+			reset_req_in1  => '0',                                -- (terminated)
+			reset_in2      => '0',                                -- (terminated)
+			reset_req_in2  => '0',                                -- (terminated)
+			reset_in3      => '0',                                -- (terminated)
+			reset_req_in3  => '0',                                -- (terminated)
+			reset_in4      => '0',                                -- (terminated)
+			reset_req_in4  => '0',                                -- (terminated)
+			reset_in5      => '0',                                -- (terminated)
+			reset_req_in5  => '0',                                -- (terminated)
+			reset_in6      => '0',                                -- (terminated)
+			reset_req_in6  => '0',                                -- (terminated)
+			reset_in7      => '0',                                -- (terminated)
+			reset_req_in7  => '0',                                -- (terminated)
+			reset_in8      => '0',                                -- (terminated)
+			reset_req_in8  => '0',                                -- (terminated)
+			reset_in9      => '0',                                -- (terminated)
+			reset_req_in9  => '0',                                -- (terminated)
+			reset_in10     => '0',                                -- (terminated)
+			reset_req_in10 => '0',                                -- (terminated)
+			reset_in11     => '0',                                -- (terminated)
+			reset_req_in11 => '0',                                -- (terminated)
+			reset_in12     => '0',                                -- (terminated)
+			reset_req_in12 => '0',                                -- (terminated)
+			reset_in13     => '0',                                -- (terminated)
+			reset_req_in13 => '0',                                -- (terminated)
+			reset_in14     => '0',                                -- (terminated)
+			reset_req_in14 => '0',                                -- (terminated)
+			reset_in15     => '0',                                -- (terminated)
+			reset_req_in15 => '0'                                 -- (terminated)
+		);
+
+	rst_controller_002 : component soc_system_rst_controller_001
+		generic map (
+			NUM_RESET_INPUTS          => 1,
+			OUTPUT_RESET_SYNC_EDGES   => "deassert",
+			SYNC_DEPTH                => 2,
+			RESET_REQUEST_PRESENT     => 0,
+			RESET_REQ_WAIT_TIME       => 1,
+			MIN_RST_ASSERTION_TIME    => 3,
+			RESET_REQ_EARLY_DSRT_TIME => 1,
+			USE_RESET_REQUEST_IN0     => 0,
+			USE_RESET_REQUEST_IN1     => 0,
+			USE_RESET_REQUEST_IN2     => 0,
+			USE_RESET_REQUEST_IN3     => 0,
+			USE_RESET_REQUEST_IN4     => 0,
+			USE_RESET_REQUEST_IN5     => 0,
+			USE_RESET_REQUEST_IN6     => 0,
+			USE_RESET_REQUEST_IN7     => 0,
+			USE_RESET_REQUEST_IN8     => 0,
+			USE_RESET_REQUEST_IN9     => 0,
+			USE_RESET_REQUEST_IN10    => 0,
+			USE_RESET_REQUEST_IN11    => 0,
+			USE_RESET_REQUEST_IN12    => 0,
+			USE_RESET_REQUEST_IN13    => 0,
+			USE_RESET_REQUEST_IN14    => 0,
+			USE_RESET_REQUEST_IN15    => 0,
+			ADAPT_RESET_REQUEST       => 0
+		)
+		port map (
+			reset_in0      => hps_0_h2f_reset_reset_ports_inv,    -- reset_in0.reset
+			clk            => pll_0_outclk0_clk,                  --       clk.clk
+			reset_out      => rst_controller_002_reset_out_reset, -- reset_out.reset
 			reset_req      => open,                               -- (terminated)
 			reset_req_in0  => '0',                                -- (terminated)
 			reset_in1      => '0',                                -- (terminated)

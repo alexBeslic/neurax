@@ -162,43 +162,43 @@
  <file
    path="simulation/submodules/altera_merlin_burst_adapter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_burst_adapter_uncmpr.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_burst_adapter_13_1.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_burst_adapter_new.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_incr_burst_converter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_wrap_burst_converter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_default_burst_converter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_address_alignment.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_avalon_st_pipeline_stage.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_avalon_st_pipeline_base.v"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_burst_adapter" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_traffic_limiter.sv"
    type="SYSTEM_VERILOG"
@@ -230,15 +230,15 @@
  <file
    path="simulation/submodules/altera_avalon_sc_fifo.v"
    type="VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_agent_rsp_fifo" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo" />
  <file
    path="simulation/submodules/altera_merlin_slave_agent.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_agent" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_agent" />
  <file
    path="simulation/submodules/altera_merlin_burst_uncompressor.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_agent" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_agent" />
  <file
    path="simulation/submodules/altera_merlin_axi_master_ni.sv"
    type="SYSTEM_VERILOG"
@@ -250,7 +250,7 @@
  <file
    path="simulation/submodules/altera_merlin_slave_translator.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_translator" />
+   library="neurax_avalon_accelerator_0_avalon_slave_0_translator" />
  <file
    path="simulation/submodules/soc_system_hps_0_hps_io.v"
    type="VERILOG"
@@ -369,6 +369,38 @@
    library="pll_0" />
  <file
    path="simulation/submodules/neurax.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/FPGA_accelerator.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/activation_block.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/convolution_block.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/neurax_accel_types_pkg.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/neurax_data_interface.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/neurax_register_block.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/neurax_register_pkg.vhd"
+   type="VHDL"
+   library="neurax_avalon_accelerator_0" />
+ <file
+   path="simulation/submodules/pooling_block.vhd"
    type="VHDL"
    library="neurax_avalon_accelerator_0" />
  <file

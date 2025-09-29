@@ -1574,10 +1574,14 @@ set_global_assignment -name USE_DLL_FREQUENCY_FOR_DQS_DELAY_CHAIN ON
 set_global_assignment -name UNIPHY_SEQUENCER_DQS_CONFIG_ENABLE ON
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
 set_global_assignment -name ECO_REGENERATE_REPORT ON
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name VHDL_FILE ../hdl/neurax_register_block.vhd
+set_global_assignment -name VHDL_FILE ../hdl/pooling_block.vhd
+set_global_assignment -name VHDL_FILE ../hdl/FPGA_accelerator.vhd
+set_global_assignment -name VHDL_FILE ../hdl/convolution_block.vhd
+set_global_assignment -name VHDL_FILE ../hdl/activation_block.vhd
 set_global_assignment -name VHDL_FILE ../hdl/de1_soc_top.vhd
 set_global_assignment -name VHDL_FILE ../hdl/neurax_register_pkg.vhd
-set_global_assignment -name VHDL_FILE ../hdl/neurax_register_blok.vhd
 set_global_assignment -name VHDL_FILE ../hdl/neurax_data_interface.vhd
 set_global_assignment -name VHDL_FILE ../hdl/neurax.vhd
 set_global_assignment -name QIP_FILE qsys/soc_system/synthesis/soc_system.qip
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

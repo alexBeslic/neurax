@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="soc_system" kind="soc_system" version="1.0" fabric="QSYS">
  <!-- Format version 24.1 1077 (Future versions may contain additional information.) -->
- <!-- 2025.09.22.21:58:13 -->
+ <!-- 2025.09.27.19:40:01 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1758571092</value>
+  <value>1758994800</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -20138,17 +20138,17 @@ parameters are a RESULT of the module parameters. -->
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>neurax_avalon_accelerator_0</moduleName>
-    <slaveName>avalon_slave</slaveName>
-    <name>neurax_avalon_accelerator_0.avalon_slave</name>
-    <baseAddress>64</baseAddress>
-    <span>32</span>
+    <slaveName>avalon_slave_0</slaveName>
+    <name>neurax_avalon_accelerator_0.avalon_slave_0</name>
+    <baseAddress>0</baseAddress>
+    <span>64</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_read.csr</name>
-    <baseAddress>32</baseAddress>
+    <baseAddress>96</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -20156,7 +20156,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_write.csr</name>
-    <baseAddress>0</baseAddress>
+    <baseAddress>64</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -20164,7 +20164,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_write.descriptor_slave</name>
-    <baseAddress>112</baseAddress>
+    <baseAddress>144</baseAddress>
     <span>16</span>
    </memoryBlock>
    <memoryBlock>
@@ -20172,7 +20172,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_read.descriptor_slave</name>
-    <baseAddress>96</baseAddress>
+    <baseAddress>128</baseAddress>
     <span>16</span>
    </memoryBlock>
   </interface>
@@ -46750,17 +46750,17 @@ parameters are a RESULT of the module parameters. -->
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>neurax_avalon_accelerator_0</moduleName>
-    <slaveName>avalon_slave</slaveName>
-    <name>neurax_avalon_accelerator_0.avalon_slave</name>
-    <baseAddress>64</baseAddress>
-    <span>32</span>
+    <slaveName>avalon_slave_0</slaveName>
+    <name>neurax_avalon_accelerator_0.avalon_slave_0</name>
+    <baseAddress>0</baseAddress>
+    <span>64</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_read.csr</name>
-    <baseAddress>32</baseAddress>
+    <baseAddress>96</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -46768,7 +46768,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_write.csr</name>
-    <baseAddress>0</baseAddress>
+    <baseAddress>64</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -46776,7 +46776,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_write.descriptor_slave</name>
-    <baseAddress>112</baseAddress>
+    <baseAddress>144</baseAddress>
     <span>16</span>
    </memoryBlock>
    <memoryBlock>
@@ -46784,7 +46784,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_read.descriptor_slave</name>
-    <baseAddress>96</baseAddress>
+    <baseAddress>128</baseAddress>
     <span>16</span>
    </memoryBlock>
   </interface>
@@ -48301,17 +48301,17 @@ parameters are a RESULT of the module parameters. -->
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>neurax_avalon_accelerator_0</moduleName>
-    <slaveName>avalon_slave</slaveName>
-    <name>neurax_avalon_accelerator_0.avalon_slave</name>
-    <baseAddress>3221225536</baseAddress>
-    <span>32</span>
+    <slaveName>avalon_slave_0</slaveName>
+    <name>neurax_avalon_accelerator_0.avalon_slave_0</name>
+    <baseAddress>3221225472</baseAddress>
+    <span>64</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_read.csr</name>
-    <baseAddress>3221225504</baseAddress>
+    <baseAddress>3221225568</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -48319,7 +48319,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_write.csr</name>
-    <baseAddress>3221225472</baseAddress>
+    <baseAddress>3221225536</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -48327,7 +48327,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_write.descriptor_slave</name>
-    <baseAddress>3221225584</baseAddress>
+    <baseAddress>3221225616</baseAddress>
     <span>16</span>
    </memoryBlock>
    <memoryBlock>
@@ -48335,7 +48335,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_read.descriptor_slave</name>
-    <baseAddress>3221225568</baseAddress>
+    <baseAddress>3221225600</baseAddress>
     <span>16</span>
    </memoryBlock>
    <memoryBlock>
@@ -49156,17 +49156,17 @@ parameters are a RESULT of the module parameters. -->
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>neurax_avalon_accelerator_0</moduleName>
-    <slaveName>avalon_slave</slaveName>
-    <name>neurax_avalon_accelerator_0.avalon_slave</name>
-    <baseAddress>3221225536</baseAddress>
-    <span>32</span>
+    <slaveName>avalon_slave_0</slaveName>
+    <name>neurax_avalon_accelerator_0.avalon_slave_0</name>
+    <baseAddress>3221225472</baseAddress>
+    <span>64</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_read.csr</name>
-    <baseAddress>3221225504</baseAddress>
+    <baseAddress>3221225568</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -49174,7 +49174,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>csr</slaveName>
     <name>DMA_neurax_write.csr</name>
-    <baseAddress>3221225472</baseAddress>
+    <baseAddress>3221225536</baseAddress>
     <span>32</span>
    </memoryBlock>
    <memoryBlock>
@@ -49182,7 +49182,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_write</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_write.descriptor_slave</name>
-    <baseAddress>3221225584</baseAddress>
+    <baseAddress>3221225616</baseAddress>
     <span>16</span>
    </memoryBlock>
    <memoryBlock>
@@ -49190,7 +49190,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>DMA_neurax_read</moduleName>
     <slaveName>descriptor_slave</slaveName>
     <name>DMA_neurax_read.descriptor_slave</name>
-    <baseAddress>3221225568</baseAddress>
+    <baseAddress>3221225600</baseAddress>
     <span>16</span>
    </memoryBlock>
    <memoryBlock>
@@ -76813,15 +76813,15 @@ the requested settings for a module instance. -->
    <type>int</type>
    <value>32</value>
    <derived>false</derived>
-   <enabled>false</enabled>
+   <enabled>true</enabled>
    <visible>true</visible>
    <valid>true</valid>
   </parameter>
   <parameter name="g_ADDR_WIDTH">
    <type>int</type>
-   <value>3</value>
+   <value>4</value>
    <derived>false</derived>
-   <enabled>false</enabled>
+   <enabled>true</enabled>
    <visible>true</visible>
    <valid>true</valid>
   </parameter>
@@ -76844,6 +76844,14 @@ the requested settings for a module instance. -->
   <parameter name="g_FB_HEIGHT">
    <type>int</type>
    <value>100</value>
+   <derived>false</derived>
+   <enabled>true</enabled>
+   <visible>true</visible>
+   <valid>true</valid>
+  </parameter>
+  <parameter name="PARALLEL_UNITS">
+   <type>int</type>
+   <value>4</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -77086,16 +77094,16 @@ parameters are a RESULT of the module parameters. -->
     <role>data</role>
    </port>
    <port>
-    <name>asi_valid_i</name>
-    <direction>Input</direction>
-    <width>1</width>
-    <role>valid</role>
-   </port>
-   <port>
     <name>asi_error_i</name>
     <direction>Input</direction>
     <width>1</width>
     <role>error</role>
+   </port>
+   <port>
+    <name>asi_valid_i</name>
+    <direction>Input</direction>
+    <width>1</width>
+    <role>valid</role>
    </port>
    <port>
     <name>asi_ready_o</name>
@@ -77223,22 +77231,16 @@ parameters are a RESULT of the module parameters. -->
    <type>avalon_streaming</type>
    <isStart>true</isStart>
    <port>
-    <name>aso_data_o</name>
-    <direction>Output</direction>
-    <width>32</width>
-    <role>data</role>
-   </port>
-   <port>
-    <name>aso_valid_o</name>
-    <direction>Output</direction>
-    <width>1</width>
-    <role>valid</role>
-   </port>
-   <port>
     <name>aso_channel_o</name>
     <direction>Output</direction>
     <width>1</width>
     <role>channel</role>
+   </port>
+   <port>
+    <name>aso_data_o</name>
+    <direction>Output</direction>
+    <width>32</width>
+    <role>data</role>
    </port>
    <port>
     <name>aso_error_o</name>
@@ -77247,13 +77249,19 @@ parameters are a RESULT of the module parameters. -->
     <role>error</role>
    </port>
    <port>
+    <name>aso_valid_o</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>valid</role>
+   </port>
+   <port>
     <name>aso_ready_i</name>
     <direction>Input</direction>
     <width>1</width>
     <role>ready</role>
    </port>
   </interface>
-  <interface name="avalon_slave" kind="avalon_slave" version="24.1">
+  <interface name="avalon_slave_0" kind="avalon_slave" version="24.1">
    <!-- The connection points exposed by a module instance for the
 particular module parameters. Connection points and their
 parameters are a RESULT of the module parameters. -->
@@ -77291,7 +77299,7 @@ parameters are a RESULT of the module parameters. -->
    </parameter>
    <parameter name="addressSpan">
     <type>java.math.BigInteger</type>
-    <value>32</value>
+    <value>64</value>
     <derived>true</derived>
     <enabled>true</enabled>
     <visible>false</visible>
@@ -77588,27 +77596,9 @@ parameters are a RESULT of the module parameters. -->
    <type>avalon</type>
    <isStart>false</isStart>
    <port>
-    <name>avs_readdata_o</name>
-    <direction>Output</direction>
-    <width>32</width>
-    <role>readdata</role>
-   </port>
-   <port>
-    <name>avs_readdatavalid_o</name>
-    <direction>Output</direction>
-    <width>1</width>
-    <role>readdatavalid</role>
-   </port>
-   <port>
-    <name>avs_waitrequest_o</name>
-    <direction>Output</direction>
-    <width>1</width>
-    <role>waitrequest</role>
-   </port>
-   <port>
     <name>avs_address_i</name>
     <direction>Input</direction>
-    <width>3</width>
+    <width>4</width>
     <role>address</role>
    </port>
    <port>
@@ -77640,6 +77630,24 @@ parameters are a RESULT of the module parameters. -->
     <direction>Input</direction>
     <width>32</width>
     <role>writedata</role>
+   </port>
+   <port>
+    <name>avs_readdata_o</name>
+    <direction>Output</direction>
+    <width>32</width>
+    <role>readdata</role>
+   </port>
+   <port>
+    <name>avs_readdatavalid_o</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>readdatavalid</role>
+   </port>
+   <port>
+    <name>avs_waitrequest_o</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>waitrequest</role>
    </port>
   </interface>
  </module>
@@ -91655,11 +91663,11 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>axi_slave0</endConnectionPoint>
  </connection>
  <connection
-   name="hps_0_bridges.h2f/neurax_avalon_accelerator_0.avalon_slave"
+   name="hps_0_bridges.h2f/neurax_avalon_accelerator_0.avalon_slave_0"
    kind="avalon"
    version="24.1"
    start="hps_0_bridges.h2f"
-   end="neurax_avalon_accelerator_0.avalon_slave">
+   end="neurax_avalon_accelerator_0.avalon_slave_0">
   <parameter name="arbitrationPriority">
    <type>int</type>
    <value>1</value>
@@ -91670,7 +91678,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x0040</value>
+   <value>0x0000</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -91703,7 +91711,7 @@ parameters are a RESULT of the module parameters. -->
   <startModule>hps_0_bridges</startModule>
   <startConnectionPoint>h2f</startConnectionPoint>
   <endModule>neurax_avalon_accelerator_0</endModule>
-  <endConnectionPoint>avalon_slave</endConnectionPoint>
+  <endConnectionPoint>avalon_slave_0</endConnectionPoint>
  </connection>
  <connection
    name="hps_0_bridges.h2f/DMA_neurax_read.csr"
@@ -91721,7 +91729,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x0020</value>
+   <value>0x0060</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -91772,7 +91780,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x0000</value>
+   <value>0x0040</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -91823,7 +91831,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x0070</value>
+   <value>0x0090</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -91874,7 +91882,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x0060</value>
+   <value>0x0080</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -92406,33 +92414,6 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>reset_n</endConnectionPoint>
  </connection>
  <connection
-   name="hps_0_bridges.h2f_reset/neurax_avalon_accelerator_0.reset"
-   kind="reset"
-   version="24.1"
-   start="hps_0_bridges.h2f_reset"
-   end="neurax_avalon_accelerator_0.reset">
-  <parameter name="deviceFamily">
-   <type>java.lang.String</type>
-   <value>UNKNOWN</value>
-   <derived>false</derived>
-   <enabled>true</enabled>
-   <visible>true</visible>
-   <valid>true</valid>
-  </parameter>
-  <parameter name="generateLegacySim">
-   <type>boolean</type>
-   <value>false</value>
-   <derived>false</derived>
-   <enabled>true</enabled>
-   <visible>true</visible>
-   <valid>true</valid>
-  </parameter>
-  <startModule>hps_0_bridges</startModule>
-  <startConnectionPoint>h2f_reset</startConnectionPoint>
-  <endModule>neurax_avalon_accelerator_0</endModule>
-  <endConnectionPoint>reset</endConnectionPoint>
- </connection>
- <connection
    name="hps_0_bridges.h2f_reset/DMA_neurax_write.reset_n"
    kind="reset"
    version="24.1"
@@ -92919,7 +92900,7 @@ parameters are a RESULT of the module parameters. -->
   <version>24.1</version>
  </plugin>
  <plugin>
-  <instanceCount>49</instanceCount>
+  <instanceCount>48</instanceCount>
   <name>reset</name>
   <type>com.altera.entityinterfaces.IElementClass</type>
   <subtype>com.altera.entityinterfaces.IConnection</subtype>

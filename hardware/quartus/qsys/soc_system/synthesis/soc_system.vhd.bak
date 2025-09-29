@@ -258,7 +258,7 @@ architecture rtl of soc_system is
 			aso_error_o         : out std_logic;                                        -- error
 			aso_valid_o         : out std_logic;                                        -- valid
 			aso_ready_i         : in  std_logic                     := 'X';             -- ready
-			avs_address_i       : in  std_logic_vector(3 downto 0)  := (others => 'X'); -- address
+			avs_address_i       : in  std_logic_vector(2 downto 0)  := (others => 'X'); -- address
 			avs_byteenable_i    : in  std_logic_vector(3 downto 0)  := (others => 'X'); -- byteenable
 			avs_chipselect_i    : in  std_logic                     := 'X';             -- chipselect
 			avs_read_i          : in  std_logic                     := 'X';             -- read
@@ -341,7 +341,7 @@ architecture rtl of soc_system is
 			DMA_neurax_write_descriptor_slave_writedata                      : out std_logic_vector(127 downto 0);                    -- writedata
 			DMA_neurax_write_descriptor_slave_byteenable                     : out std_logic_vector(15 downto 0);                     -- byteenable
 			DMA_neurax_write_descriptor_slave_waitrequest                    : in  std_logic                      := 'X';             -- waitrequest
-			neurax_avalon_accelerator_0_avalon_slave_0_address               : out std_logic_vector(3 downto 0);                      -- address
+			neurax_avalon_accelerator_0_avalon_slave_0_address               : out std_logic_vector(2 downto 0);                      -- address
 			neurax_avalon_accelerator_0_avalon_slave_0_write                 : out std_logic;                                         -- write
 			neurax_avalon_accelerator_0_avalon_slave_0_read                  : out std_logic;                                         -- read
 			neurax_avalon_accelerator_0_avalon_slave_0_readdata              : in  std_logic_vector(31 downto 0)  := (others => 'X'); -- readdata
@@ -660,7 +660,7 @@ architecture rtl of soc_system is
 	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_chipselect    : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_chipselect -> neurax_avalon_accelerator_0:avs_chipselect_i
 	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdata      : std_logic_vector(31 downto 0);  -- neurax_avalon_accelerator_0:avs_readdata_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_readdata
 	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_waitrequest   : std_logic;                      -- neurax_avalon_accelerator_0:avs_waitrequest_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_waitrequest
-	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_address       : std_logic_vector(3 downto 0);   -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_address -> neurax_avalon_accelerator_0:avs_address_i
+	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_address       : std_logic_vector(2 downto 0);   -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_address -> neurax_avalon_accelerator_0:avs_address_i
 	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_read          : std_logic;                      -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_read -> neurax_avalon_accelerator_0:avs_read_i
 	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_byteenable    : std_logic_vector(3 downto 0);   -- mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_byteenable -> neurax_avalon_accelerator_0:avs_byteenable_i
 	signal mm_interconnect_0_neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid : std_logic;                      -- neurax_avalon_accelerator_0:avs_readdatavalid_o -> mm_interconnect_0:neurax_avalon_accelerator_0_avalon_slave_0_readdatavalid
@@ -951,7 +951,7 @@ begin
 	neurax_avalon_accelerator_0 : component neurax
 		generic map (
 			g_WIDTH        => 32,
-			g_ADDR_WIDTH   => 4,
+			g_ADDR_WIDTH   => 3,
 			g_PIXEL_WIDTH  => 24,
 			g_FB_WIDTH     => 100,
 			g_FB_HEIGHT    => 100,

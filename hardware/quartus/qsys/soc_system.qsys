@@ -21,7 +21,7 @@
    {
       datum baseAddress
       {
-         value = "32";
+         value = "96";
          type = "String";
       }
    }
@@ -29,7 +29,7 @@
    {
       datum baseAddress
       {
-         value = "96";
+         value = "128";
          type = "String";
       }
    }
@@ -45,7 +45,7 @@
    {
       datum baseAddress
       {
-         value = "0";
+         value = "64";
          type = "String";
       }
    }
@@ -53,7 +53,7 @@
    {
       datum baseAddress
       {
-         value = "112";
+         value = "144";
          type = "String";
       }
    }
@@ -89,11 +89,11 @@
          type = "int";
       }
    }
-   element neurax_avalon_accelerator_0.avalon_slave
+   element neurax_avalon_accelerator_0.avalon_slave_0
    {
       datum baseAddress
       {
-         value = "64";
+         value = "0";
          type = "String";
       }
    }
@@ -103,6 +103,14 @@
       {
          value = "1";
          type = "int";
+      }
+   }
+   element soc_system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
       }
    }
 }
@@ -765,7 +773,8 @@
    kind="neurax_avalon_accelerator"
    version="1.0"
    enabled="1">
-  <parameter name="g_ADDR_WIDTH" value="3" />
+  <parameter name="PARALLEL_UNITS" value="4" />
+  <parameter name="g_ADDR_WIDTH" value="4" />
   <parameter name="g_FB_HEIGHT" value="100" />
   <parameter name="g_FB_WIDTH" value="100" />
   <parameter name="g_PIXEL_WIDTH" value="24" />
@@ -978,25 +987,7 @@
    kind="avalon"
    version="24.1"
    start="hps_0.h2f_axi_master"
-   end="neurax_avalon_accelerator_0.avalon_slave">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0040" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="24.1"
-   start="hps_0.h2f_axi_master"
-   end="DMA_neurax_read.csr">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0020" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="24.1"
-   start="hps_0.h2f_axi_master"
-   end="DMA_neurax_write.csr">
+   end="neurax_avalon_accelerator_0.avalon_slave_0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
@@ -1005,9 +996,27 @@
    kind="avalon"
    version="24.1"
    start="hps_0.h2f_axi_master"
+   end="DMA_neurax_read.csr">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0060" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="24.1"
+   start="hps_0.h2f_axi_master"
+   end="DMA_neurax_write.csr">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0040" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="24.1"
+   start="hps_0.h2f_axi_master"
    end="DMA_neurax_write.descriptor_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0070" />
+  <parameter name="baseAddress" value="0x0090" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1016,7 +1025,7 @@
    start="hps_0.h2f_axi_master"
    end="DMA_neurax_read.descriptor_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0060" />
+  <parameter name="baseAddress" value="0x0080" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1103,11 +1112,6 @@
    version="24.1"
    start="clk_0.clk_reset"
    end="DMA_neurax_read.reset_n" />
- <connection
-   kind="reset"
-   version="24.1"
-   start="hps_0.h2f_reset"
-   end="neurax_avalon_accelerator_0.reset" />
  <connection
    kind="reset"
    version="24.1"
