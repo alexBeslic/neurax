@@ -9,7 +9,8 @@ set(UBOOT_SOURCE_DIR ${UBOOT_BUILD_DIR}/u-boot-socfpga)
 set(QUARTUS_HANDOFF_DIR ${CMAKE_SOURCE_DIR}/../../hardware/quartus/hps_isw_handoff/soc_system_hps_0)
 
 # Cross compiler
-set(CROSS_COMPILE arm-linux-gnueabihf-)
+set(ARCH arm)
+set(CROSS_COMPILE arm-none-linux-gnueabihf-)
 
 ExternalProject_Add(
     uboot
@@ -28,8 +29,8 @@ ExternalProject_Add(
     BUILD_COMMAND
         $(MAKE) -C ${UBOOT_SOURCE_DIR} socfpga_cyclone5_defconfig
     COMMAND
-        $(MAKE) -C ${UBOOT_SOURCE_DIR} CROSS_COMPILE=${CROSS_COMPILE}
-    
+        $(MAKE) -C ${UBOOT_SOURCE_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}
+
     BUILD_IN_SOURCE 1
     
     INSTALL_COMMAND ""
