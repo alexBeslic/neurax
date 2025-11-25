@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "socal/hps.h"
+#include "neurax/bsp/hps.h"
 
 #include "neurax/bsp/hps_soc_system.h"
 
