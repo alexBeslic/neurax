@@ -9,7 +9,7 @@ set(UBOOT_SOURCE_DIR ${UBOOT_BUILD_DIR}/u-boot-socfpga)
 set(QUARTUS_HANDOFF_DIR ${CMAKE_SOURCE_DIR}/../../hardware/quartus/hps_isw_handoff/soc_system_hps_0)
 set(QUARTUS_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/../../hardware/quartus/output_files)
 set(QUARTUS_QSYS_DIR ${CMAKE_SOURCE_DIR}/../../hardware/quartus/qsys)
-set(BOOT_SCRIPT_SOURCE ${CMAKE_SOURCE_DIR}/boot.script)
+set(BOOT_SCRIPT_SOURCE ${CMAKE_SOURCE_DIR}/uboot.script)
 set(BOOT_SCRIPT_OUTPUT_DIR ${CMAKE_BINARY_DIR}/boot-scripts)
 
 # Cross compiler
@@ -18,7 +18,7 @@ set(CROSS_COMPILE arm-none-linux-gnueabihf-)
 
 # Intel FPGA paths
 set(INTEL_FPGA_ROOT $ENV{HOME}/intelFPGA/20.1)
-set( ${INTEL_FPGA_ROOT}/embedded/embedded_command_shell.sh)
+set(EMBEDDED_SHELL ${INTEL_FPGA_ROOT}/embedded/embedded_command_shell.sh)
 
 # Create boot script output directory
 file(MAKE_DIRECTORY ${BOOT_SCRIPT_OUTPUT_DIR})
@@ -66,8 +66,7 @@ ExternalProject_Add(
     uboot
     PREFIX ${UBOOT_BUILD_DIR}
     GIT_REPOSITORY https://github.com/altera-opensource/u-boot-socfpga.git
-    GIT_TAG socfpga_v2025.04
-    GIT_SHALLOW 1
+    GIT_TAG socfpga_v2025.07
     
     SOURCE_DIR ${UBOOT_SOURCE_DIR}
     

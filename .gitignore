@@ -53,3 +53,11 @@ dkms.conf
 
 # debug information files
 *.dwo
+*db/*
+
+# build directories
+*/CMakeFiles/*
+*/build/*
+
+# toolchain files
+toolchain/*
