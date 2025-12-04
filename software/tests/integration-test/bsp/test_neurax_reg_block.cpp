@@ -5,7 +5,9 @@
 int main(int argc, char const *argv[])
 {
     uint32_t value = 0;
+    printf("Starting NEURAX BSP register read test...\n");
     neurax_bsp_init();
+    printf("Initialized NEURAX BSP.\n");
     neurax_bsp_read_reg(NEURAX_READ_ONLY_OFFSET, &value);
 
     printf("Read NEURAX ID register: 0x%08X\n", value);

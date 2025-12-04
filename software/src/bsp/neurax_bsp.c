@@ -105,7 +105,7 @@ int neurax_bsp_write_reg(uint32_t offset, uint32_t value) {
         return -2; /* Offset out of range */
     }
 
-    neurax_reg_base[offset] = value;
+    neurax_reg_base[offset / 4] = value;
     return 0;
 }
 
@@ -118,7 +118,7 @@ int neurax_bsp_read_reg(uint32_t offset, uint32_t *value) {
         return -2; /* Offset out of range */
     }
 
-    *value = neurax_reg_base[offset];
+    *value = neurax_reg_base[offset / 4];
     return 0;
 }
 
