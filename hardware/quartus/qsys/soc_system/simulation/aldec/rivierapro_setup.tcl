@@ -12,7 +12,7 @@
 # or its authorized distributors. Please refer to the applicable 
 # agreement for further details.
 
-# ACDS 24.1 1077 win32 2025.09.27.19:39:34
+# ACDS 24.1 1077 linux 2025.12.04.20:39:47
 # ----------------------------------------
 # Auto-generated simulation script rivierapro_setup.tcl
 # ----------------------------------------
@@ -113,7 +113,7 @@ if ![info exists QSYS_SIMDIR] {
 }
 
 if ![info exists QUARTUS_INSTALL_DIR] { 
-  set QUARTUS_INSTALL_DIR "C:/intelfpga_lite/24.1std/quartus/"
+  set QUARTUS_INSTALL_DIR "/root/intelFPGA_lite/24.1std/quartus/"
 }
 
 if ![info exists USER_DEFINED_COMPILE_OPTIONS] { 
@@ -226,16 +226,16 @@ ensure_lib                                                           ./libraries
 vmap       rsp_demux                                                 ./libraries/rsp_demux                                                
 ensure_lib                                                           ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter 
 vmap       neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter  ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter 
-ensure_lib                                                           ./libraries/hps_0_h2f_axi_master_wr_limiter                          
-vmap       hps_0_h2f_axi_master_wr_limiter                           ./libraries/hps_0_h2f_axi_master_wr_limiter                          
+ensure_lib                                                           ./libraries/hps_0_h2f_lw_axi_master_wr_limiter                       
+vmap       hps_0_h2f_lw_axi_master_wr_limiter                        ./libraries/hps_0_h2f_lw_axi_master_wr_limiter                       
 ensure_lib                                                           ./libraries/router_005                                               
 vmap       router_005                                                ./libraries/router_005                                               
 ensure_lib                                                           ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo
 vmap       neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo
 ensure_lib                                                           ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_agent         
 vmap       neurax_avalon_accelerator_0_avalon_slave_0_agent          ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_agent         
-ensure_lib                                                           ./libraries/hps_0_h2f_axi_master_agent                               
-vmap       hps_0_h2f_axi_master_agent                                ./libraries/hps_0_h2f_axi_master_agent                               
+ensure_lib                                                           ./libraries/hps_0_h2f_lw_axi_master_agent                            
+vmap       hps_0_h2f_lw_axi_master_agent                             ./libraries/hps_0_h2f_lw_axi_master_agent                            
 ensure_lib                                                           ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_translator    
 vmap       neurax_avalon_accelerator_0_avalon_slave_0_translator     ./libraries/neurax_avalon_accelerator_0_avalon_slave_0_translator    
 ensure_lib                                                           ./libraries/hps_io                                                   
@@ -360,18 +360,18 @@ alias com {
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_address_alignment.sv"                                    -l altera_common_sv_packages -work neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter 
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_avalon_st_pipeline_stage.sv"                                    -l altera_common_sv_packages -work neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter 
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_avalon_st_pipeline_base.v"                                      -l altera_common_sv_packages -work neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter 
-  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_traffic_limiter.sv"                                      -l altera_common_sv_packages -work hps_0_h2f_axi_master_wr_limiter                          
-  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_reorder_memory.sv"                                       -l altera_common_sv_packages -work hps_0_h2f_axi_master_wr_limiter                          
-  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_avalon_sc_fifo.v"                                               -l altera_common_sv_packages -work hps_0_h2f_axi_master_wr_limiter                          
-  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_avalon_st_pipeline_base.v"                                      -l altera_common_sv_packages -work hps_0_h2f_axi_master_wr_limiter                          
+  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_traffic_limiter.sv"                                      -l altera_common_sv_packages -work hps_0_h2f_lw_axi_master_wr_limiter                       
+  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_reorder_memory.sv"                                       -l altera_common_sv_packages -work hps_0_h2f_lw_axi_master_wr_limiter                       
+  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_avalon_sc_fifo.v"                                               -l altera_common_sv_packages -work hps_0_h2f_lw_axi_master_wr_limiter                       
+  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_avalon_st_pipeline_base.v"                                      -l altera_common_sv_packages -work hps_0_h2f_lw_axi_master_wr_limiter                       
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/soc_system_mm_interconnect_0_router_005.sv"                            -l altera_common_sv_packages -work router_005                                               
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/soc_system_mm_interconnect_0_router_002.sv"                            -l altera_common_sv_packages -work router_002                                               
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/soc_system_mm_interconnect_0_router.sv"                                -l altera_common_sv_packages -work router                                                   
   eval  vlog -v2k5 $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS "$QSYS_SIMDIR/submodules/altera_avalon_sc_fifo.v"                                                                            -work neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_slave_agent.sv"                                          -l altera_common_sv_packages -work neurax_avalon_accelerator_0_avalon_slave_0_agent         
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_burst_uncompressor.sv"                                   -l altera_common_sv_packages -work neurax_avalon_accelerator_0_avalon_slave_0_agent         
-  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_axi_master_ni.sv"                                        -l altera_common_sv_packages -work hps_0_h2f_axi_master_agent                               
-  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_address_alignment.sv"                                    -l altera_common_sv_packages -work hps_0_h2f_axi_master_agent                               
+  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_axi_master_ni.sv"                                        -l altera_common_sv_packages -work hps_0_h2f_lw_axi_master_agent                            
+  eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_address_alignment.sv"                                    -l altera_common_sv_packages -work hps_0_h2f_lw_axi_master_agent                            
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_merlin_slave_translator.sv"                                     -l altera_common_sv_packages -work neurax_avalon_accelerator_0_avalon_slave_0_translator    
   eval  vlog -v2k5 $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS "$QSYS_SIMDIR/submodules/soc_system_hps_0_hps_io.v"                                                                          -work hps_io                                                   
   eval  vlog  $USER_DEFINED_VERILOG_COMPILE_OPTIONS $USER_DEFINED_COMPILE_OPTIONS      "$QSYS_SIMDIR/submodules/altera_avalon_mm_slave_bfm.sv"                                         -l altera_common_sv_packages -work fpga_interfaces                                          
@@ -422,14 +422,14 @@ alias com {
 # Elaborate top level design
 alias elab {
   echo "\[exec\] elab"
-  eval vsim +access +r -t ps $ELAB_OPTIONS -L work -L altera_common_sv_packages -L error_adapter_0 -L border -L channel_adapter_0 -L rsp_mux -L cmd_mux -L cmd_demux_001 -L cmd_demux -L router_002 -L router -L hps_0_f2h_axi_slave_agent -L DMA_neurax_write_mm_read_agent -L DMA_neurax_write_mm_read_translator -L avalon_st_adapter_003 -L avalon_st_adapter -L DMA_neurax_write_descriptor_slave_rsp_width_adapter -L rsp_demux -L neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter -L hps_0_h2f_axi_master_wr_limiter -L router_005 -L neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo -L neurax_avalon_accelerator_0_avalon_slave_0_agent -L hps_0_h2f_axi_master_agent -L neurax_avalon_accelerator_0_avalon_slave_0_translator -L hps_io -L fpga_interfaces -L read_mstr_internal -L write_mstr_internal -L dispatcher_internal -L rst_controller -L avalon_st_adapter_001 -L irq_mapper -L mm_interconnect_1 -L mm_interconnect_0 -L pll_0 -L neurax_avalon_accelerator_0 -L hps_0 -L DMA_neurax_write -L DMA_neurax_read -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L cyclonev_ver -L cyclonev_hssi_ver -L cyclonev_pcie_hip_ver -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi $TOP_LEVEL_NAME
+  eval vsim +access +r -t ps $ELAB_OPTIONS -L work -L altera_common_sv_packages -L error_adapter_0 -L border -L channel_adapter_0 -L rsp_mux -L cmd_mux -L cmd_demux_001 -L cmd_demux -L router_002 -L router -L hps_0_f2h_axi_slave_agent -L DMA_neurax_write_mm_read_agent -L DMA_neurax_write_mm_read_translator -L avalon_st_adapter_003 -L avalon_st_adapter -L DMA_neurax_write_descriptor_slave_rsp_width_adapter -L rsp_demux -L neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter -L hps_0_h2f_lw_axi_master_wr_limiter -L router_005 -L neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo -L neurax_avalon_accelerator_0_avalon_slave_0_agent -L hps_0_h2f_lw_axi_master_agent -L neurax_avalon_accelerator_0_avalon_slave_0_translator -L hps_io -L fpga_interfaces -L read_mstr_internal -L write_mstr_internal -L dispatcher_internal -L rst_controller -L avalon_st_adapter_001 -L irq_mapper -L mm_interconnect_1 -L mm_interconnect_0 -L pll_0 -L neurax_avalon_accelerator_0 -L hps_0 -L DMA_neurax_write -L DMA_neurax_read -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L cyclonev_ver -L cyclonev_hssi_ver -L cyclonev_pcie_hip_ver -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi $TOP_LEVEL_NAME
 }
 
 # ----------------------------------------
 # Elaborate the top level design with -dbg -O2 option
 alias elab_debug {
   echo "\[exec\] elab_debug"
-  eval vsim -dbg -O2 +access +r -t ps $ELAB_OPTIONS -L work -L altera_common_sv_packages -L error_adapter_0 -L border -L channel_adapter_0 -L rsp_mux -L cmd_mux -L cmd_demux_001 -L cmd_demux -L router_002 -L router -L hps_0_f2h_axi_slave_agent -L DMA_neurax_write_mm_read_agent -L DMA_neurax_write_mm_read_translator -L avalon_st_adapter_003 -L avalon_st_adapter -L DMA_neurax_write_descriptor_slave_rsp_width_adapter -L rsp_demux -L neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter -L hps_0_h2f_axi_master_wr_limiter -L router_005 -L neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo -L neurax_avalon_accelerator_0_avalon_slave_0_agent -L hps_0_h2f_axi_master_agent -L neurax_avalon_accelerator_0_avalon_slave_0_translator -L hps_io -L fpga_interfaces -L read_mstr_internal -L write_mstr_internal -L dispatcher_internal -L rst_controller -L avalon_st_adapter_001 -L irq_mapper -L mm_interconnect_1 -L mm_interconnect_0 -L pll_0 -L neurax_avalon_accelerator_0 -L hps_0 -L DMA_neurax_write -L DMA_neurax_read -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L cyclonev_ver -L cyclonev_hssi_ver -L cyclonev_pcie_hip_ver -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi $TOP_LEVEL_NAME
+  eval vsim -dbg -O2 +access +r -t ps $ELAB_OPTIONS -L work -L altera_common_sv_packages -L error_adapter_0 -L border -L channel_adapter_0 -L rsp_mux -L cmd_mux -L cmd_demux_001 -L cmd_demux -L router_002 -L router -L hps_0_f2h_axi_slave_agent -L DMA_neurax_write_mm_read_agent -L DMA_neurax_write_mm_read_translator -L avalon_st_adapter_003 -L avalon_st_adapter -L DMA_neurax_write_descriptor_slave_rsp_width_adapter -L rsp_demux -L neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter -L hps_0_h2f_lw_axi_master_wr_limiter -L router_005 -L neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo -L neurax_avalon_accelerator_0_avalon_slave_0_agent -L hps_0_h2f_lw_axi_master_agent -L neurax_avalon_accelerator_0_avalon_slave_0_translator -L hps_io -L fpga_interfaces -L read_mstr_internal -L write_mstr_internal -L dispatcher_internal -L rst_controller -L avalon_st_adapter_001 -L irq_mapper -L mm_interconnect_1 -L mm_interconnect_0 -L pll_0 -L neurax_avalon_accelerator_0 -L hps_0 -L DMA_neurax_write -L DMA_neurax_read -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L cyclonev_ver -L cyclonev_hssi_ver -L cyclonev_pcie_hip_ver -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi $TOP_LEVEL_NAME
 }
 
 # ----------------------------------------

@@ -1,0 +1,184 @@
+
+State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:dma_neurax_read_descriptor_slave_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
+Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
+state.ST_IDLE 0 0 0 0 
+state.ST_COMP_TRANS 1 0 0 1 
+state.ST_UNCOMP_TRANS 1 0 1 0 
+state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
+
+State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:dma_neurax_write_descriptor_slave_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
+Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
+state.ST_IDLE 0 0 0 0 
+state.ST_COMP_TRANS 1 0 0 1 
+state.ST_UNCOMP_TRANS 1 0 1 0 
+state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
+
+State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:dma_neurax_read_csr_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
+Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
+state.ST_IDLE 0 0 0 0 
+state.ST_COMP_TRANS 1 0 0 1 
+state.ST_UNCOMP_TRANS 1 0 1 0 
+state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
+
+State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:dma_neurax_write_csr_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
+Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
+state.ST_IDLE 0 0 0 0 
+state.ST_COMP_TRANS 1 0 0 1 
+state.ST_UNCOMP_TRANS 1 0 1 0 
+state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
+
+State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
+Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
+state.ST_IDLE 0 0 0 0 
+state.ST_COMP_TRANS 1 0 0 1 
+state.ST_UNCOMP_TRANS 1 0 1 0 
+state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|current_state
+Name current_state.DONE_ST current_state.ACT_OP current_state.POOL_OP current_state.CONV_OP current_state.IDLE 
+current_state.IDLE 0 0 0 0 0 
+current_state.CONV_OP 0 0 0 1 1 
+current_state.POOL_OP 0 0 1 0 1 
+current_state.ACT_OP 0 1 0 0 1 
+current_state.DONE_ST 1 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|act_sel
+Name act_sel.ELU act_sel.LEAKY_RELU act_sel.LINEAR act_sel.TANH act_sel.SIGMOID act_sel.RELU 
+act_sel.RELU 0 0 0 0 0 0 
+act_sel.SIGMOID 0 0 0 0 1 1 
+act_sel.TANH 0 0 0 1 0 1 
+act_sel.LINEAR 0 0 1 0 0 1 
+act_sel.LEAKY_RELU 0 1 0 0 0 1 
+act_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[3][2].activation_sel
+Name pipeline[3][2].activation_sel.ELU pipeline[3][2].activation_sel.LEAKY_RELU pipeline[3][2].activation_sel.LINEAR pipeline[3][2].activation_sel.TANH pipeline[3][2].activation_sel.SIGMOID pipeline[3][2].activation_sel.RELU 
+pipeline[3][2].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[3][2].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[3][2].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[3][2].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[3][2].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[3][2].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[3][1].activation_sel
+Name pipeline[3][1].activation_sel.ELU pipeline[3][1].activation_sel.LEAKY_RELU pipeline[3][1].activation_sel.LINEAR pipeline[3][1].activation_sel.TANH pipeline[3][1].activation_sel.SIGMOID pipeline[3][1].activation_sel.RELU 
+pipeline[3][1].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[3][1].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[3][1].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[3][1].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[3][1].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[3][1].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[3][0].activation_sel
+Name pipeline[3][0].activation_sel.ELU pipeline[3][0].activation_sel.LEAKY_RELU pipeline[3][0].activation_sel.LINEAR pipeline[3][0].activation_sel.TANH pipeline[3][0].activation_sel.SIGMOID pipeline[3][0].activation_sel.RELU 
+pipeline[3][0].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[3][0].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[3][0].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[3][0].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[3][0].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[3][0].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[2][2].activation_sel
+Name pipeline[2][2].activation_sel.ELU pipeline[2][2].activation_sel.LEAKY_RELU pipeline[2][2].activation_sel.LINEAR pipeline[2][2].activation_sel.TANH pipeline[2][2].activation_sel.SIGMOID pipeline[2][2].activation_sel.RELU 
+pipeline[2][2].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[2][2].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[2][2].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[2][2].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[2][2].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[2][2].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[2][1].activation_sel
+Name pipeline[2][1].activation_sel.ELU pipeline[2][1].activation_sel.LEAKY_RELU pipeline[2][1].activation_sel.LINEAR pipeline[2][1].activation_sel.TANH pipeline[2][1].activation_sel.SIGMOID pipeline[2][1].activation_sel.RELU 
+pipeline[2][1].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[2][1].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[2][1].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[2][1].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[2][1].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[2][1].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[2][0].activation_sel
+Name pipeline[2][0].activation_sel.ELU pipeline[2][0].activation_sel.LEAKY_RELU pipeline[2][0].activation_sel.LINEAR pipeline[2][0].activation_sel.TANH pipeline[2][0].activation_sel.SIGMOID pipeline[2][0].activation_sel.RELU 
+pipeline[2][0].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[2][0].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[2][0].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[2][0].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[2][0].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[2][0].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[1][2].activation_sel
+Name pipeline[1][2].activation_sel.ELU pipeline[1][2].activation_sel.LEAKY_RELU pipeline[1][2].activation_sel.LINEAR pipeline[1][2].activation_sel.TANH pipeline[1][2].activation_sel.SIGMOID pipeline[1][2].activation_sel.RELU 
+pipeline[1][2].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[1][2].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[1][2].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[1][2].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[1][2].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[1][2].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[1][1].activation_sel
+Name pipeline[1][1].activation_sel.ELU pipeline[1][1].activation_sel.LEAKY_RELU pipeline[1][1].activation_sel.LINEAR pipeline[1][1].activation_sel.TANH pipeline[1][1].activation_sel.SIGMOID pipeline[1][1].activation_sel.RELU 
+pipeline[1][1].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[1][1].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[1][1].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[1][1].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[1][1].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[1][1].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[1][0].activation_sel
+Name pipeline[1][0].activation_sel.ELU pipeline[1][0].activation_sel.LEAKY_RELU pipeline[1][0].activation_sel.LINEAR pipeline[1][0].activation_sel.TANH pipeline[1][0].activation_sel.SIGMOID pipeline[1][0].activation_sel.RELU 
+pipeline[1][0].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[1][0].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[1][0].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[1][0].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[1][0].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[1][0].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[0][2].activation_sel
+Name pipeline[0][2].activation_sel.ELU pipeline[0][2].activation_sel.LEAKY_RELU pipeline[0][2].activation_sel.LINEAR pipeline[0][2].activation_sel.TANH pipeline[0][2].activation_sel.SIGMOID pipeline[0][2].activation_sel.RELU 
+pipeline[0][2].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[0][2].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[0][2].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[0][2].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[0][2].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[0][2].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[0][1].activation_sel
+Name pipeline[0][1].activation_sel.ELU pipeline[0][1].activation_sel.LEAKY_RELU pipeline[0][1].activation_sel.LINEAR pipeline[0][1].activation_sel.TANH pipeline[0][1].activation_sel.SIGMOID pipeline[0][1].activation_sel.RELU 
+pipeline[0][1].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[0][1].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[0][1].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[0][1].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[0][1].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[0][1].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|pipeline[0][0].activation_sel
+Name pipeline[0][0].activation_sel.ELU pipeline[0][0].activation_sel.LEAKY_RELU pipeline[0][0].activation_sel.LINEAR pipeline[0][0].activation_sel.TANH pipeline[0][0].activation_sel.SIGMOID pipeline[0][0].activation_sel.RELU 
+pipeline[0][0].activation_sel.RELU 0 0 0 0 0 0 
+pipeline[0][0].activation_sel.SIGMOID 0 0 0 0 1 1 
+pipeline[0][0].activation_sel.TANH 0 0 0 1 0 1 
+pipeline[0][0].activation_sel.LINEAR 0 0 1 0 0 1 
+pipeline[0][0].activation_sel.LEAKY_RELU 0 1 0 0 0 1 
+pipeline[0][0].activation_sel.ELU 1 0 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|activation_block:act_inst|current_state
+Name current_state.DONE_ST current_state.PIPELINE_FLUSH current_state.PROCESSING current_state.INIT_LUT current_state.IDLE 
+current_state.IDLE 0 0 0 0 0 
+current_state.INIT_LUT 0 0 0 1 1 
+current_state.PROCESSING 0 0 1 0 1 
+current_state.PIPELINE_FLUSH 0 1 0 0 1 
+current_state.DONE_ST 1 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|pooling_block:pool_inst|current_state
+Name current_state.DONE_ST current_state.WRITE_OUTPUT current_state.POOL_COMPUTE current_state.SETUP_DIMS current_state.IDLE 
+current_state.IDLE 0 0 0 0 0 
+current_state.SETUP_DIMS 0 0 0 1 1 
+current_state.POOL_COMPUTE 0 0 1 0 1 
+current_state.WRITE_OUTPUT 0 1 0 0 1 
+current_state.DONE_ST 1 0 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|convolution_block:conv_inst|current_state
+Name current_state.DONE_ST current_state.WRITE_OUTPUT current_state.CONV_COMPUTE current_state.LOAD_WEIGHTS current_state.IDLE 
+current_state.IDLE 0 0 0 0 0 
+current_state.LOAD_WEIGHTS 0 0 0 1 1 
+current_state.CONV_COMPUTE 0 0 1 0 1 
+current_state.WRITE_OUTPUT 0 1 0 0 1 
+current_state.DONE_ST 1 0 0 0 1 

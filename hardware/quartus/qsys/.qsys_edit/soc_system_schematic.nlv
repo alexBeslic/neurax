@@ -65,18 +65,18 @@ preplace inst soc_system.hps_0.f2s_periph_ref_clk -pg 1
 preplace inst soc_system.hps_0.fpga_interfaces -pg 1
 preplace inst soc_system.pll_0 -pg 1 -lvl 2 -y 30
 preplace inst soc_system.hps_0.axi_sdram -pg 1
+preplace netloc INTERCONNECT<net_container>soc_system</net_container>(SLAVE)DMA_neurax_read.reset_n,(SLAVE)pll_0.reset,(SLAVE)DMA_neurax_write.reset_n,(SLAVE)neurax_avalon_accelerator_0.reset,(MASTER)hps_0.h2f_reset,(MASTER)clk_0.clk_reset) 1 1 6 300 400 NJ 400 NJ 400 910 470 1340 340 1690
+preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(MASTER)hps_0.f2h_irq0,(SLAVE)DMA_neurax_write.csr_irq) 1 4 3 950 450 NJ 300 1650
 preplace netloc EXPORT<net_container>soc_system</net_container>(SLAVE)soc_system.clk,(SLAVE)clk_0.clk_in) 1 0 1 NJ
-preplace netloc FAN_OUT<net_container>soc_system</net_container>(SLAVE)hps_0.f2h_axi_clock,(SLAVE)DMA_neurax_read.clock,(SLAVE)DMA_neurax_write.clock,(MASTER)pll_0.outclk0,(SLAVE)neurax_avalon_accelerator_0.clk,(SLAVE)hps_0.h2f_axi_clock) 1 2 5 NJ 40 NJ 40 930 180 1300 280 NJ
 preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(SLAVE)pll_0.refclk,(MASTER)clk_0.clk) 1 1 1 280
 preplace netloc EXPORT<net_container>soc_system</net_container>(SLAVE)soc_system.reset,(SLAVE)clk_0.clk_in_reset) 1 0 1 NJ
-preplace netloc FAN_IN<net_container>soc_system</net_container>(MASTER)DMA_neurax_read.mm_write,(MASTER)DMA_neurax_write.mm_read,(SLAVE)hps_0.f2h_axi_slave) 1 5 3 1260 230 NJ 230 1940
 preplace netloc EXPORT<net_container>soc_system</net_container>(SLAVE)hps_0.memory,(SLAVE)soc_system.hps_0_ddr) 1 0 6 NJ 160 NJ 160 NJ 160 NJ 160 NJ 160 NJ
-preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(SLAVE)DMA_neurax_write.csr_irq,(MASTER)hps_0.f2h_irq0) 1 4 3 950 210 NJ 210 1630
-preplace netloc FAN_OUT<net_container>soc_system</net_container>(SLAVE)DMA_neurax_write.csr,(SLAVE)DMA_neurax_write.descriptor_slave,(SLAVE)DMA_neurax_read.csr,(SLAVE)neurax_avalon_accelerator_0.avalon_slave_0,(MASTER)hps_0.h2f_axi_master,(SLAVE)DMA_neurax_read.descriptor_slave) 1 4 3 970 450 1320 320 1670
-preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(SLAVE)DMA_neurax_read.st_sink,(MASTER)neurax_avalon_accelerator_0.avalon_source) 1 6 1 N
-preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(SLAVE)DMA_neurax_read.csr_irq,(MASTER)hps_0.f2h_irq1) 1 6 1 1690
-preplace netloc INTERCONNECT<net_container>soc_system</net_container>(MASTER)clk_0.clk_reset,(SLAVE)pll_0.reset,(SLAVE)DMA_neurax_write.reset_n,(MASTER)hps_0.h2f_reset,(SLAVE)DMA_neurax_read.reset_n,(SLAVE)neurax_avalon_accelerator_0.reset) 1 1 6 300 100 NJ 100 NJ 100 910 270 1280 340 1650
-preplace netloc EXPORT<net_container>soc_system</net_container>(SLAVE)hps_0.hps_io,(SLAVE)soc_system.hps_0_io) 1 0 6 NJ 140 NJ 140 NJ 140 NJ 120 NJ 120 NJ
-preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(MASTER)DMA_neurax_write.st_source,(SLAVE)neurax_avalon_accelerator_0.avalon_sink) 1 5 1 N
-levelinfo -pg 1 0 70 1980
-levelinfo -hier soc_system 80 110 330 530 890 1120 1420 1810 1960
+preplace netloc FAN_IN<net_container>soc_system</net_container>(SLAVE)hps_0.f2h_axi_slave,(MASTER)DMA_neurax_read.mm_write,(MASTER)DMA_neurax_write.mm_read) 1 5 3 1280 280 NJ 430 2000
+preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(MASTER)neurax_avalon_accelerator_0.avalon_source,(SLAVE)DMA_neurax_read.st_sink) 1 6 1 N
+preplace netloc FAN_OUT<net_container>soc_system</net_container>(SLAVE)DMA_neurax_read.csr,(SLAVE)neurax_avalon_accelerator_0.avalon_slave_0,(MASTER)hps_0.h2f_axi_master,(SLAVE)DMA_neurax_read.descriptor_slave,(SLAVE)DMA_neurax_write.csr,(SLAVE)DMA_neurax_write.descriptor_slave) 1 4 3 930 270 1260 320 1730
+preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(SLAVE)neurax_avalon_accelerator_0.avalon_sink,(MASTER)DMA_neurax_write.st_source) 1 5 1 N
+preplace netloc POINT_TO_POINT<net_container>soc_system</net_container>(MASTER)hps_0.f2h_irq1,(SLAVE)DMA_neurax_read.csr_irq) 1 6 1 1750
+preplace netloc EXPORT<net_container>soc_system</net_container>(SLAVE)soc_system.hps_0_io,(SLAVE)hps_0.hps_io) 1 0 6 NJ 120 NJ 120 NJ 120 NJ 120 NJ 120 NJ
+preplace netloc FAN_OUT<net_container>soc_system</net_container>(SLAVE)DMA_neurax_write.clock,(SLAVE)hps_0.h2f_axi_clock,(SLAVE)neurax_avalon_accelerator_0.clk,(SLAVE)hps_0.f2h_axi_clock,(SLAVE)DMA_neurax_read.clock,(MASTER)pll_0.outclk0) 1 2 5 460 250 NJ 250 910 250 1300 260 1710
+levelinfo -pg 1 0 70 2040
+levelinfo -hier soc_system 80 110 330 530 890 1120 1440 1870 2020

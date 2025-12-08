@@ -202,19 +202,19 @@
  <file
    path="simulation/submodules/altera_merlin_traffic_limiter.sv"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_axi_master_wr_limiter" />
+   library="hps_0_h2f_lw_axi_master_wr_limiter" />
  <file
    path="simulation/submodules/altera_merlin_reorder_memory.sv"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_axi_master_wr_limiter" />
+   library="hps_0_h2f_lw_axi_master_wr_limiter" />
  <file
    path="simulation/submodules/altera_avalon_sc_fifo.v"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_axi_master_wr_limiter" />
+   library="hps_0_h2f_lw_axi_master_wr_limiter" />
  <file
    path="simulation/submodules/altera_avalon_st_pipeline_base.v"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_axi_master_wr_limiter" />
+   library="hps_0_h2f_lw_axi_master_wr_limiter" />
  <file
    path="simulation/submodules/soc_system_mm_interconnect_0_router_005.sv"
    type="SYSTEM_VERILOG"
@@ -242,11 +242,11 @@
  <file
    path="simulation/submodules/altera_merlin_axi_master_ni.sv"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_axi_master_agent" />
+   library="hps_0_h2f_lw_axi_master_agent" />
  <file
    path="simulation/submodules/altera_merlin_address_alignment.sv"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_axi_master_agent" />
+   library="hps_0_h2f_lw_axi_master_agent" />
  <file
    path="simulation/submodules/altera_merlin_slave_translator.sv"
    type="SYSTEM_VERILOG"

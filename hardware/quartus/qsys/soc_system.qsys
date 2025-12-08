@@ -21,7 +21,7 @@
    {
       datum baseAddress
       {
-         value = "96";
+         value = "64";
          type = "String";
       }
    }
@@ -45,7 +45,7 @@
    {
       datum baseAddress
       {
-         value = "64";
+         value = "96";
          type = "String";
       }
    }
@@ -392,7 +392,7 @@
   <parameter name="H2F_AXI_CLOCK_FREQ" value="50000000" />
   <parameter name="H2F_CTI_CLOCK_FREQ" value="100" />
   <parameter name="H2F_DEBUG_APB_CLOCK_FREQ" value="100" />
-  <parameter name="H2F_LW_AXI_CLOCK_FREQ" value="100" />
+  <parameter name="H2F_LW_AXI_CLOCK_FREQ" value="50000000" />
   <parameter name="H2F_TPIU_CLOCK_IN_FREQ" value="100" />
   <parameter name="HARD_EMIF" value="true" />
   <parameter name="HCX_COMPAT_MODE" value="false" />
@@ -415,7 +415,7 @@
   <parameter name="LOANIO_Enable">No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No</parameter>
   <parameter name="LOCAL_ID_WIDTH" value="8" />
   <parameter name="LRDIMM_EXTENDED_CONFIG">0x000000000000000000</parameter>
-  <parameter name="LWH2F_Enable" value="false" />
+  <parameter name="LWH2F_Enable" value="true" />
   <parameter name="MARGIN_VARIATION_TEST" value="false" />
   <parameter name="MAX_PENDING_RD_CMD" value="32" />
   <parameter name="MAX_PENDING_WR_CMD" value="16" />
@@ -986,7 +986,7 @@
  <connection
    kind="avalon"
    version="24.1"
-   start="hps_0.h2f_axi_master"
+   start="hps_0.h2f_lw_axi_master"
    end="neurax_avalon_accelerator_0.avalon_slave_0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
@@ -995,8 +995,8 @@
  <connection
    kind="avalon"
    version="24.1"
-   start="hps_0.h2f_axi_master"
-   end="DMA_neurax_read.csr">
+   start="hps_0.h2f_lw_axi_master"
+   end="DMA_neurax_write.csr">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0060" />
   <parameter name="defaultConnection" value="false" />
@@ -1004,8 +1004,8 @@
  <connection
    kind="avalon"
    version="24.1"
-   start="hps_0.h2f_axi_master"
-   end="DMA_neurax_write.csr">
+   start="hps_0.h2f_lw_axi_master"
+   end="DMA_neurax_read.csr">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0040" />
   <parameter name="defaultConnection" value="false" />
@@ -1013,7 +1013,7 @@
  <connection
    kind="avalon"
    version="24.1"
-   start="hps_0.h2f_axi_master"
+   start="hps_0.h2f_lw_axi_master"
    end="DMA_neurax_write.descriptor_slave">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0090" />
@@ -1022,7 +1022,7 @@
  <connection
    kind="avalon"
    version="24.1"
-   start="hps_0.h2f_axi_master"
+   start="hps_0.h2f_lw_axi_master"
    end="DMA_neurax_read.descriptor_slave">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0080" />
@@ -1082,6 +1082,11 @@
    version="24.1"
    start="pll_0.outclk0"
    end="hps_0.h2f_axi_clock" />
+ <connection
+   kind="clock"
+   version="24.1"
+   start="pll_0.outclk0"
+   end="hps_0.h2f_lw_axi_clock" />
  <connection
    kind="interrupt"
    version="24.1"

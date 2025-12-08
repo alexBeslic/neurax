@@ -1,5 +1,5 @@
 --IP Functional Simulation Model
---VERSION_BEGIN 24.1 cbx_mgl 2025:03:05:20:07:01:SC cbx_simgen 2025:03:05:20:06:36:SC  VERSION_END
+--VERSION_BEGIN 24.1 cbx_mgl 2025:03:05:20:10:25:SC cbx_simgen 2025:03:05:20:03:09:SC  VERSION_END
 
 
 -- Copyright (C) 2025  Altera Corporation. All rights reserved.
