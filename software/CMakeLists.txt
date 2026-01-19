@@ -98,6 +98,7 @@ add_library(neurax_core STATIC
     src/core/layers/FlattenLayer.cpp
     src/core/layers/BatchNormLayer.cpp
     src/core/network/NeuralNetwork.cpp
+    src/core/execution/GraphExecutor.cpp
     src/core/NeuralNetworkBuilder.cpp
     src/core/LayerBuilder.cpp
     src/core/Conv2dBuilder.cpp
@@ -132,8 +133,13 @@ target_link_libraries(neurax_image
     PUBLIC neurax_tensor
 )
 
-add_subdirectory(3pp/cnpy)
-add_subdirectory(3pp/json)
+# 3pp libraries (commented out if not present)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3pp/cnpy")
+    add_subdirectory(3pp/cnpy)
+endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3pp/json")
+    add_subdirectory(3pp/json)
+endif()
 
 # -------------------------
 # Installation rules
