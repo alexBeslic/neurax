@@ -139,6 +139,16 @@ public:
         throw std::runtime_error("batchnorm not implemented for this accelerator");
     }
 
+    /**
+     * @brief Perform element-wise bias addition
+     * @param input Input tensor
+     * @param bias Bias tensor (broadcastable to input shape)
+     * @return Output tensor after adding bias
+     */
+    virtual Tensor bias_add(const Tensor& input, const Tensor& bias) {
+        throw std::runtime_error("bias_add not implemented for this accelerator");
+    }
+
     // Configuration and Control
 
     /**
