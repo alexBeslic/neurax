@@ -95,6 +95,9 @@ public:
                      float epsilon,
                      float momentum) override;
 
+    Tensor bias_add(const Tensor& input,
+                    const Tensor& bias) override;
+
     // Configuration
     bool set_precision(bool use_16bit) override;
     bool is_16bit_precision() const override;

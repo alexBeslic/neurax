@@ -721,5 +721,73 @@ void CPUAccelerator::apply_activation_function_simd(float* output_data,
     }
 }
 
+Tensor CPUAccelerator::bias_add(const Tensor& input, const Tensor& bias) {
+    if (!initialized_) {
+        throw std::runtime_error("Accelerator not initialized");
+    }
+
+    // Create output tensor with same shape as input
+    Tensor output = Tensor::zeros(input.shape(), input.dtype());
+
+    const float* input_data = input.data_ptr<float>();
+    const float* bias_data = bias.data_ptr<float>();
+    float* output_data = output.data_ptr<float>();
+
+    const auto& input_shape = input.shape();
+    size_t bias_size = bias.numel();
+
+    // Handle different input dimensions
+    if (input_shape.size() == 4) {
+        // NHWC format: [batch, height, width, channels]
+        // Bias is typically [channels] and broadcast along N, H, W
+        size_t batch = input_shape[0];
+        size_t height = input_shape[1];
+        size_t width = input_shape[2];
+        size_t channels = input_shape[3];
+
+        if (bias_size != channels) {
+            throw std::runtime_error("Bias size must match number of channels for 4D input");
+        }
+
+        for (size_t n = 0; n < batch; ++n) {
+            for (size_t h = 0; h < height; ++h) {
+                for (size_t w = 0; w < width; ++w) {
+                    for (size_t c = 0; c < channels; ++c) {
+                        size_t idx = n * height * width * channels + h * width * channels + w * channels + c;
+                        output_data[idx] = input_data[idx] + bias_data[c];
+                    }
+                }
+            }
+        }
+    } else if (input_shape.size() == 2) {
+        // [batch, features] format
+        size_t batch = input_shape[0];
+        size_t features = input_shape[1];
+
+        if (bias_size != features) {
+            throw std::runtime_error("Bias size must match number of features for 2D input");
+        }
+
+        for (size_t n = 0; n < batch; ++n) {
+            for (size_t f = 0; f < features; ++f) {
+                size_t idx = n * features + f;
+                output_data[idx] = input_data[idx] + bias_data[f];
+            }
+        }
+    } else if (input_shape.size() == 1) {
+        // 1D tensor: element-wise add
+        if (bias_size != input.numel()) {
+            throw std::runtime_error("Bias size must match input size for 1D input");
+        }
+        for (size_t i = 0; i < input.numel(); ++i) {
+            output_data[i] = input_data[i] + bias_data[i];
+        }
+    } else {
+        throw std::runtime_error("Unsupported input dimension for bias_add");
+    }
+
+    return output;
+}
+
 } // namespace hal
 } // namespace neurax

@@ -5,6 +5,7 @@
 #include "neurax/core/ActivationBuilder.hpp"
 #include "neurax/core/DenseBuilder.hpp"
 #include "neurax/core/FlattenBuilder.hpp"
+#include "neurax/core/BiasAddBuilder.hpp"
 
 namespace neurax {
 namespace core {
@@ -31,6 +32,10 @@ FlattenBuilder LayerBuilder::flatten(){
 
 BatchNormBuilder LayerBuilder::batchnorm(){
     return BatchNormBuilder();
+}
+
+BiasAddBuilder LayerBuilder::biasAdd(){
+    return BiasAddBuilder();
 }
 
 

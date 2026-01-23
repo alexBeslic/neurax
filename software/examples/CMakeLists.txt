@@ -54,6 +54,28 @@ target_link_libraries(example_core_load_kernel
         Threads::Threads
 )
 
+# ONNX Parser example (only if parser is enabled)
+if(BUILD_ONNX_PARSER)
+    add_executable(example_onnx_test
+        onnx_test.cpp
+    )
+
+    target_include_directories(example_onnx_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/../include
+        ${CMAKE_BINARY_DIR}/../generated
+    )
+
+    target_link_libraries(example_onnx_test
+        PRIVATE
+            neurax_parser
+            neurax_core
+            neurax_tensor
+            Threads::Threads
+    )
+    
+    message(STATUS "  ONNX Parser Example: enabled")
+endif()
+
 # Set runtime library path for development
 if(UNIX AND NOT APPLE)
 endif()

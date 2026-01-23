@@ -9,6 +9,7 @@
 #include "DenseBuilder.hpp"
 #include "FlattenBuilder.hpp"
 #include "BatchNormBuilder.hpp"
+#include "BiasAddBuilder.hpp"
 
 namespace neurax {
 namespace core {
@@ -26,6 +27,7 @@ public:
     static DenseBuilder dense();
     static FlattenBuilder flatten();
     static BatchNormBuilder batchnorm();
+    static BiasAddBuilder biasAdd();
 };
 
 } // namespace core
