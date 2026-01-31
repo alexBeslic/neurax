@@ -25,8 +25,9 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy ../kernel/zImage sdfs/zImage
     COMMAND ${CMAKE_COMMAND} -E copy ../../hardware/quartus/qsys/socfpga.dtb sdfs/socfpga.dtb
     COMMAND ${CMAKE_COMMAND} -E copy ../../hardware/quartus/output_files/socfpga.rbf sdfs/socfpga.rbf
+    COMMAND ${CMAKE_COMMAND} -E copy ../u-boot/u-boot.scr sdfs/u-boot.scr
     DEPENDS sdfs
-    COMMENT "Copying zImage, socfpga.dtb, socfpga.rbf"
+    COMMENT "Copying zImage, socfpga.dtb, socfpga.rbf u-boot.scr"
 )
 
 # Step 6: create extlinux dir + extlinux.conf

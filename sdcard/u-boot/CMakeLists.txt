@@ -40,7 +40,6 @@ add_custom_target(
             sopc2dts --input soc_system.sopcinfo
                      --output socfpga.dtb
                      --type dtb
-                     --board soc_system_board_info.xml
                      --board hps_common_board_info.xml
                      --bridge-removal all
                      --clocks
