@@ -1,5 +1,5 @@
 
-# (C) 2001-2025 Altera Corporation. All rights reserved.
+# (C) 2001-2026 Altera Corporation. All rights reserved.
 # Your use of Altera Corporation's design tools, logic functions and 
 # other software and tools, and its AMPP partner logic functions, and 
 # any output files any of the foregoing (including device programming 
@@ -12,7 +12,7 @@
 # or its authorized distributors. Please refer to the applicable 
 # agreement for further details.
 
-# ACDS 24.1 1077 linux 2025.12.04.20:39:47
+# ACDS 24.1 1077 linux 2026.02.16.19:40:00
 
 # ----------------------------------------
 # xcelium - auto-generated simulation script
@@ -107,7 +107,7 @@
 # within the Quartus project, and generate a unified
 # script which supports all the Altera IP within the design.
 # ----------------------------------------
-# ACDS 24.1 1077 linux 2025.12.04.20:39:47
+# ACDS 24.1 1077 linux 2026.02.16.19:40:00
 # ----------------------------------------
 # initialize variables
 TOP_LEVEL_NAME="soc_system"

@@ -7,8 +7,8 @@
    <irq preferredWidth="47" />
   </columns>
  </systemtable>
- <library expandedCategories="Project,Library" />
- <window width="1984" height="1094" x="-32" y="-32" />
+ <library expandedCategories="Library,Project" />
+ <window width="1473" height="915" x="343" y="-2" />
  <generation
    synthesis="VHDL"
    path="_PROJECT_NAME_/"

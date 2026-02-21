@@ -41,6 +41,7 @@ add_custom_target(
                      --output socfpga.dtb
                      --type dtb
                      --board hps_common_board_info.xml
+                     --board soc_system_board_info.xml
                      --bridge-removal all
                      --clocks
     WORKING_DIRECTORY ${QUARTUS_QSYS_DIR}
