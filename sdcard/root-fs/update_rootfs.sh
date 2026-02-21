@@ -1,4 +1,5 @@
 #!/bin/bash
+#bash update_rootfs.sh rootfs.tar file_name root/
 set -e
 
 if [[ $# -ne 3 ]]; then

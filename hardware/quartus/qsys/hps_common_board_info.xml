@@ -60,14 +60,23 @@ these aliases allows seamless support of multiple emacs
 <DTAppend name="#reset-cells" type="number" parentlabel="hps_0_rstmgr" val="1"/>
 
 
-<DTAppend name="speed-mode" type="number" parentlabel="hps_0_i2c1" val="0"/>
-<DTAppend name="clock-frequency" type="number" parentlabel="hps_0_i2c1" val="100000"/>
+<DTAppend name="speed-mode" type="number" parentlabel="hps_0_i2c0" val="0"/>
+<DTAppend name="clock-frequency" type="number" parentlabel="hps_0_i2c0" val="100000"/>
 <!-- adjust the falling times to decrease the i2c frequency to 50Khz
      because the LCD module does not work at the standard 100Khz
 -->
-<DTAppend name="i2c-sda-falling-time-ns" type="number" parentlabel="hps_0_i2c1" val="5000"/>
-<DTAppend name="i2c-scl-falling-time-ns" type="number" parentlabel="hps_0_i2c1" val="5000"/>
+<DTAppend name="i2c-sda-falling-time-ns" type="number" parentlabel="hps_0_i2c0" val="5000"/>
+<DTAppend name="i2c-scl-falling-time-ns" type="number" parentlabel="hps_0_i2c0" val="5000"/>
 
+<I2CBus master="hps_0_i2c0">
+	<I2CChip addr="0x28" label="lcd" name="newhaven,nhd-0216k3z-nsw-bbw"></I2CChip>
+	<I2CChip addr="0x51" label="eeprom" name="atmel,24c32"></I2CChip>
+	<I2CChip addr="0x68" label="rtc" name="dallas,ds1339"></I2CChip>
+</I2CBus>
+<DTAppend name="height" type="number" parentlabel="lcd" val="2"/>
+<DTAppend name="width" type="number" parentlabel="lcd" val="16"/>
+<DTAppend name="brightness" type="number" parentlabel="lcd" val="8"/>
+<DTAppend name="pagesize" type="number" parentlabel="eeprom" val="32"/>
 
 <DTAppend name="sdmmc_clk_divided" type="node" parentlabel="hps_0_clkmgr" newlabel="sdmmc_clk_divided"/>
 <DTAppend name="#clock-cells" type="number" parentlabel="sdmmc_clk_divided" val="0"/>
@@ -128,7 +137,9 @@ these aliases allows seamless support of multiple emacs
 <DTAppend name="regulator-name" type="string" parentlabel="regulator_3_3v" val="3.3V" />
 <DTAppend name="regulator-min-microvolt" type="number" parentlabel="regulator_3_3v" val="3300000" />
 <DTAppend name="regulator-max-microvolt" type="number" parentlabel="regulator_3_3v" val="3300000" />
-
+<DTAppend name="cdns,fifo-depth" type="number" parentlabel="hps_0_qspi" val="128"/>
+<DTAppend name="cdns,fifo-width" type="number" parentlabel="hps_0_qspi" val="4"/>
+<DTAppend name="cdns,trigger-address" type="number" parentlabel="hps_0_qspi" val="0"/>
 <DTAppend name="#address-cells" type="number" parentlabel="hps_0_qspi" val="1"/>
 <DTAppend name="#size-cells" type="number" parentlabel="hps_0_qspi" val="0"/>
 <DTAppend name="master-ref-clk" type="number" parentlabel="hps_0_qspi" val="400000000"/>
@@ -146,29 +157,90 @@ these aliases allows seamless support of multiple emacs
 <DTAppend name="tslch-ns" type="number" parentlabel="flash0" val="4"/>
 <DTAppend name="cdns,page-size" type="number" parentlabel="flash0" val="256"/>
 <DTAppend name="cdns,block-size" type="number" parentlabel="flash0" val="16"/>
+<DTAppend name="cdns,read-delay" type="number" parentlabel="flash0" val="3"/>
 <DTAppend name="cdns,tshsl-ns" type="number" parentlabel="flash0" val="50"/>
 <DTAppend name="cdns,tsd2d-ns" type="number" parentlabel="flash0" val="50"/>
 <DTAppend name="cdns,tchsh-ns" type="number" parentlabel="flash0" val="4"/>
 <DTAppend name="cdns,tslch-ns" type="number" parentlabel="flash0" val="4"/>
 
 <DTAppend name="spidev@0" type="node" parentlabel="hps_0_spim0" newlabel="spidev0"/>
-<DTAppend name="compatible" type="string" parentlabel="spidev0" val="spidev"/>
+<DTAppend name="compatible" type="string" parentlabel="spidev0" val="rohm,dh2228fv"/>
 <DTAppend name="reg" type="number" parentlabel="spidev0" val="0"/>
 <DTAppend name="spi-max-frequency" type="number" parentlabel="spidev0" val="100000000"/>
 <DTAppend name="enable-dma" type="number" parentlabel="spidev0" val="1"/>
 
-<DTAppend name="spidev@0" type="node" parentlabel="hps_0_spim1" newlabel="spidev1"/>
-<DTAppend name="compatible" type="string" parentlabel="spidev1" val="spidev"/>
-<DTAppend name="reg" type="number" parentlabel="spidev1" val="0"/>
-<DTAppend name="spi-max-frequency" type="number" parentlabel="spidev1" val="100000000"/>
-<DTAppend name="enable-dma" type="number" parentlabel="spidev1" val="1"/>
+<DTAppend name="leds" type="node" parentlabel="sopc0" newlabel="soc_leds"/>
+<DTAppend name="compatible" type="string" parentlabel="soc_leds" val="gpio-leds"/>
 
+<DTAppend name="hps0" type="node" parentlabel="soc_leds" newlabel="led_hps0"/>
+<DTAppend name="hps1" type="node" parentlabel="soc_leds" newlabel="led_hps1"/>
+<DTAppend name="hps2" type="node" parentlabel="soc_leds" newlabel="led_hps2"/>
+<DTAppend name="hps3" type="node" parentlabel="soc_leds" newlabel="led_hps3"/>
+
+<DTAppend name="fpga0" type="node" parentlabel="soc_leds" newlabel="led_fpga0"/>
+<DTAppend name="fpga1" type="node" parentlabel="soc_leds" newlabel="led_fpga1"/>
+<DTAppend name="fpga2" type="node" parentlabel="soc_leds" newlabel="led_fpga2"/>
+<DTAppend name="fpga3" type="node" parentlabel="soc_leds" newlabel="led_fpga3"/>
 
 <!-- these two can be removed when 14.1 or newer is used to generate the sopinfo -->
 <DTAppend name="snps,nr-gpios" type="number" parentlabel="hps_0_gpio0_porta" val="29"/>
 <DTAppend name="snps,nr-gpios" type="number" parentlabel="hps_0_gpio1_porta" val="29"/>
 
+<DTAppend name="label" type="string" parentlabel="led_hps0" val="hps_led0"/>
+<DTAppend name="gpios" parentlabel="led_hps0" >
+<val type="phandle">hps_0_gpio1_porta</val>
+<val type="number">15</val>
+<val type="number">1</val>
+</DTAppend>
 
+<DTAppend name="label" type="string" parentlabel="led_hps1" val="hps_led1"/>
+<DTAppend name="gpios" parentlabel="led_hps1" >
+<val type="phandle">hps_0_gpio1_porta</val>
+<val type="number">14</val>
+<val type="number">1</val>
+</DTAppend>
+
+<DTAppend name="label" type="string" parentlabel="led_hps2" val="hps_led2"/>
+<DTAppend name="gpios" parentlabel="led_hps2" >
+<val type="phandle">hps_0_gpio1_porta</val>
+<val type="number">13</val>
+<val type="number">1</val>
+</DTAppend>
+
+<DTAppend name="label" type="string" parentlabel="led_hps3" val="hps_led3"/>
+<DTAppend name="gpios" parentlabel="led_hps3" >
+<val type="phandle">hps_0_gpio1_porta</val>
+<val type="number">12</val>
+<val type="number">1</val>
+</DTAppend>
+
+<DTAppend name="label" type="string" parentlabel="led_fpga0" val="fpga_led0"/>
+<DTAppend name="gpios" parentlabel="led_fpga0" >
+<val type="phandle">led_pio</val>
+<val type="number">0</val>
+<val type="number">1</val>
+</DTAppend>
+
+<DTAppend name="label" type="string" parentlabel="led_fpga1" val="fpga_led1"/>
+<DTAppend name="gpios" parentlabel="led_fpga1" >
+<val type="phandle">led_pio</val>
+<val type="number">1</val>
+<val type="number">1</val>
+</DTAppend>
+
+<DTAppend name="label" type="string" parentlabel="led_fpga2" val="fpga_led2"/>
+<DTAppend name="gpios" parentlabel="led_fpga2" >
+<val type="phandle">led_pio</val>
+<val type="number">2</val>
+<val type="number">1</val>
+</DTAppend>
+
+<DTAppend name="label" type="string" parentlabel="led_fpga3" val="fpga_led3"/>
+<DTAppend name="gpios" parentlabel="led_fpga3" >
+<val type="phandle">led_pio</val>
+<val type="number">3</val>
+<val type="number">1</val>
+</DTAppend>
 
 <DTAppend name="pmu0" type="node" parentlabel="sopc0" newlabel="pmu"/>
 <DTAppend name="#address-cells" type="number" parentlabel="pmu" val="1"/>
@@ -237,8 +309,17 @@ these aliases allows seamless support of multiple emacs
 <DTAppend name="write-ports-mask" type="hex" parentlabel="fpgabridge3" val="0xf"/>
 <DTAppend name="cmd-ports-mask" type="hex" parentlabel="fpgabridge3" val="0x1"/>
 
+<DTAppend name="usbphy@0" type="node" parentlabel="sopc0" newlabel="usbphy0" />
+<DTAppend name="#phy-cells" type="number" val="0" parentlabel="usbphy0" />
+<DTAppend name="compatible" type="string" val="usb-nop-xceiv" parentlabel="usbphy0" />
+<DTAppend name="status" type="string" val="okay" parentlabel="usbphy0" />
+
+<DTAppend name="phys" type="phandle" parentlabel="hps_0_usb1" val="usbphy0" />
 
 <Chosen>
         <Bootargs val="console=ttyS0,115200"></Bootargs>
 </Chosen>
+
+<DTAppend name="clocks" type="phandle" parentlabel="hps_0_fpgamgr" val="l4_mp_clk"/>
+
 </BoardInfo>
