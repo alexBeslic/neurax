@@ -207,9 +207,11 @@ uint32_t neurax_wait_done(neurax_bsp_t *bsp) {
  * ========================================================================= */
 
 void neurax_dma_reset(volatile uint32_t *dma_csr) {
+    /* Clear all status bits first (write-1-to-clear) */
+    dma_csr_write(dma_csr, MSGDMA_CSR_STATUS, MSGDMA_CSR_STAT_MASK);
+
     /* Assert dispatcher reset */
     dma_csr_write(dma_csr, MSGDMA_CSR_CONTROL, MSGDMA_CSR_RESET);
-    msleep(1);
 
     /* Wait for reset to complete */
     int timeout = 1000;
@@ -218,8 +220,12 @@ void neurax_dma_reset(volatile uint32_t *dma_csr) {
         timeout--;
     }
 
-    /* Clear any pending IRQ */
-    dma_csr_write(dma_csr, MSGDMA_CSR_STATUS, MSGDMA_CSR_IRQ);
+    /* Clear all status bits again */
+    dma_csr_write(dma_csr, MSGDMA_CSR_STATUS, MSGDMA_CSR_STAT_MASK);
+
+    /* Enable stop-on-error (matches kernel driver best practice) */
+    dma_csr_write(dma_csr, MSGDMA_CSR_CONTROL,
+                  MSGDMA_CSR_STOP_ON_ERR | MSGDMA_CSR_STOP_ON_EARLY);
 }
 
 int neurax_dma_send(neurax_bsp_t *bsp, uint32_t phys_addr, uint32_t length) {
@@ -279,7 +285,8 @@ int neurax_dma_recv(neurax_bsp_t *bsp, uint32_t phys_addr, uint32_t length) {
     dma_desc_write(desc, MSGDMA_DESC_LENGTH, length);
     dma_desc_write(desc, MSGDMA_DESC_CONTROL,
                    MSGDMA_DESC_CTL_GO
-                   | MSGDMA_DESC_CTL_END_ON_EOP);
+                   | MSGDMA_DESC_CTL_END_ON_EOP
+                   | MSGDMA_DESC_CTL_END_ON_LEN);
 
     return 0;
 }

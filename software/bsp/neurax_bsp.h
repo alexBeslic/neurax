@@ -130,17 +130,23 @@ extern "C" {
 /* CSR Status bits */
 #define MSGDMA_CSR_BUSY            (1 << 0)
 #define MSGDMA_CSR_DESC_EMPTY      (1 << 1)
+#define MSGDMA_CSR_DESC_FULL       (1 << 2)
+#define MSGDMA_CSR_RESP_EMPTY      (1 << 3)
+#define MSGDMA_CSR_RESP_FULL       (1 << 4)
+#define MSGDMA_CSR_STOPPED         (1 << 5)
 #define MSGDMA_CSR_RESETTING       (1 << 6)
+#define MSGDMA_CSR_STOPPED_ON_ERR  (1 << 7)
+#define MSGDMA_CSR_STOPPED_EARLY   (1 << 8)
 #define MSGDMA_CSR_IRQ             (1 << 9)
+#define MSGDMA_CSR_STAT_MASK       0x3FF
 
 /* CSR Control bits */
 #define MSGDMA_CSR_STOP            (1 << 0)
 #define MSGDMA_CSR_RESET           (1 << 1)
-#define MSGDMA_CSR_STOP_DESC       (1 << 2)
-#define MSGDMA_CSR_STOP_ERR        (1 << 3)
-#define MSGDMA_CSR_IRQ_EN          (1 << 4)
-#define MSGDMA_CSR_STOP_EARLY      (1 << 5)
+#define MSGDMA_CSR_STOP_ON_ERR     (1 << 2)
+#define MSGDMA_CSR_STOP_ON_EARLY   (1 << 3)
 #define MSGDMA_CSR_GLOBAL_IRQ_EN   (1 << 4)
+#define MSGDMA_CSR_STOP_DESC       (1 << 5)
 
 /* mSGDMA Standard Descriptor (no prefetcher) */
 /* MM→ST (write to FPGA): read_addr + length */
@@ -157,7 +163,11 @@ extern "C" {
 #define MSGDMA_DESC_CTL_PARK_READS      (1 << 10)
 #define MSGDMA_DESC_CTL_PARK_WRITES     (1 << 11)
 #define MSGDMA_DESC_CTL_END_ON_EOP      (1 << 12)
-#define MSGDMA_DESC_CTL_TX_CHANNEL(ch)  ((ch) << 16)
+#define MSGDMA_DESC_CTL_END_ON_LEN      (1 << 13)
+#define MSGDMA_DESC_CTL_TR_COMP_IRQ     (1 << 14)
+#define MSGDMA_DESC_CTL_TR_ERR_IRQ      (0xFF << 16)
+#define MSGDMA_DESC_CTL_TX_CHANNEL(ch)  ((ch) & 0xFF)
+#define MSGDMA_DESC_CTL_EARLY_DONE      (1 << 24)
 #define MSGDMA_DESC_CTL_OWNED_BY_HW     (1 << 30)
 
 /* =========================================================================
