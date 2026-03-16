@@ -171,7 +171,7 @@
   <parameter name="EXPOSE_ST_PORT" value="0" />
   <parameter name="FIX_ADDRESS_WIDTH" value="32" />
   <parameter name="MAX_BURST_COUNT" value="2" />
-  <parameter name="MAX_BYTE" value="1024" />
+  <parameter name="MAX_BYTE" value="131072" />
   <parameter name="MAX_STRIDE" value="1" />
   <parameter name="MODE" value="2" />
   <parameter name="PACKET_ENABLE" value="0" />
@@ -218,7 +218,7 @@
   <parameter name="EXPOSE_ST_PORT" value="0" />
   <parameter name="FIX_ADDRESS_WIDTH" value="32" />
   <parameter name="MAX_BURST_COUNT" value="2" />
-  <parameter name="MAX_BYTE" value="1024" />
+  <parameter name="MAX_BYTE" value="131072" />
   <parameter name="MAX_STRIDE" value="1" />
   <parameter name="MODE" value="1" />
   <parameter name="PACKET_ENABLE" value="0" />
@@ -983,6 +983,15 @@
   <parameter name="gui_switchover_mode">Automatic Switchover</parameter>
   <parameter name="gui_use_locked" value="false" />
  </module>
+ <connection
+   kind="avalon"
+   version="24.1"
+   start="hps_0.h2f_axi_master"
+   end="DMA_neurax_read.csr">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0040" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
  <connection
    kind="avalon"
    version="24.1"

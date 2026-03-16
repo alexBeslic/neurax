@@ -201,7 +201,7 @@ begin
 	write_mstr_internal : component write_master
 		generic map (
 			DATA_WIDTH                     => 32,
-			LENGTH_WIDTH                   => 11,
+			LENGTH_WIDTH                   => 18,
 			FIFO_DEPTH                     => 32,
 			STRIDE_ENABLE                  => 0,
 			BURST_ENABLE                   => 0,

@@ -13,13 +13,6 @@ state.ST_COMP_TRANS 1 0 0 1
 state.ST_UNCOMP_TRANS 1 0 1 0 
 state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
 
-State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:dma_neurax_read_csr_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
-Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
-state.ST_IDLE 0 0 0 0 
-state.ST_COMP_TRANS 1 0 0 1 
-state.ST_UNCOMP_TRANS 1 0 1 0 
-state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
-
 State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:dma_neurax_write_csr_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
 Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
 state.ST_IDLE 0 0 0 0 
@@ -33,6 +26,27 @@ state.ST_IDLE 0 0 0 0
 state.ST_COMP_TRANS 1 0 0 1 
 state.ST_UNCOMP_TRANS 1 0 1 0 
 state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
+
+State Machine - |de1_soc_top|soc_system:u0|soc_system_mm_interconnect_0:mm_interconnect_0|altera_merlin_burst_adapter:dma_neurax_read_csr_burst_adapter|altera_merlin_burst_adapter_13_1:altera_merlin_burst_adapter_13_1.burst_adapter|state
+Name state.ST_IDLE state.ST_UNCOMP_WR_SUBBURST state.ST_UNCOMP_TRANS state.ST_COMP_TRANS 
+state.ST_IDLE 0 0 0 0 
+state.ST_COMP_TRANS 1 0 0 1 
+state.ST_UNCOMP_TRANS 1 0 1 0 
+state.ST_UNCOMP_WR_SUBBURST 1 1 0 0 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|conv_read_phase_d1
+Name conv_read_phase_d1.PHASE_INPUT conv_read_phase_d1.PHASE_BIAS conv_read_phase_d1.PHASE_WEIGHT conv_read_phase_d1.PHASE_DONE 
+conv_read_phase_d1.PHASE_DONE 0 0 0 0 
+conv_read_phase_d1.PHASE_WEIGHT 0 0 1 1 
+conv_read_phase_d1.PHASE_BIAS 0 1 0 1 
+conv_read_phase_d1.PHASE_INPUT 1 0 0 1 
+
+State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|conv_read_phase
+Name conv_read_phase.PHASE_INPUT conv_read_phase.PHASE_BIAS conv_read_phase.PHASE_WEIGHT conv_read_phase.PHASE_DONE 
+conv_read_phase.PHASE_DONE 0 0 0 0 
+conv_read_phase.PHASE_WEIGHT 0 0 1 1 
+conv_read_phase.PHASE_BIAS 0 1 0 1 
+conv_read_phase.PHASE_INPUT 1 0 0 1 
 
 State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|current_state
 Name current_state.DONE_ST current_state.ACT_OP current_state.POOL_OP current_state.CONV_OP current_state.IDLE 
@@ -176,9 +190,8 @@ current_state.WRITE_OUTPUT 0 1 0 0 1
 current_state.DONE_ST 1 0 0 0 1 
 
 State Machine - |de1_soc_top|soc_system:u0|neurax:neurax_avalon_accelerator_0|FPGA_accelerator:u_fpga_accelerator|convolution_block:conv_inst|current_state
-Name current_state.DONE_ST current_state.WRITE_OUTPUT current_state.CONV_COMPUTE current_state.LOAD_WEIGHTS current_state.IDLE 
-current_state.IDLE 0 0 0 0 0 
-current_state.LOAD_WEIGHTS 0 0 0 1 1 
-current_state.CONV_COMPUTE 0 0 1 0 1 
-current_state.WRITE_OUTPUT 0 1 0 0 1 
-current_state.DONE_ST 1 0 0 0 1 
+Name current_state.DONE_ST current_state.WRITE_OUTPUT current_state.CONV_COMPUTE current_state.IDLE 
+current_state.IDLE 0 0 0 0 
+current_state.CONV_COMPUTE 0 0 1 1 
+current_state.WRITE_OUTPUT 0 1 0 1 
+current_state.DONE_ST 1 0 0 1 

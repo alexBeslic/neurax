@@ -136,6 +136,14 @@
    type="SYSTEM_VERILOG"
    library="DMA_neurax_write_descriptor_slave_rsp_width_adapter" />
  <file
+   path="simulation/submodules/soc_system_mm_interconnect_0_rsp_mux_002.sv"
+   type="SYSTEM_VERILOG"
+   library="rsp_mux_002" />
+ <file
+   path="simulation/submodules/altera_merlin_arbitrator.sv"
+   type="SYSTEM_VERILOG"
+   library="rsp_mux_002" />
+ <file
    path="simulation/submodules/soc_system_mm_interconnect_0_rsp_mux.sv"
    type="SYSTEM_VERILOG"
    library="rsp_mux" />
@@ -144,9 +152,21 @@
    type="SYSTEM_VERILOG"
    library="rsp_mux" />
  <file
+   path="simulation/submodules/soc_system_mm_interconnect_0_rsp_demux_001.sv"
+   type="SYSTEM_VERILOG"
+   library="rsp_demux_001" />
+ <file
    path="simulation/submodules/soc_system_mm_interconnect_0_rsp_demux.sv"
    type="SYSTEM_VERILOG"
    library="rsp_demux" />
+ <file
+   path="simulation/submodules/soc_system_mm_interconnect_0_cmd_mux_001.sv"
+   type="SYSTEM_VERILOG"
+   library="cmd_mux_001" />
+ <file
+   path="simulation/submodules/altera_merlin_arbitrator.sv"
+   type="SYSTEM_VERILOG"
+   library="cmd_mux_001" />
  <file
    path="simulation/submodules/soc_system_mm_interconnect_0_cmd_mux.sv"
    type="SYSTEM_VERILOG"
@@ -156,49 +176,53 @@
    type="SYSTEM_VERILOG"
    library="cmd_mux" />
  <file
+   path="simulation/submodules/soc_system_mm_interconnect_0_cmd_demux_002.sv"
+   type="SYSTEM_VERILOG"
+   library="cmd_demux_002" />
+ <file
    path="simulation/submodules/soc_system_mm_interconnect_0_cmd_demux.sv"
    type="SYSTEM_VERILOG"
    library="cmd_demux" />
  <file
    path="simulation/submodules/altera_merlin_burst_adapter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_burst_adapter_uncmpr.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_burst_adapter_13_1.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_burst_adapter_new.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_incr_burst_converter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_wrap_burst_converter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_default_burst_converter.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_address_alignment.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_avalon_st_pipeline_stage.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_avalon_st_pipeline_base.v"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_burst_adapter" />
+   library="DMA_neurax_read_csr_burst_adapter" />
  <file
    path="simulation/submodules/altera_merlin_traffic_limiter.sv"
    type="SYSTEM_VERILOG"
@@ -216,9 +240,17 @@
    type="SYSTEM_VERILOG"
    library="hps_0_h2f_lw_axi_master_wr_limiter" />
  <file
+   path="simulation/submodules/soc_system_mm_interconnect_0_router_007.sv"
+   type="SYSTEM_VERILOG"
+   library="router_007" />
+ <file
    path="simulation/submodules/soc_system_mm_interconnect_0_router_005.sv"
    type="SYSTEM_VERILOG"
    library="router_005" />
+ <file
+   path="simulation/submodules/soc_system_mm_interconnect_0_router_004.sv"
+   type="SYSTEM_VERILOG"
+   library="router_004" />
  <file
    path="simulation/submodules/soc_system_mm_interconnect_0_router_002.sv"
    type="SYSTEM_VERILOG"
@@ -230,27 +262,27 @@
  <file
    path="simulation/submodules/altera_avalon_sc_fifo.v"
    type="VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_agent_rsp_fifo" />
+   library="DMA_neurax_read_csr_agent_rsp_fifo" />
  <file
    path="simulation/submodules/altera_merlin_slave_agent.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_agent" />
+   library="DMA_neurax_read_csr_agent" />
  <file
    path="simulation/submodules/altera_merlin_burst_uncompressor.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_agent" />
+   library="DMA_neurax_read_csr_agent" />
  <file
    path="simulation/submodules/altera_merlin_axi_master_ni.sv"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_lw_axi_master_agent" />
+   library="hps_0_h2f_axi_master_agent" />
  <file
    path="simulation/submodules/altera_merlin_address_alignment.sv"
    type="SYSTEM_VERILOG"
-   library="hps_0_h2f_lw_axi_master_agent" />
+   library="hps_0_h2f_axi_master_agent" />
  <file
    path="simulation/submodules/altera_merlin_slave_translator.sv"
    type="SYSTEM_VERILOG"
-   library="neurax_avalon_accelerator_0_avalon_slave_0_translator" />
+   library="DMA_neurax_read_csr_translator" />
  <file
    path="simulation/submodules/soc_system_hps_0_hps_io.v"
    type="VERILOG"

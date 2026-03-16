@@ -87,7 +87,7 @@ module soc_system_DMA_neurax_read (
 
 	write_master #(
 		.DATA_WIDTH                     (32),
-		.LENGTH_WIDTH                   (11),
+		.LENGTH_WIDTH                   (18),
 		.FIFO_DEPTH                     (32),
 		.STRIDE_ENABLE                  (0),
 		.BURST_ENABLE                   (0),

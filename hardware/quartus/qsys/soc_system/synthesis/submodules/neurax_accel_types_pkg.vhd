@@ -11,8 +11,8 @@ package neurax_accel_types_pkg is
     constant MAX_BATCH_SIZE : integer := 4;
 
     -- Maksimalne dimenzije
-    constant MAX_HEIGHT      : integer := 64;
-    constant MAX_WIDTH       : integer := 64;
+    constant MAX_HEIGHT      : integer := 128;
+    constant MAX_WIDTH       : integer := 128;
     constant MAX_CHANNELS    : integer := 16;
 
     -- Konvolucija
