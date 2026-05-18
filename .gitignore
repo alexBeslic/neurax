@@ -61,5 +61,7 @@ dkms.conf
 
 # toolchain files
 toolchain/*
+!toolchain/README.md
+!toolchain/setup_tools.sh
 
 *.img
