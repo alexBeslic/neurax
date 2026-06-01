@@ -39,7 +39,60 @@ msgdma_push_descr(
     iowrite32(rd_addr, &reg->desc_read_addr);
     iowrite32(wr_addr, &reg->desc_write_addr);
     iowrite32(len,     &reg->desc_len);
+    /* Ensure address and length writes are visible before GO commits the descriptor.
+     * The CSR status register is write-1-to-clear; GO triggers on the control write. */
+    wmb();
     iowrite32(ctrl | GO, &reg->desc_ctrl);
+}
+
+/* Send a channel=1 "start-of-frame" descriptor to the write (m2s) DMA.
+ *
+ * The FPGA neurax_data_interface resets write_index and clears buffer_full
+ * whenever asi_channel_i=1.  Critically, this check is NOT gated by the
+ * Avalon-ST valid/ready handshake in the FPGA write FSM:
+ *
+ *   elsif asi_channel_i = '1' then
+ *       write_index <= (others => '0');
+ *       buffer_full <= '0';          -- clears one clock after channel=1 appears
+ *
+ * So even when buffer_full=1 (which pulls asi_ready_o low), the mSGDMA
+ * presenting channel=1 with valid=1 will cause the FPGA to clear buffer_full
+ * on the next rising edge, raising ready.  The handshake then completes in
+ * the following cycle, and this 1-word descriptor finishes near-instantly.
+ *
+ * Requires the mSGDMA m2s IP to be configured with channel support
+ * (MAX_CHANNEL > 1 in Qsys).  If channel output is tied to 0 in the IP,
+ * this descriptor will stall and return -ETIMEDOUT.
+ */
+static int
+msgdma_send_sof(struct msgdma_data *data)
+{
+    unsigned long deadline;
+    u32 status;
+
+    /* 1-word transfer; content is discarded by the FPGA on channel=1 */
+    msgdma_push_descr(
+        data->msgdma0_reg,
+        data->dma_buf_wr_handle,
+        0,
+        sizeof(u32),
+        TX_CHAN(1) | GO);
+
+    deadline = jiffies + SOF_TIMEOUT;
+    while (time_before(jiffies, deadline)) {
+        status = ioread32(&data->msgdma0_reg->csr_status);
+        if (!(status & BUSY))
+            break;
+        usleep_range(100, 500);
+    }
+
+    if (status & BUSY) {
+        msgdma_reset(data->msgdma0_reg);
+        pr_err("msgdma SOF timeout: mSGDMA channel feature may be disabled in Qsys "
+               "or FPGA ST Sink is disconnected (CSR=0x%08x)\n", status);
+        return -ETIMEDOUT;
+    }
+    return 0;
 }
 
 static int
@@ -65,15 +118,34 @@ msgdma_write(struct file *f, const char __user *ubuf, size_t len, loff_t *off)
 {
     struct msgdma_data *data;
     ssize_t write_ret;
+    u32 dma_len;   /* word-aligned length actually pushed to the mSGDMA */
+    int sof_ret;
     u32 status, fill, resp_fill;
 
     data = (struct msgdma_data*)f->private_data;
 
-    write_ret = len > DMA_BUF_SIZE ? DMA_BUF_SIZE : len;
+    /* Reset the FPGA data interface write state before every transfer.
+     * If a previous write filled the 23000-word buffer (buffer_full=1 in the FPGA),
+     * the ST Sink holds asi_ready_o=0, causing any new write to stall forever.
+     * The channel=1 SOF descriptor breaks this deadlock unconditionally. */
+    sof_ret = msgdma_send_sof(data);
+    if (sof_ret)
+        return sof_ret;
 
-    /* Copy all user data to DMA buffer first */
+    write_ret = len > DMA_BUF_SIZE ? DMA_BUF_SIZE : (ssize_t)len;
+
+    /* Copy user data to DMA buffer first */
     if(copy_from_user(data->dma_buf_wr, ubuf, write_ret) != 0)
         return -EFAULT;
+
+    /* The m2s mSGDMA is configured with TRANSFER_TYPE="Full Word Accesses Only"
+     * (from soc_system.sopcinfo).  Any transfer length that is not a multiple of
+     * 4 bytes causes the DMA to hang indefinitely with BUSY=1.  Round up and
+     * zero-pad so the FPGA always receives complete 32-bit words. */
+    dma_len = (u32)ALIGN(write_ret, sizeof(u32));
+    if (dma_len > (u32)write_ret)
+        memset((u8 *)data->dma_buf_wr + write_ret, 0,
+               (size_t)(dma_len - (u32)write_ret));
 
     /* Push single descriptor for entire transfer */
     data->wr_in_progress = 1;
@@ -82,7 +154,7 @@ msgdma_write(struct file *f, const char __user *ubuf, size_t len, loff_t *off)
         data->msgdma0_reg,
         data->dma_buf_wr_handle,
         0,
-        write_ret,
+        dma_len,
         TX_COMPLETE_IRQ_EN);
 
     /* Log post-push state.
@@ -91,8 +163,8 @@ msgdma_write(struct file *f, const char __user *ubuf, size_t len, loff_t *off)
      * For m2s: expect fill_rd=1 if descriptor accepted, or BUSY=1 if already executing. */
     status = ioread32(&data->msgdma0_reg->csr_status);
     fill   = ioread32(&data->msgdma0_reg->csr_fill_lvl);
-    pr_info("msgdma write: pushed CSR=0x%08x fill_rd=%u fill_wr=%u dma=0x%08x len=%zd\n",
-            status, fill & 0xffff, fill >> 16, (u32)data->dma_buf_wr_handle, write_ret);
+    pr_info("msgdma write: pushed CSR=0x%08x fill_rd=%u fill_wr=%u dma=0x%08x dma_len=%u user_len=%zd\n",
+            status, fill & 0xffff, fill >> 16, (u32)data->dma_buf_wr_handle, dma_len, write_ret);
 
     /* Poll for completion — decoupled from IRQ to isolate routing issues */
     {
@@ -133,11 +205,27 @@ msgdma_read(struct file *f, char __user *ubuf, size_t len, loff_t *off)
 {
     struct msgdma_data *data;
     ssize_t read_ret;
+    u32 dma_len;   /* word-aligned length pushed to the s2m mSGDMA */
     u32 status, fill, resp_fill;
 
     data = (struct msgdma_data*)f->private_data;
 
-    read_ret = len > DMA_BUF_SIZE ? DMA_BUF_SIZE : len;
+    /* EOF: the FPGA streams exactly FPGA_OUTPUT_SIZE bytes per read cycle.
+     * Return 0 once all output data has been consumed so that tools like
+     * 'cat' terminate instead of looping forever issuing new DMA transfers. */
+    if (*off >= (loff_t)FPGA_OUTPUT_SIZE)
+        return 0;
+
+    {
+        size_t remaining = (size_t)((loff_t)FPGA_OUTPUT_SIZE - *off);
+        read_ret = (ssize_t)min3(len, (size_t)DMA_BUF_SIZE, remaining);
+    }
+
+    /* The s2m mSGDMA is configured with TRANSFER_TYPE="Full Word Accesses Only"
+     * (DMA_neurax_write in soc_system.sopcinfo).  Round up to a word boundary
+     * to prevent the DMA from stalling on a sub-word transfer.  The extra bytes
+     * (≤3) are written to the DMA buffer but never copied to userspace. */
+    dma_len = (u32)ALIGN(read_ret, sizeof(u32));
 
     /* s2m: stream from FPGA source, write to HPS SDRAM. read_addr=0 (stream input). */
     data->rd_in_progress = 1;
@@ -145,7 +233,7 @@ msgdma_read(struct file *f, char __user *ubuf, size_t len, loff_t *off)
         data->msgdma1_reg,
         0,
         data->dma_buf_rd_handle,
-        read_ret,
+        dma_len,
         TX_COMPLETE_IRQ_EN
     );
 
@@ -155,8 +243,8 @@ msgdma_read(struct file *f, char __user *ubuf, size_t len, loff_t *off)
      * For s2m: expect fill_wr=1 if descriptor accepted, or BUSY=1 if already executing. */
     status = ioread32(&data->msgdma1_reg->csr_status);
     fill   = ioread32(&data->msgdma1_reg->csr_fill_lvl);
-    pr_info("msgdma read: pushed CSR=0x%08x fill_rd=%u fill_wr=%u dma=0x%08x len=%zd\n",
-            status, fill & 0xffff, fill >> 16, (u32)data->dma_buf_rd_handle, read_ret);
+    pr_info("msgdma read: pushed CSR=0x%08x fill_rd=%u fill_wr=%u dma=0x%08x dma_len=%u user_len=%zd\n",
+            status, fill & 0xffff, fill >> 16, (u32)data->dma_buf_rd_handle, dma_len, read_ret);
 
     /* Poll for completion — decoupled from IRQ to isolate routing issues */
     {
@@ -192,6 +280,7 @@ msgdma_read(struct file *f, char __user *ubuf, size_t len, loff_t *off)
     if(copy_to_user(ubuf, data->dma_buf_rd, read_ret) != 0)
         return -EFAULT;
 
+    *off += read_ret;
     return read_ret;
 }
 
@@ -205,15 +294,17 @@ msgdma_irq_handler(int irq, void *dev_id)
     msgdma0_reg = data->msgdma0_reg;
     msgdma1_reg = data->msgdma1_reg;
 
-    /* Acknowledge corresponding DMA, and wake up whoever is waiting */
+    /* Acknowledge corresponding DMA, and wake up whoever is waiting.
+     * CSR status is write-1-to-clear: write only the IRQ bit, not a
+     * read-modify-write, to avoid clearing other status bits (STOPPED_ON_ERR etc.) */
     if(ioread32(&msgdma0_reg->csr_status) & IRQ) {
-        setbit_reg32(&msgdma0_reg->csr_status, IRQ);
+        iowrite32(IRQ, &msgdma0_reg->csr_status);
         data->wr_in_progress = 0;
         wake_up_interruptible(&data->wr_complete_wq);
     }
 
     if(ioread32(&msgdma1_reg->csr_status) & IRQ) {
-        setbit_reg32(&msgdma1_reg->csr_status, IRQ);
+        iowrite32(IRQ, &msgdma1_reg->csr_status);
         data->rd_in_progress = 0;
         wake_up_interruptible(&data->rd_complete_wq);
     }
@@ -353,6 +444,33 @@ msgdma_probe(struct platform_device *pdev)
         }
         dev_info(dev, "msgdma1 (read s2m): mapped at %px (phys 0x%x)",
                  data->msgdma1_reg, (u32)msgdma1_phys);
+    }
+
+    /* Enable all required FPGA-to-SDRAM ports before any DMA transfer.
+     *
+     * The mSGDMA masters use two separate HPS SDRAM ports (from sopcinfo):
+     *   f2h_sdram0_data → m2s read  master (DMA_neurax_read,  WRITE path)
+     *   f2h_sdram1_data → s2m write master (DMA_neurax_write, READ  path)
+     *
+     * The FPGAPORTRST register in the SDR controller releases these ports from
+     * reset (bit=1 → enabled).  U-Boot typically sets only the write port (bit 4),
+     * leaving the read port (bit 0) in reset.  With bit 0 clear the m2s DMA's
+     * Avalon MM master receives no response from SDRAM and stalls indefinitely
+     * with BUSY=1 — which is the "stream stall" symptom seen in dmesg. */
+    {
+        void __iomem *sdr = ioremap(SDR_CTL_BASE, 0x100);
+        if (!sdr) {
+            dev_err(dev, "failed to map HPS SDR controller");
+            return -ENOMEM;
+        }
+        {
+            u32 val = readl(sdr + SDR_CTL_FPGAPORTRST);
+            dev_info(dev, "FPGAPORTRST before bridge enable: 0x%08x", val);
+            writel(val | FPGAPORTRST_F2SDRAM_ALL, sdr + SDR_CTL_FPGAPORTRST);
+            dev_info(dev, "FPGAPORTRST after  bridge enable: 0x%08x",
+                     readl(sdr + SDR_CTL_FPGAPORTRST));
+        }
+        iounmap(sdr);
     }
 
     /* Initialize the device itself */
