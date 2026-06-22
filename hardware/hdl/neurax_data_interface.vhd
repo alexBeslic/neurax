@@ -65,6 +65,7 @@ architecture arch of neurax_data_interface is
     -- Write state machine
     signal write_index    : unsigned(g_ADDR_WIDTH - 1 downto 0) := (others => '0');
     signal write_complete : std_logic := '0';
+    signal write_sof      : std_logic := '0';  -- pulsed for 1 cycle on channel=1 SOF
     signal ready_reg      : std_logic := '1';
     signal buffer_full    : std_logic := '0';
 
@@ -178,6 +179,7 @@ begin
             buffer_full    <= '0';
         elsif rising_edge(clk_i) then
             write_complete <= '0';
+            write_sof      <= '0';
             ready_reg      <= '1';
 
             -- Handle error: reset write pointer
@@ -186,10 +188,11 @@ begin
                 ready_reg   <= '0';
                 buffer_full <= '0';
 
-            -- Handle start-of-frame: reset write pointer
+            -- Handle start-of-frame: reset write pointer and signal read FSM
             elsif asi_channel_i = '1' then
                 write_index <= (others => '0');
                 buffer_full <= '0';
+                write_sof   <= '1';
 
             -- Normal write
             elsif asi_valid_i = '1' and ready_reg = '1' and buffer_full = '0' then
@@ -290,6 +293,13 @@ begin
             read_request_d  <= read_request;
             sof_request_d   <= sof_request;
             error_request_d <= error_request;
+
+            -- SOF from write side: abort any in-progress read and reset read pointer.
+            -- Placed last so it overrides any read advancement on the same clock edge.
+            if write_sof = '1' then
+                reading_active <= '0';
+                read_index     <= (others => '0');
+            end if;
         end if;
     end process;
 
