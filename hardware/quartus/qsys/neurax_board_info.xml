@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BoardInfo>
+    <DTAppend name="compatible" parentlabel="DMA_neurax_write" action="remove"/>
+    <DTAppend name="compatible" type="string" parentlabel="DMA_neurax_write" val="neurax,msgdma"/>
+
+    <DTAppend name="compatible" parentlabel="DMA_neurax_read" action="remove"/>
+    <DTAppend name="compatible" type="string" parentlabel="DMA_neurax_read" val="neurax,msgdma,main"/>
+
+    <DTAppend name="compatible" parentlabel="neurax_avalon_accelerator_0" action="remove"/>
+    <DTAppend name="compatible" type="string" parentlabel="neurax_avalon_accelerator_0" val="neurax,avalon-accelerator"/>
+</BoardInfo>

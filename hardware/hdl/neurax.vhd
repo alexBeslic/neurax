@@ -14,12 +14,13 @@ use work.accel_types.all;
 
 entity neurax is
     generic (
-        g_WIDTH        : natural := 32;
-        g_ADDR_WIDTH   : natural := 4;
-        g_PIXEL_WIDTH  : natural := 24;
-        g_FB_WIDTH     : natural := 100;
-        g_FB_HEIGHT    : natural := 100;
-        PARALLEL_UNITS : integer := 4
+        g_WIDTH           : natural := 32;
+        g_ADDR_WIDTH      : natural := 4;
+        g_DATA_ADDR_WIDTH : natural := 15;
+        g_PIXEL_WIDTH     : natural := 24;
+        g_FB_WIDTH        : natural := 100;
+        g_FB_HEIGHT       : natural := 100;
+        PARALLEL_UNITS    : integer := 4
     );
 
     port (
@@ -49,7 +50,9 @@ entity neurax is
         g_aso_valid_o   : out std_logic;
         g_aso_ready_i   : in  std_logic;
         g_aso_channel_o : out std_logic;
-        g_aso_error_o   : out std_logic
+        g_aso_error_o   : out std_logic;
+        g_aso_sop_o     : out std_logic;
+        g_aso_eop_o     : out std_logic
     );
 end neurax;
 
@@ -62,7 +65,8 @@ architecture arch of neurax is
     component neurax_register_block
     generic (
         g_WIDTH      : natural := 32;
-        g_ADDR_WIDTH : natural := 4
+        g_ADDR_WIDTH : natural := 4;
+        g_DATA_ADDR_WIDTH : natural := 15
     );
     port (
         clk_i                : in  std_logic;
@@ -104,6 +108,11 @@ architecture arch of neurax is
         neurax_operation_done_i      : in  std_logic;
         neurax_operation_busy_i      : in  std_logic;
         neurax_current_operation_i   : in  std_logic_vector(1 downto 0);
+        neurax_data_start_o          : out std_logic;
+        neurax_data_start_addr_o     : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+        neurax_data_length_o         : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+        neurax_data_busy_i           : in std_logic;
+        neurax_data_done_i           : in std_logic;
         neurax_debug_cycle_i         : in  std_logic_vector(g_WIDTH-1 downto 0);
         neurax_debug_status_i        : in  std_logic_vector(7 downto 0)
     );
@@ -112,8 +121,7 @@ architecture arch of neurax is
     component neurax_data_interface
     generic (
         g_DATA_WIDTH : natural := 32;
-        g_ADDR_WIDTH : natural := 15;
-        g_RAM_SIZE   : natural := 23000
+        g_ADDR_WIDTH : natural := 15  -- 15 bits => 32768-word RAM
     );
     port (
         clk_i             : in  std_logic;
@@ -128,6 +136,13 @@ architecture arch of neurax is
         aso_ready_i       : in  std_logic;
         aso_channel_o     : out std_logic;
         aso_error_o       : out std_logic;
+        aso_sop_o         : out std_logic;
+        aso_eop_o         : out std_logic;
+        rd_start_i        : in  std_logic;                                  
+        rd_start_addr_i   : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
+        rd_length_i       : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
+        rd_busy_o         : out std_logic;                                  
+        rd_done_o         : out std_logic;                                  
         ram_b_rdaddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
         ram_b_q_o         : out std_logic_vector(g_DATA_WIDTH - 1 downto 0);
         ram_b_wraddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
@@ -166,10 +181,10 @@ architecture arch of neurax is
         tensor_size          : in  integer range 1 to MAX_TENSOR_SIZE;
         alpha                : in  std_logic_vector(DATA_WIDTH-1 downto 0);
         batch_size           : in  integer range 1 to MAX_BATCH_SIZE;
-        ram_rdaddress_o      : out std_logic_vector(15 downto 0);
-        ram_q_i              : in  std_logic_vector(31 downto 0);
-        ram_wraddress_o      : out std_logic_vector(15 downto 0);
-        ram_data_o           : out std_logic_vector(31 downto 0);
+        ram_rdaddress_o      : out std_logic_vector(g_DATA_ADDR_WIDTH downto 0);
+        ram_q_i              : in  std_logic_vector(g_WIDTH-1 downto 0);
+        ram_wraddress_o      : out std_logic_vector(g_DATA_ADDR_WIDTH downto 0);
+        ram_data_o           : out std_logic_vector(g_WIDTH-1 downto 0);
         ram_wren_o           : out std_logic;
         operation_done       : out std_logic;
         operation_busy       : out std_logic;
@@ -219,6 +234,13 @@ architecture arch of neurax is
     signal neurax_current_operation : std_logic_vector(1 downto 0);
     signal neurax_output_valid      : std_logic;
 
+    -- Data interface signals
+    signal neurax_data_start        : std_logic;
+    signal neurax_data_start_addr   : std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+    signal neurax_data_length       : std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+    signal neurax_data_busy         : std_logic;
+    signal neurax_data_done         : std_logic;
+
     -- Debug
     signal neurax_debug_cycle  : std_logic_vector(31 downto 0);
     signal neurax_debug_status : std_logic_vector(7 downto 0);
@@ -226,10 +248,10 @@ architecture arch of neurax is
     -- =========================================================================
     -- RAM Port B signals: accelerator <-> data_interface
     -- =========================================================================
-    signal accel_ram_rdaddress : std_logic_vector(15 downto 0);
-    signal accel_ram_q         : std_logic_vector(31 downto 0);
-    signal accel_ram_wraddress : std_logic_vector(15 downto 0);
-    signal accel_ram_data      : std_logic_vector(31 downto 0);
+    signal accel_ram_rdaddress : std_logic_vector(g_DATA_ADDR_WIDTH downto 0);
+    signal accel_ram_q         : std_logic_vector(g_WIDTH-1 downto 0);
+    signal accel_ram_wraddress : std_logic_vector(g_DATA_ADDR_WIDTH downto 0);
+    signal accel_ram_data      : std_logic_vector(g_WIDTH-1 downto 0);
     signal accel_ram_wren      : std_logic;
 
 begin
@@ -240,7 +262,8 @@ begin
     u_neurax_register_block : neurax_register_block
     generic map (
         g_WIDTH      => g_WIDTH,
-        g_ADDR_WIDTH => g_ADDR_WIDTH
+        g_ADDR_WIDTH => g_ADDR_WIDTH,
+        g_DATA_ADDR_WIDTH => g_DATA_ADDR_WIDTH
     )
     port map (
         clk_i         => g_clk_i,
@@ -292,6 +315,12 @@ begin
         neurax_operation_busy_i    => neurax_operation_busy,
         neurax_current_operation_i => neurax_current_operation,
 
+        neurax_data_start_o      => neurax_data_start,
+        neurax_data_start_addr_o => neurax_data_start_addr,
+        neurax_data_length_o     => neurax_data_length,
+        neurax_data_busy_i       => neurax_data_busy,
+        neurax_data_done_i       => neurax_data_done,
+
         neurax_debug_cycle_i  => neurax_debug_cycle,
         neurax_debug_status_i => neurax_debug_status
     );
@@ -307,8 +336,7 @@ begin
     u_neurax_data_interface : neurax_data_interface
     generic map (
         g_DATA_WIDTH => g_WIDTH,
-        g_ADDR_WIDTH => 15,
-        g_RAM_SIZE   => 23000  -- 23K x 32-bit words = 92 KB (one Q8.8 per word, 100x100 conv)
+        g_ADDR_WIDTH => g_DATA_ADDR_WIDTH
     )
     port map (
         clk_i         => g_clk_i,
@@ -327,12 +355,21 @@ begin
         aso_ready_i   => g_aso_ready_i,
         aso_channel_o => g_aso_channel_o,
         aso_error_o   => g_aso_error_o,
+        aso_sop_o     => g_aso_sop_o,
+        aso_eop_o     => g_aso_eop_o,
+
+        -- Control signals for reading data from RAM (from register block)
+        rd_start_i       => neurax_data_start,
+        rd_start_addr_i  => neurax_data_start_addr,
+        rd_length_i      => neurax_data_length,
+        rd_busy_o        => neurax_data_busy,
+        rd_done_o        => neurax_data_done,
 
         -- RAM Port B -> connected to FPGA accelerator
         -- Accelerator uses 16-bit addresses; truncate to 15-bit for M10K RAM
-        ram_b_rdaddress_i => accel_ram_rdaddress(14 downto 0),
+        ram_b_rdaddress_i => accel_ram_rdaddress(g_DATA_ADDR_WIDTH-1 downto 0),
         ram_b_q_o         => accel_ram_q,
-        ram_b_wraddress_i => accel_ram_wraddress(14 downto 0),
+        ram_b_wraddress_i => accel_ram_wraddress(g_DATA_ADDR_WIDTH-1 downto 0),
         ram_b_data_i      => accel_ram_data,
         ram_b_wren_i      => accel_ram_wren
     );

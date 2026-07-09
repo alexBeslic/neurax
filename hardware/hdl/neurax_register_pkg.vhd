@@ -13,8 +13,8 @@ package neurax_register_pkg is
   constant c_REG_ACTIVATION_CONFIG : unsigned(3 downto 0) := "0110"; -- Address 6: Activation config register
   constant c_REG_ACTIVATION_ALPHA : unsigned(3 downto 0) := "0111"; -- Address 7: Activation alpha register
   constant c_REG_BATCH_SIZE : unsigned(3 downto 0) := "1000"; -- Address 8: Batch size register
-  constant c_REG_TEMP_0 : unsigned(3 downto 0) := "1001"; -- Address 9: Temporary register 0
-  constant c_REG_TEMP_1 : unsigned(3 downto 0) := "1010"; -- Address 10: Temporary register 1
+  constant c_REG_DATA_SC : unsigned(3 downto 0) := "1001"; -- Address 9: Data status/config register
+  constant c_REG_DATA_READ : unsigned(3 downto 0) := "1010"; -- Address 10: Data start/length register
   constant c_REG_TEMP_2 : unsigned(3 downto 0) := "1011"; -- Address 11: Temporary register 2
   constant c_REG_TEMP_3 : unsigned(3 downto 0) := "1100"; -- Address 12: Temporary register 3
   constant c_REG_DEBUG_CYCLES : unsigned(3 downto 0) := "1101"; -- Address 13: Read-only register
@@ -62,6 +62,15 @@ package neurax_register_pkg is
 
   -- Common parameters
   subtype t_BATCH_SIZE is natural range 7 downto 0; -- Bit [7:0] in batch size register
+
+  -- Data status/config register
+  constant c_DATA_SC_DONE : natural := 0; -- Bit 0 in data status/config register
+  constant c_DATA_SC_BUSY : natural := 1; -- Bit 1 in data status/config register
+  constant c_DATA_SC_START : natural := 31; -- Bit 31 in data status/config register
+  
+  -- Data start/length register
+  subtype t_DATA_READ_START_ADDR is natural range 14 downto 0; -- Bits [14:0] in data read start address register
+  subtype t_DATA_READ_LENGTH is natural range 30 downto 16; -- Bits [30:16] in data read length register
 
   -- Debug registers
   subtype t_DEBUG_STATUS is natural range 7 downto 0; -- Bits [7:0] in debug status register
