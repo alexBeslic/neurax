@@ -20,7 +20,7 @@ ARCH          := arm
 obj-m += neurax_uio.o
 
 # NFS install path (update to match your setup)
-NFS_ROOT := /srv/nfs/de1_rootfs/home/root
+NFS_ROOT := .
 
 .PHONY: all module userspace install clean
 
@@ -32,8 +32,8 @@ module:
 
 userspace: neurax_uio_test
 
-neurax_uio_test: neurax_uio_test.c msgdma_uio.h
-	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test.c
+neurax_uio_test: neurax_uio_test_2.c msgdma_uio.h
+	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_2.c 
 
 UIO_KO := $(KERNEL_SRC)/drivers/uio/uio.ko
 

@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #include "msgdma_uio.h"
 #include "neurax_regs.h"
@@ -34,13 +35,6 @@
  * Neurax accelerator register map (LW bridge offset 0x000, same page as mSGDMAs)
  * Mirrors neurax_bsp.h — copied here to keep the test self-contained.
  * ------------------------------------------------------------------------- */
-#define REG_CMD                 0
-#define REG_STATUS              1
-#define REG_CONV_CONFIG_0       3
-#define REG_CONV_CONFIG_1       4
-#define REG_BATCH_SIZE          8
-#define REG_DEBUG_CYCLES       13
-
 #define CMD_ENABLE              (1u << 0)
 #define CMD_OP_CONV             (0u << 1)   /* OP_SELECT = 0 → convolution */
 #define CMD_START               (1u << 3)
@@ -54,11 +48,16 @@
 #define RAM_WEIGHT_BASE  10000u
 #define RAM_BIAS_BASE    13000u
 #define RAM_OUTPUT_BASE  13016u
-#define RAM_TOTAL_WORDS  23000u
+#define RAM_TOTAL_WORDS  1u
 
 /* Q8.8: 1.0 → 0x0100 */
 #define Q8_8_ONE        0x00000100u
 #define Q8_8_ZERO       0x00000000u
+
+/* Full altsyncram integrity test constants (derived from msgdma_uio.h) */
+#define FPGA_RAM_WORDS    (FPGA_OUTPUT_SIZE / sizeof(uint32_t)) /* 23000 words */
+#define FPGA_RAM_BYTES    FPGA_OUTPUT_SIZE                     /* 92000 bytes */
+#define MAX_PRINT_ERRORS  32u  /* cap per-mismatch output for readability    */
 
 /* ---------------------------------------------------------------------------
  * Internal state
@@ -69,7 +68,7 @@ struct neurax_uio_ctx {
     void    *lw_base;               /* mmap base for LW bridge              */
     volatile struct msgdma_reg *m2s; /* mSGDMA0: HPS→FPGA (write path)      */
     volatile struct msgdma_reg *s2m; /* mSGDMA1: FPGA→HPS (read  path)      */
-    volatile uint32_t          *neurax; /* Neurax control register block     */
+    volatile neurax_reg_t      *neurax; /* Neurax control register block     */
 
     /* UIO mapping — DMA-coherent buffers */
     int      fd_uio;
@@ -188,7 +187,7 @@ int neurax_uio_init(struct neurax_uio_ctx *ctx)
         goto err;
     }
 
-    ctx->neurax = (volatile uint32_t *)((char *)ctx->lw_base + NEURAX_REG_OFFSET);
+    ctx->neurax = (volatile neurax_reg_t *)((char *)ctx->lw_base + NEURAX_REG_OFFSET);
     ctx->m2s    = (volatile struct msgdma_reg *)((char *)ctx->lw_base + MSGDMA0_OFFSET);
     ctx->s2m    = (volatile struct msgdma_reg *)((char *)ctx->lw_base + MSGDMA1_OFFSET);
 
@@ -367,7 +366,7 @@ ssize_t neurax_dma_read(struct neurax_uio_ctx *ctx, void *dst, size_t len)
     usleep_ms(1);
     printf("[DMA read]  after 1ms: CSR=0x%08x fill=0x%08x resp=%u m2s_CSR=0x%08x neurax_ST=0x%08x\n",
            ctx->s2m->csr_status, ctx->s2m->csr_fill_lvl, ctx->s2m->csr_resp_fill,
-           ctx->m2s->csr_status, ctx->neurax[REG_STATUS]);
+           ctx->m2s->csr_status, ctx->neurax->reg_status);
     {
         volatile uint32_t *rxw = (volatile uint32_t *)ctx->rx_buf;
         printf("[DMA read]  rx_buf[0..3] after 1ms: 0x%08x 0x%08x 0x%08x 0x%08x\n",
@@ -385,7 +384,7 @@ ssize_t neurax_dma_read(struct neurax_uio_ctx *ctx, void *dst, size_t len)
             volatile uint32_t *rxw = (volatile uint32_t *)ctx->rx_buf;
             printf("[DMA read poll] CSR=0x%08x fill=0x%08x resp=%u | m2s=0x%08x neurax=0x%08x | rx[0]=0x%08x rx[1]=0x%08x\n",
                    status, ctx->s2m->csr_fill_lvl, ctx->s2m->csr_resp_fill,
-                   ctx->m2s->csr_status, ctx->neurax[REG_STATUS],
+                   ctx->m2s->csr_status, ctx->neurax->reg_status,
                    rxw[0], rxw[1]);
             next_print = t + 500000u;
         }
@@ -414,63 +413,120 @@ ssize_t neurax_dma_read(struct neurax_uio_ctx *ctx, void *dst, size_t len)
 }
 
 /* ---------------------------------------------------------------------------
- * Configure and start a convolution on the Neurax accelerator.
- * Blocks until STATUS_DONE or timeout. Returns 0 on success, -1 on timeout.
- *
- * REG_CONV_CONFIG_0: kernel_size[31:24] | in_ch[23:16] | padding[15:8] | stride[7:0]
- * REG_CONV_CONFIG_1: out_ch[15:8] | in_ch[7:0]
+ * test_pattern — unique 32-bit value for word index i
  * ------------------------------------------------------------------------- */
-static int accelerator_start_conv(struct neurax_uio_ctx *ctx,
-                                   int kernel, int stride, int padding,
-                                   int in_ch,  int out_ch)
+static inline uint32_t test_pattern(uint32_t i)
 {
-    uint32_t conv0 = ((uint32_t)(kernel  & 0xFF) << 24)
-                   | ((uint32_t)(in_ch   & 0xFF) << 16)
-                   | ((uint32_t)(padding & 0xFF) <<  8)
-                   | ((uint32_t)(stride  & 0xFF) <<  0);
-    uint32_t conv1 = ((uint32_t)(out_ch  & 0xFF) <<  8)
-                   | ((uint32_t)(in_ch   & 0xFF) <<  0);
+    return 0xFE580000u | (i & 0xFFFFu);
+}
 
-    /* Reset: disable → 1 ms → enable → 1 ms (matches neurax_reset in BSP) */
-    ctx->neurax[REG_CMD] = 0;
-    __sync_synchronize();
-    usleep_ms(1);
-    ctx->neurax[REG_CMD] = CMD_ENABLE;
-    __sync_synchronize();
-    usleep_ms(1);
-
-    /* Write convolution config and batch size */
-    ctx->neurax[REG_CONV_CONFIG_0] = conv0;
-    ctx->neurax[REG_CONV_CONFIG_1] = conv1;
-    ctx->neurax[REG_BATCH_SIZE]    = 1;
-    __sync_synchronize();
-
-    /* Start: write CMD_ENABLE | CMD_START, then clear START after 10 µs.
-     * The start bit is edge-detected in HW (IDLE→OP transition), so it must
-     * be cleared to avoid retriggering on any later register read/write.    */
-    ctx->neurax[REG_CMD] = CMD_ENABLE | CMD_OP_CONV | CMD_START;
-    __sync_synchronize();
-
-    printf("[accel] started: kernel=%d stride=%d pad=%d in_ch=%d out_ch=%d "
-           "CONV0=0x%08x CONV1=0x%08x\n",
-           kernel, stride, padding, in_ch, out_ch, conv0, conv1);
-
-    usleep(10);
-    ctx->neurax[REG_CMD] = CMD_ENABLE | CMD_OP_CONV;  /* clear START bit */
-    __sync_synchronize();
-
-    uint64_t deadline = now_us() + 5000000u;  /* 5 s timeout */
-    while (now_us() < deadline) {
-        uint32_t st = ctx->neurax[REG_STATUS];
-        if (st & STATUS_DONE) {
-            printf("[accel] done  STATUS=0x%08x cycles=%u\n",
-                   st, ctx->neurax[REG_DEBUG_CYCLES]);
-            return 0;
-        }
+/* ---------------------------------------------------------------------------
+ * poll_dma_complete — wait for an mSGDMA to leave BUSY state or timeout.
+ * Resets the DMA and returns -1 on timeout.
+ * ------------------------------------------------------------------------- */
+static int poll_dma_complete(volatile struct msgdma_reg *dma, uint32_t timeout_us)
+{
+    uint64_t deadline = now_us() + timeout_us;
+    uint32_t status;
+    do {
+        status = dma->csr_status;
+        if (!(status & CSR_ST_BUSY)) return 0;
         usleep_ms(1);
-    }
-    fprintf(stderr, "[accel] timeout! STATUS=0x%08x\n", ctx->neurax[REG_STATUS]);
+    } while (now_us() < deadline);
+
+    fprintf(stderr, "[DMA poll] timeout: CSR=0x%08x fill=0x%08x resp=%u\n",
+            status, dma->csr_fill_lvl, dma->csr_resp_fill);
+    msgdma_reset(dma);
     return -1;
+}
+
+/* ---------------------------------------------------------------------------
+ * test_full_ram — write a unique pattern to every RAM word, read it back
+ * through the circular loopback buffer, and verify all locations.
+ *
+ * Protocol note: s2m is pre-armed BEFORE the write so that data flows
+ * through the 1-word pipeline stage as m2s fills it (backpressure would
+ * otherwise stall m2s after the first word).  neurax_dma_write() sends a
+ * channel=1 SOF first; the Qsys adapter suppresses valid for channel > 0,
+ * so the FPGA never asserts asi_ready=0 during SOF and s2m capacity is
+ * not consumed by it.
+ *
+ * Returns 0 on PASS, -1 on any error.
+ * ------------------------------------------------------------------------- */
+static int test_full_ram(struct neurax_uio_ctx *ctx)
+{
+    const uint32_t n_words = (uint32_t)(FPGA_RAM_WORDS);
+    const uint32_t n_bytes = (uint32_t)(FPGA_RAM_BYTES);
+
+    printf("\n=== Full RAM integrity test (%"PRIu32" words, %"PRIu32" bytes) ===\n",
+           n_words, n_bytes);
+
+    /* 1. Build test pattern in a temporary TX buffer */
+    uint32_t *tx_data = malloc(n_bytes);
+    if (!tx_data) {
+        perror("malloc tx_data");
+        return -1;
+    }
+    for (uint32_t i = 0; i < n_words; i++)
+        tx_data[i] = test_pattern(i);
+
+    /* 2. Clear RX buffer; pre-arm s2m before the write so data can stream
+     *    through the circular buffer pipeline as m2s fills it. */
+    memset(ctx->rx_buf, 0, n_bytes);
+    __sync_synchronize();
+    msgdma_reset(ctx->s2m);
+    msgdma_push_descr(ctx->s2m, 0, (uint32_t)ctx->rx_phys, n_bytes, 0);
+
+    /* 3. Write full buffer to FPGA (neurax_dma_write sends SOF first) */
+    printf("[full-RAM] Writing %"PRIu32" words...\n", n_words);
+    ssize_t wr = neurax_dma_write(ctx, tx_data, n_bytes);
+    tx_data = NULL;
+    if (wr < 0) {
+        fprintf(stderr, "[full-RAM] Write failed\n");
+        msgdma_reset(ctx->s2m);
+        return -1;
+    }
+    printf("[full-RAM] Write OK: %zd bytes\n", wr);
+
+    ctx->neurax->reg_data_sc = 0;  /* clear data length in words */
+    ctx->neurax->reg_data_sc = FPGA_RAM_WORDS << 16u;  /* set data length in words */
+    ctx->neurax->reg_data_sc = 1 << 31; /* set data start bit */
+    __sync_synchronize();
+
+    /* 4. Poll s2m: data streams through the FPGA pipeline to the RX buffer */
+    printf("[full-RAM] Waiting for readback to complete...\n");
+    if (poll_dma_complete(ctx->s2m, DMA_TIMEOUT_US) < 0) {
+        fprintf(stderr, "[full-RAM] Readback timed out\n");
+        return -1;
+    }
+    printf("[full-RAM] Readback OK\n");
+
+    /* 5. Verify every word */
+    volatile uint32_t *rx = (volatile uint32_t *)ctx->rx_buf;
+    uint32_t errors = 0;
+    for (uint32_t i = 0; i < n_words; i++) {
+        uint32_t expected = test_pattern(i);
+        uint32_t received = rx[i];
+        if (received != expected) {
+            if (errors < MAX_PRINT_ERRORS)
+                printf("  Address 0x%04"PRIx32":\n"
+                       "    expected: 0x%08"PRIx32"\n"
+                       "    received: 0x%08"PRIx32"\n",
+                       i, expected, received);
+            else if (errors == MAX_PRINT_ERRORS)
+                printf("  ... (further mismatches suppressed)\n");
+            errors++;
+        }
+    }
+    free(tx_data);
+
+
+    /* 6. Summary */
+    printf("\nTotal words tested : %"PRIu32"\n", n_words);
+    printf("Errors             : %"PRIu32"\n", errors);
+    printf("Result             : %s\n", errors == 0 ? "PASS" : "FAIL");
+
+    return errors == 0 ? 0 : -1;
 }
 
 /* ---------------------------------------------------------------------------
@@ -479,6 +535,7 @@ static int accelerator_start_conv(struct neurax_uio_ctx *ctx,
 int main(void)
 {
     struct neurax_uio_ctx ctx;
+    int final_result = 0;
 
     printf("=== Neurax UIO DMA test ===\n");
 
@@ -488,191 +545,61 @@ int main(void)
     }
 
     /* --- Print initial register state ------------------------------------ */
+    printf("Sanity check: Read the magic number from the Neurax register block: 0x%08x\n",
+           ctx.neurax->reg_read_only);
     printf("\nmSGDMA0 (m2s) CSR status=0x%08x ctrl=0x%08x\n",
            ctx.m2s->csr_status, ctx.m2s->csr_ctrl);
     printf("mSGDMA1 (s2m) CSR status=0x%08x ctrl=0x%08x\n",
            ctx.s2m->csr_status, ctx.s2m->csr_ctrl);
     printf("Neurax   CMD=0x%08x STATUS=0x%08x\n\n",
-           ctx.neurax[REG_CMD], ctx.neurax[REG_STATUS]);
+           ctx.neurax->reg_cmd, ctx.neurax->reg_status);
 
-    /* --- Build full 23000-word RAM image ---------------------------------- *
-     * Layout matches FPGA generics (see neurax_test.c):
-     *   [0      .. 9999 ] input:   100×100 pixels, Q8.8 value 1.0
-     *   [10000  .. 10008] weights: 3×3 kernel, Q8.8 value 1.0 (all-ones)
-     *   [10009  .. 12999] unused weight area (zero)
-     *   [13000         ] bias:    Q8.8 value 0.0
-     *   [13001  .. 13015] unused bias area (zero)
-     *   [13016  .. 23000] output:  written by accelerator
-     * ----------------------------------------------------------------------- */
-    const size_t ram_bytes = RAM_TOTAL_WORDS * sizeof(uint32_t);
+    
+    // const size_t ram_bytes = RAM_TOTAL_WORDS * sizeof(uint32_t);
 
-    uint32_t *ram_buf = calloc(RAM_TOTAL_WORDS, sizeof(uint32_t));
-    if (!ram_buf) { perror("calloc ram_buf"); goto done; }
+    // uint32_t *ram_buf = calloc(RAM_TOTAL_WORDS, sizeof(uint32_t));
+    // if (!ram_buf) { perror("calloc ram_buf"); goto done; }
 
-    /* Input: 100×100 = 10000 words, each = 1.0 in Q8.8 */
-    for (uint32_t i = RAM_INPUT_BASE; i < RAM_INPUT_BASE + 10000u; i++)
-        ram_buf[i] = Q8_8_ONE;
+    // ram_buf[0] = 0x12345678u;
 
-    /* Weights: 3×3×1×1 = 9 words, each = 1.0 in Q8.8 */
-    for (uint32_t i = RAM_WEIGHT_BASE; i < RAM_WEIGHT_BASE + 9u; i++)
-        ram_buf[i] = Q8_8_ONE;
+    // memset(ctx.rx_buf, 0xAB, 1 * sizeof(uint32_t));
+    // __sync_synchronize();
+    // msgdma_reset(ctx.s2m);
+    // msgdma_push_descr(ctx.s2m, 0, ctx.rx_phys, (uint32_t)ram_bytes, 0);
+    // printf("Writing %zu bytes (%u words) to FPGA...\n", ram_bytes, RAM_TOTAL_WORDS);
+    // ssize_t wr = neurax_dma_write(&ctx, ram_buf, ram_bytes);
+    // if (wr < 0) {
+    //     fprintf(stderr, "DMA write failed\n");
+    //     free(ram_buf);
+    //     goto done;
+    // }
+    // printf("Write OK: %zd bytes\n\n", wr);
 
-    /* Bias: 1 word for 1 output channel = 0.0 */
-    ram_buf[RAM_BIAS_BASE] = Q8_8_ZERO;
+    // /* --- DMA read: stream full RAM image back from FPGA ------------------- */
+    // uint32_t *result = calloc(RAM_TOTAL_WORDS, sizeof(uint32_t));
+    // if (!result) { perror("calloc result"); free(ram_buf); goto done; }
 
-    /* =========================================================================
-     * DIAGNOSTIC TEST A: pre-arm s2m BEFORE write.
-     * If this works (DMA completes), streaming is fundamentally OK and the
-     * issue in the normal flow is timing (aso_ready_i not asserted when
-     * reading_active first becomes 1, or something clears reading_active later).
-     * If this ALSO fails, there is a fundamental hardware path issue.
-     * ======================================================================= */
-    printf("=== DIAGNOSTIC TEST A: pre-arm s2m descriptor BEFORE DMA write ===\n");
-    {
-        memset(ctx.rx_buf, 0xAB, 8 * sizeof(uint32_t));
-        __sync_synchronize();
-        msgdma_reset(ctx.s2m);
-        msgdma_push_descr(ctx.s2m, 0, ctx.rx_phys, (uint32_t)ram_bytes, 0);
-        printf("[TEST A] s2m armed: CSR=0x%08x fill=0x%08x\n",
-               ctx.s2m->csr_status, ctx.s2m->csr_fill_lvl);
+    // printf("\nReading %zu bytes (%u words) from FPGA...\n", ram_bytes, RAM_TOTAL_WORDS);
+    // ctx.rx_offset = 0;
+    // ssize_t rd = neurax_dma_read(&ctx,
+    //                                  (uint8_t *)result,
+    //                                  ram_bytes);
+    //     if (rd < 0) {
+    //         fprintf(stderr, "DMA read failed at offset %zu\n", ram_bytes);
+    //     }
 
-        /* Now write — when buffer_full fires, aso_ready_i is already 1 */
-        ssize_t wra = neurax_dma_write(&ctx, ram_buf, ram_bytes);
-        if (wra < 0) {
-            fprintf(stderr, "[TEST A] DMA write failed\n");
-        } else {
-            printf("[TEST A] Write done (%zd bytes). Polling s2m...\n", wra);
-            uint64_t dl = now_us() + 3000000u;
-            uint64_t np = now_us();
-            uint32_t st;
-            volatile uint32_t *rxw = (volatile uint32_t *)ctx.rx_buf;
-            do {
-                st = ctx.s2m->csr_status;
-                if (!(st & CSR_ST_BUSY)) break;
-                uint64_t t = now_us();
-                if (t >= np) {
-                    printf("[TEST A poll] CSR=0x%08x fill=0x%08x resp=%u | rx[0]=0x%08x\n",
-                           st, ctx.s2m->csr_fill_lvl, ctx.s2m->csr_resp_fill, rxw[0]);
-                    np = t + 500000u;
-                }
-                usleep_ms(1);
-            } while (now_us() < dl);
-            printf("[TEST A] RESULT: CSR=0x%08x %s\n", ctx.s2m->csr_status,
-                   (st & CSR_ST_BUSY) ? "*** TIMEOUT (streaming broken) ***"
-                                      : "DONE (streaming OK!)");
-            printf("[TEST A] rx_buf[0..7] (expect 0x%08x = Q8_8_ONE for word[0]):\n", Q8_8_ONE);
-            for (int i = 0; i < 8; i++)
-                printf("  [%d] 0x%08x\n", i, rxw[i]);
-        }
-        msgdma_reset(ctx.s2m);
-    }
-    printf("=== END DIAGNOSTIC TEST A ===\n\n");
 
-    /* =========================================================================
-     * DIAGNOSTIC TEST B: push s2m AFTER write but BEFORE accelerator.
-     * If reading_active=1 persists after write, streaming should start as
-     * soon as aso_ready_i=1 (i.e., immediately when we push the descriptor).
-     * If TEST A passes but TEST B fails, the accelerator clears reading_active.
-     * If TEST B passes but normal test fails, something else is wrong.
-     * ======================================================================= */
-    printf("=== DIAGNOSTIC TEST B: s2m push immediately AFTER write (no accel) ===\n");
-    {
-        memset(ctx.rx_buf, 0xAB, 8 * sizeof(uint32_t));
-        __sync_synchronize();
-        msgdma_reset(ctx.s2m);
-        ssize_t wrb = neurax_dma_write(&ctx, ram_buf, ram_bytes);
-        if (wrb < 0) {
-            fprintf(stderr, "[TEST B] DMA write failed\n");
-        } else {
-            printf("[TEST B] Write done. Pushing s2m descriptor now...\n");
-            msgdma_push_descr(ctx.s2m, 0, ctx.rx_phys, (uint32_t)ram_bytes, 0);
-            printf("[TEST B] s2m initial: CSR=0x%08x fill=0x%08x\n",
-                   ctx.s2m->csr_status, ctx.s2m->csr_fill_lvl);
-            usleep_ms(1);
-            {
-                volatile uint32_t *rxw = (volatile uint32_t *)ctx.rx_buf;
-                printf("[TEST B] after 1ms: CSR=0x%08x fill=0x%08x resp=%u | rx[0]=0x%08x\n",
-                       ctx.s2m->csr_status, ctx.s2m->csr_fill_lvl,
-                       ctx.s2m->csr_resp_fill, rxw[0]);
-            }
-            uint64_t dl = now_us() + 3000000u;
-            uint64_t np = now_us() + 500000u;
-            uint32_t st;
-            volatile uint32_t *rxw = (volatile uint32_t *)ctx.rx_buf;
-            do {
-                st = ctx.s2m->csr_status;
-                if (!(st & CSR_ST_BUSY)) break;
-                uint64_t t = now_us();
-                if (t >= np) {
-                    printf("[TEST B poll] CSR=0x%08x fill=0x%08x resp=%u | rx[0]=0x%08x\n",
-                           st, ctx.s2m->csr_fill_lvl, ctx.s2m->csr_resp_fill, rxw[0]);
-                    np = t + 500000u;
-                }
-                usleep_ms(1);
-            } while (now_us() < dl);
-            printf("[TEST B] RESULT: CSR=0x%08x %s\n", ctx.s2m->csr_status,
-                   (st & CSR_ST_BUSY) ? "*** TIMEOUT (reading_active issue?) ***"
-                                      : "DONE (reading_active OK!)");
-            printf("[TEST B] rx_buf[0..7]:\n");
-            for (int i = 0; i < 8; i++)
-                printf("  [%d] 0x%08x\n", i, rxw[i]);
-        }
-        msgdma_reset(ctx.s2m);
-    }
-    printf("=== END DIAGNOSTIC TEST B ===\n\n");
+    // printf("Result sample 0x%08x \n", result[0]);
 
-    /* --- DMA write: stream full 23000-word RAM image to FPGA -------------- */
-    printf("Writing %zu bytes (%u words) to FPGA...\n", ram_bytes, RAM_TOTAL_WORDS);
-    ssize_t wr = neurax_dma_write(&ctx, ram_buf, ram_bytes);
-    if (wr < 0) {
-        fprintf(stderr, "DMA write failed\n");
-        free(ram_buf);
-        goto done;
-    }
-    printf("Write OK: %zd bytes\n\n", wr);
+    // free(result);
+    // free(ram_buf);
 
-    /* --- Start Neurax convolution ----------------------------------------- *
-     * 3×3 kernel, stride=1, padding=0, 1 input channel, 1 output channel.
-     * Expected output (no bias): each interior pixel = sum of 3×3 ones = 9.0
-     * in Q8.8 → 0x00000900.  Edge pixels depend on padding mode (none here).
-     * ----------------------------------------------------------------------- */
-    if (accelerator_start_conv(&ctx, 3, 1, 0, 1, 1) < 0) {
-        fprintf(stderr, "Accelerator start failed\n");
-        free(ram_buf);
-        goto done;
-    }
-
-    /* --- DMA read: stream full RAM image back from FPGA ------------------- */
-    uint32_t *result = calloc(RAM_TOTAL_WORDS, sizeof(uint32_t));
-    if (!result) { perror("calloc result"); free(ram_buf); goto done; }
-
-    printf("\nReading %zu bytes (%u words) from FPGA...\n", ram_bytes, RAM_TOTAL_WORDS);
-    ctx.rx_offset = 0;
-
-    ssize_t rd = neurax_dma_read(&ctx,
-                                     (uint8_t *)result,
-                                     ram_bytes);
-
-    if (rd < 0) {
-            fprintf(stderr, "DMA read failed at offset %zu\n", ram_bytes);
-    }
-    printf("Read OK: %zu bytes\n\n", ram_bytes);
-
-    /* --- Dump first 8 output words (expected ~0x00000900 = 9.0 in Q8.8) -- */
-    printf("Output words [%u..%u] (expected 9.0 = 0x00000900 for interior pixels):\n",
-           RAM_OUTPUT_BASE, RAM_OUTPUT_BASE + 7u);
-    for (uint32_t i = 0; i < 8u; i++) {
-        uint32_t w = result[RAM_OUTPUT_BASE + i];
-        int16_t q = (int16_t)(w & 0xFFFF);
-        printf("  [%u] 0x%08x  (Q8.8 = %d → %.4f)\n",
-               RAM_OUTPUT_BASE + i, w, q, (float)q / 256.0f);
-    }
-
-    free(result);
-    free(ram_buf);
+    /* --- Full RAM integrity test ----------------------------------------- */
+    if (test_full_ram(&ctx) != 0)
+        final_result = 1;
 
 done:
     neurax_uio_deinit(&ctx);
     printf("\nDone.\n");
-    return 0;
+    return final_result;
 }

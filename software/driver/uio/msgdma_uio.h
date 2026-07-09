@@ -120,9 +120,17 @@ static inline uint32_t msgdma_rd(volatile struct msgdma_reg *r, uint32_t mask)
 static inline void msgdma_reset(volatile struct msgdma_reg *r)
 {
     r->csr_status = CSR_ST_CLEAR_ALL;
-    r->csr_ctrl  |= CSR_CT_RESET_DISP;
+    r->csr_ctrl = CSR_CT_RESET_DISP;
+
     while (r->csr_status & CSR_ST_RESETTING)
-        ;
+    {
+        #if defined(__arm__) || defined(__aarch64__)
+            __asm__ volatile("yield" ::: "memory");
+        #endif
+    }
+
+    r->csr_ctrl = 0;
+
     r->csr_status = CSR_ST_CLEAR_ALL;
 }
 
@@ -144,7 +152,9 @@ static inline void msgdma_push_descr(volatile struct msgdma_reg *r,
     r->desc_read_addr  = rd_addr;
     r->desc_write_addr = wr_addr;
     r->desc_len        = len;
+    
     __sync_synchronize();
+    
     r->desc_ctrl       = ctrl | DESC_GO;
 }
 

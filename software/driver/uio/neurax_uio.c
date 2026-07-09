@@ -67,12 +67,21 @@ struct neurax_uio_priv {
 /* Reset a single mSGDMA instance. Mirrors the kernel msgdma_reset() sequence. */
 static void msgdma_hw_reset(void __iomem *base)
 {
-    iowrite32(0x3FF, base + MSGDMA_CSR_STATUS);   /* clear all w1c status bits */
-    iowrite32(ioread32(base + MSGDMA_CSR_CTRL) | CSR_RESET_DISP,
-              base + MSGDMA_CSR_CTRL);
+    /* 1. Clean all old statuses and interrupts */
+    iowrite32(0x3FF, base + MSGDMA_CSR_STATUS);
+    
+    /* 2. Start reset (avoid |= if we want a clean reset) */
+    iowrite32(CSR_RESET_DISP, base + MSGDMA_CSR_CTRL);
+    
+    /* 3. Actively wait while the hardware performs internal reset */
     while (ioread32(base + MSGDMA_CSR_STATUS) & CSR_RESETTING)
         cpu_relax();
-    iowrite32(0x3FF, base + MSGDMA_CSR_STATUS);   /* clear bits set during reset */
+        
+    /* 4. CRITICAL: Clear the reset bit in the controller by writing 0 */
+    iowrite32(0, base + MSGDMA_CSR_CTRL);
+    
+    /* 5. Clear any remaining statuses again */
+    iowrite32(0x3FF, base + MSGDMA_CSR_STATUS);
 }
 
 /*
@@ -84,23 +93,16 @@ static void msgdma_hw_reset(void __iomem *base)
  */
 static int neurax_uio_mmap(struct uio_info *info, struct vm_area_struct *vma)
 {
-    struct neurax_uio_priv *priv =
-        container_of(info, struct neurax_uio_priv, uio);
+    struct neurax_uio_priv *priv = container_of(info, struct neurax_uio_priv, uio);
     int mi = (int)vma->vm_pgoff;
 
     vma->vm_pgoff = 0;
 
     switch (mi) {
     case 0:
-        return dma_mmap_coherent(priv->dev, vma,
-                                 priv->dma_tx_virt,
-                                 priv->dma_tx_phys,
-                                 DMA_BUF_SIZE);
+        return dma_mmap_coherent(priv->dev, vma, priv->dma_tx_virt, priv->dma_tx_phys, DMA_BUF_SIZE);
     case 1:
-        return dma_mmap_coherent(priv->dev, vma,
-                                 priv->dma_rx_virt,
-                                 priv->dma_rx_phys,
-                                 DMA_BUF_SIZE);
+        return dma_mmap_coherent(priv->dev, vma, priv->dma_rx_virt, priv->dma_rx_phys, DMA_BUF_SIZE);
     default:
         return -EINVAL;
     }
@@ -121,47 +123,25 @@ static int neurax_uio_probe(struct platform_device *pdev)
     priv->dev = dev;
     platform_set_drvdata(pdev, priv);
 
-    /* Enable all F2SDRAM bridge ports so mSGDMA masters can reach HPS SDRAM.
-     * Without this, the m2s master stalls with BUSY=1 on every write. */
     sdr = ioremap(SDR_CTL_BASE, 0x100);
     if (sdr) {
         u32 v = readl(sdr + SDR_CTL_FPGAPORTRST);
-        dev_info(dev, "FPGAPORTRST before: 0x%08x", v);
         writel(v | FPGAPORTRST_F2SDRAM_ALL, sdr + SDR_CTL_FPGAPORTRST);
-        dev_info(dev, "FPGAPORTRST after:  0x%08x",
-                 readl(sdr + SDR_CTL_FPGAPORTRST));
         iounmap(sdr);
-    } else {
-        dev_warn(dev, "cannot map HPS SDR controller — F2SDRAM bridges may be disabled");
     }
 
-    /* Allocate DMA-coherent buffers (physical address = DMA address on Cyclone V) */
     ret = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
-    if (ret) {
-        dev_err(dev, "dma_set_coherent_mask failed: %d", ret);
-        return ret;
-    }
+    if (ret) return ret;
 
-    priv->dma_tx_virt = dma_alloc_coherent(dev, DMA_BUF_SIZE,
-                                            &priv->dma_tx_phys, GFP_KERNEL);
-    if (!priv->dma_tx_virt) {
-        dev_err(dev, "failed to alloc TX DMA buffer");
-        return -ENOMEM;
-    }
+    priv->dma_tx_virt = dma_alloc_coherent(dev, DMA_BUF_SIZE, &priv->dma_tx_phys, GFP_KERNEL);
+    if (!priv->dma_tx_virt) return -ENOMEM;
 
-    priv->dma_rx_virt = dma_alloc_coherent(dev, DMA_BUF_SIZE,
-                                            &priv->dma_rx_phys, GFP_KERNEL);
+    priv->dma_rx_virt = dma_alloc_coherent(dev, DMA_BUF_SIZE, &priv->dma_rx_phys, GFP_KERNEL);
     if (!priv->dma_rx_virt) {
-        dev_err(dev, "failed to alloc RX DMA buffer");
         ret = -ENOMEM;
         goto err_free_tx;
     }
 
-    dev_info(dev, "TX DMA buf: virt=%px phys=0x%08x", priv->dma_tx_virt, (u32)priv->dma_tx_phys);
-    dev_info(dev, "RX DMA buf: virt=%px phys=0x%08x", priv->dma_rx_virt, (u32)priv->dma_rx_phys);
-
-    /* Reset both mSGDMA instances before handing off to userspace.
-     * Resource 0 from DT is the mSGDMA0 (m2s) base; mSGDMA1 (s2m) is at +0x40. */
     res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
     if (res) {
         dma0 = ioremap(res->start, 0x40);
@@ -169,20 +149,16 @@ static int neurax_uio_probe(struct platform_device *pdev)
         if (dma0 && dma1) {
             msgdma_hw_reset(dma0);
             msgdma_hw_reset(dma1);
-            dev_info(dev, "mSGDMA0 reset at 0x%08x, mSGDMA1 at 0x%08x",
-                     (u32)res->start, (u32)(res->start + MSGDMA1_OFFSET));
         }
         if (dma0) iounmap(dma0);
         if (dma1) iounmap(dma1);
-    } else {
-        dev_warn(dev, "no MEM resource in DT — mSGDMAs not reset");
     }
 
     /* UIO device setup */
     priv->uio.name    = "neurax-msgdma";
     priv->uio.version = "1.0";
     priv->uio.mmap    = neurax_uio_mmap;
-    priv->uio.irq     = UIO_IRQ_NONE;  /* poll-based prototype, no IRQ needed */
+    priv->uio.irq     = UIO_IRQ_NONE;
 
     /* mem[0]: TX buffer — userspace fills this, mSGDMA m2s streams to FPGA.
      * Physical address published at /sys/class/uio/uio0/maps/map0/addr. */
@@ -200,12 +176,10 @@ static int neurax_uio_probe(struct platform_device *pdev)
 
     ret = uio_register_device(dev, &priv->uio);
     if (ret) {
-        dev_err(dev, "uio_register_device failed: %d", ret);
+        dev_err(dev, "uio_register_device failed: %d\n", ret);
         goto err_free_rx;
     }
 
-    dev_info(dev, "neurax UIO ready — TX phys=0x%08x  RX phys=0x%08x",
-             (u32)priv->dma_tx_phys, (u32)priv->dma_rx_phys);
     return 0;
 
 err_free_rx:
@@ -220,10 +194,14 @@ static void neurax_uio_remove(struct platform_device *pdev)
     struct neurax_uio_priv *priv = platform_get_drvdata(pdev);
 
     uio_unregister_device(&priv->uio);
-    dma_free_coherent(priv->dev, DMA_BUF_SIZE,
-                      priv->dma_rx_virt, priv->dma_rx_phys);
-    dma_free_coherent(priv->dev, DMA_BUF_SIZE,
-                      priv->dma_tx_virt, priv->dma_tx_phys);
+    
+    if (priv->dma_rx_virt)
+        dma_free_coherent(&pdev->dev, DMA_BUF_SIZE, priv->dma_rx_virt, priv->dma_rx_phys);
+        
+    if (priv->dma_tx_virt)
+        dma_free_coherent(&pdev->dev, DMA_BUF_SIZE, priv->dma_tx_virt, priv->dma_tx_phys);
+
+    dev_info(&pdev->dev, "neurax UIO module removed and memory freed\n");
 }
 
 static const struct of_device_id neurax_uio_of_match[] = {
@@ -233,15 +211,16 @@ static const struct of_device_id neurax_uio_of_match[] = {
 MODULE_DEVICE_TABLE(of, neurax_uio_of_match);
 
 static struct platform_driver neurax_uio_driver = {
-    .probe  = neurax_uio_probe,
-    .remove = neurax_uio_remove,
     .driver = {
         .name           = "neurax-uio",
         .of_match_table = neurax_uio_of_match,
     },
+    .probe  = neurax_uio_probe,
+    .remove = neurax_uio_remove,
 };
+
 module_platform_driver(neurax_uio_driver);
 
-MODULE_DESCRIPTION("Neurax mSGDMA UIO driver for Cyclone V SoC");
-MODULE_AUTHOR("ReDS");
 MODULE_LICENSE("GPL v2");
+MODULE_AUTHOR("Neurax");
+MODULE_DESCRIPTION("Minimal UIO driver for mSGDMA on Cyclone V");
