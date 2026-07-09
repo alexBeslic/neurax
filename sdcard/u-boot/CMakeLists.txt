@@ -13,8 +13,9 @@ set(BOOT_SCRIPT_SOURCE ${CMAKE_SOURCE_DIR}/uboot.script)
 set(BOOT_SCRIPT_OUTPUT_DIR ${CMAKE_BINARY_DIR}/boot-scripts)
 
 # Cross compiler
+set(CROSS_COMPILER_PATH ${CMAKE_SOURCE_DIR}/../../toolchain/gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf/bin)
 set(ARCH arm)
-set(CROSS_COMPILE arm-none-linux-gnueabihf-)
+set(CROSS_COMPILE ${CROSS_COMPILER_PATH}/arm-none-linux-gnueabihf-)
 
 # Intel FPGA paths
 set(INTEL_FPGA_ROOT $ENV{HOME}/intelFPGA/20.1)
@@ -42,6 +43,7 @@ add_custom_target(
                      --type dtb
                      --board hps_common_board_info.xml
                      --board soc_system_board_info.xml
+                     --board neurax_board_info.xml
                      --bridge-removal all
                      --clocks
     WORKING_DIRECTORY ${QUARTUS_QSYS_DIR}
