@@ -190,11 +190,12 @@ begin
     --   sink_ready gates both asi_ready_o and port_a_wren.
     --   Deasserts the moment a read transfer starts (rd_state /= IDLE), preventing
     --   Port A address collisions without any software ordering requirement.
-    --   port_a_wren follows Avalon-ST rule: write only on an accepted handshake.
+    --   A channel-1 packet marker is treated as a reset marker for the write
+    --   pointer; it is not stored into RAM as payload data.
     -- =========================================================================
     sink_ready    <= '1' when rd_state = IDLE else '0';
     asi_ready_o   <= sink_ready;
-    port_a_wren   <= asi_valid_i and sink_ready;
+    port_a_wren   <= asi_valid_i and sink_ready and (not asi_channel_i);
     port_a_wrdata <= asi_data_i;
 
     -- =========================================================================
@@ -251,9 +252,11 @@ begin
 
         elsif rising_edge(clk_i) then
 
-            -- ---- Sink: advance write pointer on every accepted handshake ----
-            -- port_a_wren = asi_valid_i AND sink_ready; never asserts outside IDLE.
-            if port_a_wren = '1' then
+            -- ---- Sink: channel=1 resets the write pointer, channel=0 advances it
+            -- on every accepted handshake.  The marker word is not stored into RAM.
+            if asi_valid_i = '1' and sink_ready = '1' and asi_channel_i = '1' then
+                wr_ptr <= (others => '0');
+            elsif port_a_wren = '1' then
                 wr_ptr <= wr_ptr + 1;
             end if;
 

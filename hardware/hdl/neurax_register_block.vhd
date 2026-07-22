@@ -147,6 +147,13 @@ begin
             ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_DONE) <= neurax_data_done_i;
             ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_BUSY) <= neurax_data_busy_i;
 
+            -- Self-clear the START bit once the data FSM has accepted the command.
+            -- This makes CONTROL.START behave like a one-cycle pulse instead of a
+            -- software-latched level that can retrigger the read FSM indefinitely.
+            if neurax_data_busy_i = '1' then
+                ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_START) <= '0';
+            end if;
+
             ram(to_integer(c_REG_DEBUG_CYCLES)) <= neurax_debug_cycle_i;
             ram(to_integer(c_REG_DEBUG_STATUS))(t_DEBUG_STATUS) <= neurax_debug_status_i;
 
