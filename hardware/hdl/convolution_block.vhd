@@ -46,7 +46,8 @@ entity convolution_block is
         output_valid : out std_logic;
         output_data : out std_logic_vector(DATA_WIDTH-1 downto 0);
         output_addr : out std_logic_vector(15 downto 0);
-        output_write_en : out std_logic
+        output_write_en : out std_logic;
+        kernel_done_o : out std_logic
     );
 end convolution_block;
 
@@ -276,6 +277,13 @@ begin
                              in_ch_cnt = 0 and kh_cnt = 0 and kw_cnt = 0 else '0';
     
     output_write_en <= '1' when current_state = WRITE_OUTPUT else '0';
+
+    -- Exposes the registered kh/kw/in_ch "last tap of kernel window" condition to
+    -- the top-level accelerator so its RAM read sequencer can avoid dispatching a
+    -- redundant speculative fetch right after the window's final tap (that phantom
+    -- fetch would otherwise collide with the WRITE_OUTPUT RAM write on the shared
+    -- single Avalon-MM address bus and corrupt the next position's first tap).
+    kernel_done_o <= kernel_done;
     
     -- Output data: accumulator result (with final multiply added) + bias
     -- The accumulator contains the sum of all but the last multiply.

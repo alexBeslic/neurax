@@ -26,6 +26,21 @@
 --     before returning to IDLE.  Occurs only after the last word is accepted so
 --     it does not reduce transfer throughput.
 --
+-- SEND watchdog:
+--   The SEND -> FLUSH transition depends entirely on aso_ready_i eventually
+--   pulsing rd_remaining down to zero.  If the downstream Avalon-ST sink (the
+--   mSGDMA s2m controller) ever stops asserting ready one handshake short of
+--   cmd_length -- e.g. because its own word count was satisfied by a spurious
+--   extra handshake elsewhere in the pipeline, or because it was reset out from
+--   under an in-progress transfer (the two mSGDMAs and the neurax core sit in
+--   different reset domains) -- this FSM would otherwise hang in SEND forever:
+--   rd_busy_o stays asserted and the IDLE-only rd_start_i check is never
+--   reached again, so no further transfer can ever be started without a full
+--   core reset.  rd_timeout_cnt guards against this: it counts idle (no
+--   handshake) cycles while in SEND and forces the machine back to IDLE if
+--   g_SEND_TIMEOUT_CYCLES elapses without a handshake, guaranteeing rd_busy_o
+--   always eventually deasserts.
+--
 -- Avalon-MM register integration:
 --   rd_start_i      maps to CONTROL.START  (write-1-to-start)
 --   rd_start_addr_i maps to READ_START_ADDRESS register
@@ -42,6 +57,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 library altera_mf;
 use altera_mf.altera_mf_components.all;
@@ -49,7 +65,12 @@ use altera_mf.altera_mf_components.all;
 entity neurax_data_interface is
     generic (
         g_DATA_WIDTH : natural := 32;
-        g_ADDR_WIDTH : natural := 15    -- 15 bits => 32768-word RAM (covers 23000 words)
+        g_ADDR_WIDTH : natural := 15;   -- 15 bits => 32768-word RAM (covers 23000 words)
+        -- Max consecutive cycles the SEND state will wait for a single
+        -- aso_ready_i handshake before giving up and forcing the FSM back to
+        -- IDLE.  Default ~ 20 ms @ 50 MHz -- far above the ~0.66 ms a full
+        -- 32768-word transfer takes at 1 word/cycle.
+        g_SEND_TIMEOUT_CYCLES : natural := 104857600
     );
     port (
         clk_i : in  std_logic;
@@ -117,6 +138,11 @@ architecture arch of neurax_data_interface is
     signal rd_ptr       : unsigned(g_ADDR_WIDTH - 1 downto 0);
     signal rd_remaining : unsigned(g_ADDR_WIDTH - 1 downto 0);
     signal rd_first     : std_logic;   -- '1' on the first word of a packet (SOP)
+
+    -- SEND watchdog: counts consecutive cycles without an aso_ready_i
+    -- handshake; cleared on every handshake and on (re)entry to SEND.
+    constant c_TIMEOUT_WIDTH : natural := integer(ceil(log2(real(g_SEND_TIMEOUT_CYCLES + 1))));
+    signal rd_timeout_cnt : unsigned(c_TIMEOUT_WIDTH - 1 downto 0);
 
 begin
 
@@ -192,6 +218,17 @@ begin
     --   Port A address collisions without any software ordering requirement.
     --   A channel-1 packet marker is treated as a reset marker for the write
     --   pointer; it is not stored into RAM as payload data.
+    --
+    --   NOTE: the SOF/wr_ptr-reset marker must NOT require asi_valid_i = '1'.
+    --   The Qsys channel adapter between DMA_neurax_read and this sink
+    --   (avalon_st_adapter_001) forces its output valid to '0' whenever the
+    --   incoming channel number is > 0, so a channel=1 SOF descriptor is always
+    --   seen here with asi_valid_i = '0'.  Gating the reset on valid as well as
+    --   channel means it can never fire in real hardware: wr_ptr never resets
+    --   between write sessions, so every write silently lands at whatever
+    --   offset wr_ptr was left at, and the readback keeps showing the PREVIOUS
+    --   run's data instead of the new pattern (reproduced across multiple runs
+    --   in error.txt: run N's readback always matches run N-1's pattern).
     -- =========================================================================
     sink_ready    <= '1' when rd_state = IDLE else '0';
     asi_ready_o   <= sink_ready;
@@ -249,12 +286,16 @@ begin
             rd_ptr         <= (others => '0');
             rd_remaining   <= (others => '0');
             rd_first       <= '1';
+            rd_timeout_cnt <= (others => '0');
 
         elsif rising_edge(clk_i) then
 
             -- ---- Sink: channel=1 resets the write pointer, channel=0 advances it
             -- on every accepted handshake.  The marker word is not stored into RAM.
-            if asi_valid_i = '1' and sink_ready = '1' and asi_channel_i = '1' then
+            -- Deliberately does NOT gate on asi_valid_i: the Qsys channel adapter
+            -- forces valid to '0' for any channel > 0, so a valid check here would
+            -- make the SOF reset unreachable (see comment above sink_ready).
+            if sink_ready = '1' and asi_channel_i = '1' then
                 wr_ptr <= (others => '0');
             elsif port_a_wren = '1' then
                 wr_ptr <= wr_ptr + 1;
@@ -284,12 +325,14 @@ begin
                     -- port_a_address = rd_ptr is already on Port A combinatorially.
                     -- The altsyncram registers that address on this rising edge;
                     -- q_a = RAM[rd_ptr] is valid from the next cycle (SEND) onward.
-                    rd_state <= SEND;
+                    rd_timeout_cnt <= (others => '0');
+                    rd_state       <= SEND;
 
                 when SEND =>
                     -- Advance only on a successful Avalon-ST handshake.
                     if aso_ready_i = '1' then
-                        rd_first <= '0';
+                        rd_first       <= '0';
+                        rd_timeout_cnt <= (others => '0');
                         if rd_remaining = 1 then
                             -- Last word accepted.  Move to FLUSH to assert rd_done_o
                             -- and cleanly deassert aso_valid_o before returning to IDLE.
@@ -301,6 +344,17 @@ begin
                             -- (combinatorial mux, priority 2), so RAM[rd_ptr+1] is
                             -- registered now and available at the next SEND cycle.
                         end if;
+                    elsif rd_timeout_cnt = to_unsigned(g_SEND_TIMEOUT_CYCLES - 1, rd_timeout_cnt'length) then
+                        -- Watchdog expired: the downstream sink has stopped
+                        -- acknowledging words (word-count desync, DMA reset out
+                        -- from under us, etc.).  Abandon this transfer and force
+                        -- the machine back to IDLE so rd_busy_o deasserts and a
+                        -- future rd_start_i can be accepted again.  No rd_done_o
+                        -- pulse is issued since the transfer did not complete.
+                        rd_timeout_cnt <= (others => '0');
+                        rd_state       <= IDLE;
+                    else
+                        rd_timeout_cnt <= rd_timeout_cnt + 1;
                     end if;
 
                 when FLUSH =>

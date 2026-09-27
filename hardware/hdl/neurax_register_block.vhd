@@ -166,8 +166,21 @@ begin
                     -- Valid address range
                     for i in 0 to (g_WIDTH/8 - 1) loop
                         if avs_byteenable_i(i) = '1' then
-                            -- Write only the enabled bytes
-                            ram(to_integer(unsigned(avs_address_i)))(i*8 + 7 downto i*8) <= avs_writedata_i(i*8 + 7 downto i*8);
+                            -- Write only the enabled bytes.  REG_DATA_SC byte 0
+                            -- holds the hardware-owned DONE/BUSY mirror bits
+                            -- (driven every cycle from neurax_data_done_i /
+                            -- neurax_data_busy_i above); exclude them here so a
+                            -- software write (e.g. writing the whole word to set
+                            -- only the START bit) cannot momentarily clobber the
+                            -- real FSM status with a stale value.
+                            for b in i*8 to i*8 + 7 loop
+                                if unsigned(avs_address_i) = c_REG_DATA_SC and
+                                   (b = c_DATA_SC_DONE or b = c_DATA_SC_BUSY) then
+                                    null;  -- preserve hardware-owned status bit
+                                else
+                                    ram(to_integer(unsigned(avs_address_i)))(b) <= avs_writedata_i(b);
+                                end if;
+                            end loop;
                         end if;
                     end loop;
                 end if;
