@@ -2,17 +2,15 @@
  * @file neurax_test.c
  * @brief Neurax BSP Integration Test
  *
- * Tests: ID check, register R/W, DMA transfers, small convolution.
+ * Tests: ID check, register R/W, small convolution.
  *
- * IMPORTANT: DMA needs physically contiguous memory. For userspace we use
- * a RESERVED memory region at the top of DDR. You can pass the address via
- * command line or it defaults to 0x3E000000 (last 32 MB of a 1 GB system).
+ * DMA transfers use the Linux msgdma character device driver (/dev/msgdma).
+ * The driver handles DMA buffer management and descriptor submission
+ * internally; userspace just calls write() to send data and read() to
+ * receive data.
  *
  * Usage:
- *   ./neurax_test [dma_buffer_phys_addr_hex]
- *
- * Example:
- *   ./neurax_test 3E000000
+ *   ./neurax_test
  */
 
 #include <stdio.h>
@@ -20,7 +18,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/mman.h>
 
 #include "neurax_bsp.h"
 
@@ -28,13 +25,8 @@
  * Test configuration
  * ========================================================================= */
 
-/* Default DMA buffer physical address - top of 1 GB DDR */
-#define DEFAULT_DMA_PHYS_BASE   0x3E000000
-#define DMA_REGION_SIZE         (4 * 1024 * 1024)   /* 4 MB for testing */
-
-/* Buffer layout within the DMA region */
-#define INPUT_OFFSET    0x00000
-#define OUTPUT_OFFSET   0x100000   /* 1 MB in */
+/* msgdma character device path */
+#define MSGDMA_DEV_PATH     "/dev/msgdma"
 
 /*
  * Hardware dimensions (must match FPGA generics g_FB_HEIGHT/g_FB_WIDTH):
@@ -134,155 +126,53 @@ static void test_enable_reset(neurax_bsp_t *bsp) {
 }
 
 /* =========================================================================
- * Test: DMA Status
+ * Test: Small Convolution (uniform input, all-ones kernel)
  * ========================================================================= */
 
-static void test_dma_status(neurax_bsp_t *bsp) {
-    printf("\n--- Test: DMA Engine Status ---\n");
-
-    neurax_dma_reset(bsp->dma_write_csr);
-    neurax_dma_reset(bsp->dma_read_csr);
-
-    uint32_t write_status = bsp->dma_write_csr[0];
-    uint32_t read_status  = bsp->dma_read_csr[0];
-
-    printf("  DMA write CSR status = 0x%08X\n", write_status);
-    printf("  DMA read  CSR status = 0x%08X\n", read_status);
-
-    check((write_status & MSGDMA_CSR_BUSY) == 0, "DMA write not busy");
-    check((read_status  & MSGDMA_CSR_BUSY) == 0, "DMA read not busy");
-    check((write_status & MSGDMA_CSR_DESC_EMPTY) != 0, "DMA write desc buffer empty");
-    check((read_status  & MSGDMA_CSR_DESC_EMPTY) != 0, "DMA read desc buffer empty");
-}
-
-/* =========================================================================
- * Test: Small Convolution (vertical edge detector on 4×4 input)
- * ========================================================================= */
-
-static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_base) {
+static void test_convolution(neurax_bsp_t *bsp) {
     printf("\n--- Test: Convolution (%dx%d input, %dx%d kernel) ---\n",
            HW_INPUT_H, HW_INPUT_W, TEST_KERNEL, TEST_KERNEL);
 
-    /*
-     * Map the DMA physical region into userspace so we can write test data.
-     * The DMA engines will access this memory via their physical address.
-     */
-    void *dma_region = mmap(NULL, DMA_REGION_SIZE,
-                            PROT_READ | PROT_WRITE, MAP_SHARED,
-                            fd_mem, dma_phys_base);
-    if (dma_region == MAP_FAILED) {
-        perror("  mmap DMA region");
-        FAIL("Could not map DMA buffer region");
+    /* Open the msgdma character device */
+    int fd_dma = open(MSGDMA_DEV_PATH, O_RDWR);
+    if (fd_dma < 0) {
+        perror("  open " MSGDMA_DEV_PATH);
+        FAIL("Could not open msgdma device");
         tests_failed++;
         return;
     }
 
-    uint32_t *input_buf  = (uint32_t *)((uint8_t *)dma_region + INPUT_OFFSET);
-    uint32_t *output_buf = (uint32_t *)((uint8_t *)dma_region + OUTPUT_OFFSET);
-
-    /* ---- Clear entire RAM image ---- */
-    memset(input_buf, 0, RAM_TOTAL_WORDS * 4);
+    /* Allocate RAM image buffer */
+    uint32_t *ram_buf = (uint32_t *)calloc(RAM_TOTAL_WORDS, sizeof(uint32_t));
+    if (!ram_buf) {
+        FAIL("Could not allocate RAM buffer");
+        tests_failed++;
+        close(fd_dma);
+        return;
+    }
 
     /* ---- Prepare input data: 100x100, all 1.0 in Q8.8 ---- */
-    /*
-     * Fill a uniform 100x100 input with value 1.0.
-     * With a 3x3 kernel of all 1.0, every output should be 9.0 (sum of 9 ones).
-     * Hardware stores one Q8.8 value per 32-bit RAM word (in lower 16 bits).
-     */
     int16_t val_one = float_to_q8_8(1.0f);
-    int total_input = HW_INPUT_H * HW_INPUT_W;  /* 10000 elements */
+    int total_input = HW_INPUT_H * HW_INPUT_W;
     for (int i = 0; i < total_input; i++) {
-        input_buf[RAM_INPUT_BASE + i] = (uint32_t)(uint16_t)val_one;
+        ram_buf[RAM_INPUT_BASE + i] = (uint32_t)(uint16_t)val_one;
     }
-    printf("  Input: %dx%d uniform 1.0 (%d elements, %d words)\n",
-           HW_INPUT_H, HW_INPUT_W, total_input, total_input);
+    printf("  Input: %dx%d uniform 1.0 (%d elements)\n",
+           HW_INPUT_H, HW_INPUT_W, total_input);
 
     /* ---- Prepare weights: 3x3, all 1.0 in Q8.8 ---- */
-    int total_weights = TEST_KERNEL * TEST_KERNEL * TEST_IN_CH * TEST_OUT_CH;  /* 9 */
+    int total_weights = TEST_KERNEL * TEST_KERNEL * TEST_IN_CH * TEST_OUT_CH;
     for (int i = 0; i < total_weights; i++) {
-        input_buf[RAM_WEIGHT_BASE + i] = (uint32_t)(uint16_t)val_one;
+        ram_buf[RAM_WEIGHT_BASE + i] = (uint32_t)(uint16_t)val_one;
     }
-    printf("  Weights: %dx%d all-ones kernel (%d elements, %d words)\n",
-           TEST_KERNEL, TEST_KERNEL, total_weights, total_weights);
+    printf("  Weights: %dx%d all-ones kernel (%d elements)\n",
+           TEST_KERNEL, TEST_KERNEL, total_weights);
 
     /* ---- Prepare bias: 0.0 ---- */
-    input_buf[RAM_BIAS_BASE] = (uint32_t)(uint16_t)float_to_q8_8(0.0f);
+    ram_buf[RAM_BIAS_BASE] = (uint32_t)(uint16_t)float_to_q8_8(0.0f);
     printf("  Bias: 0.0\n");
 
-    /* ---- Clear output readback area ---- */
-    memset(output_buf, 0xAA, RAM_TOTAL_WORDS * 4);
-
-    /* ---- DMA: send RAM image to FPGA ---- */
-    neurax_dma_reset(bsp->dma_write_csr);
-    neurax_dma_reset(bsp->dma_read_csr);
-
-    printf("  Sending %d words (%d bytes) via DMA...\n",
-           RAM_TOTAL_WORDS, RAM_TOTAL_WORDS * 4);
-
-    uint32_t input_phys  = dma_phys_base + INPUT_OFFSET;
-    uint32_t output_phys = dma_phys_base + OUTPUT_OFFSET;
-    uint32_t total_send  = RAM_TOTAL_WORDS * 4;
-    int rc;
-
-    /*
-     * Chunked DMA send (MM->ST).  Current HW has MAX_BYTE=1024
-     * (LENGTH_WIDTH=11), so each descriptor can transfer at most 1024 bytes.
-     * The descriptor FIFO is 128 deep, enough for 92000/1024 = 90 entries.
-     * Wait for FIFO space before pushing each descriptor.
-     * SOP on first descriptor, EOP on last (the kernel driver sets
-     * TR_ERR_IRQ on all; we don't need IRQ but follow the pattern).
-     */
-    {
-        uint32_t chunk = 1024;
-        uint32_t sent = 0;
-        int is_first = 1;
-        volatile uint32_t *desc = bsp->dma_write_desc;
-
-        while (sent < total_send) {
-            /* Wait if descriptor FIFO is full */
-            int fifo_wait = 10000;
-            while ((bsp->dma_write_csr[MSGDMA_CSR_STATUS / 4] & MSGDMA_CSR_DESC_FULL)
-                   && fifo_wait > 0) {
-                usleep(1);
-                fifo_wait--;
-            }
-
-            uint32_t len = (total_send - sent > chunk) ? chunk : (total_send - sent);
-            uint32_t ctrl = MSGDMA_DESC_CTL_GO;
-
-            if (is_first) {
-                ctrl |= MSGDMA_DESC_CTL_GENERATE_SOP;
-                is_first = 0;
-            }
-            if (sent + len >= total_send) {
-                ctrl |= MSGDMA_DESC_CTL_GENERATE_EOP;
-            }
-
-            desc[MSGDMA_DESC_READ_ADDR / 4]  = input_phys + sent;
-            desc[MSGDMA_DESC_WRITE_ADDR / 4] = 0;
-            desc[MSGDMA_DESC_LENGTH / 4]     = len;
-            desc[MSGDMA_DESC_CONTROL / 4]    = ctrl;  /* control write flushes descriptor */
-
-            sent += len;
-        }
-    }
-
-    rc = neurax_dma_send_wait(bsp);
-    if (rc) {
-        uint32_t dma_sts = bsp->dma_write_csr[MSGDMA_CSR_STATUS / 4];
-        uint32_t dma_fill = bsp->dma_write_csr[MSGDMA_CSR_RW_FILL / 4];
-        printf("  DMA write CSR STATUS=0x%08X  RW_FILL=0x%08X\n", dma_sts, dma_fill);
-        printf("  (busy=%d desc_empty=%d desc_full=%d stopped=%d stopped_err=%d)\n",
-               (dma_sts >> 0) & 1, (dma_sts >> 1) & 1,
-               (dma_sts >> 2) & 1, (dma_sts >> 5) & 1,
-               (dma_sts >> 7) & 1);
-        FAIL("DMA send timeout");
-        tests_failed++;
-        goto cleanup;
-    }
-    printf("  DMA send complete (%u bytes)\n", total_send);
-
-    /* ---- Configure and start convolution ---- */
+    /* ---- Configure accelerator BEFORE DMA write so ST Sink is ready ---- */
     neurax_reset(bsp);
 
     neurax_conv_config_t conv_cfg = {
@@ -295,6 +185,27 @@ static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_ba
     neurax_config_conv(bsp, &conv_cfg);
     neurax_set_batch_size(bsp, 1);
 
+    /* ---- Send RAM image to FPGA via /dev/msgdma ---- */
+    uint32_t total_bytes = RAM_TOTAL_WORDS * 4;
+    printf("  Sending %d words (%u bytes) via /dev/msgdma...\n",
+           RAM_TOTAL_WORDS, total_bytes);
+
+    ssize_t nw = write(fd_dma, ram_buf, total_bytes);
+    if (nw < 0) {
+        perror("  write /dev/msgdma");
+        FAIL("DMA write failed");
+        tests_failed++;
+        goto cleanup;
+    }
+    if ((uint32_t)nw != total_bytes) {
+        printf("  Short write: %zd / %u bytes\n", nw, total_bytes);
+        FAIL("DMA write incomplete");
+        tests_failed++;
+        goto cleanup;
+    }
+    printf("  DMA send complete (%u bytes)\n", total_bytes);
+
+    /* ---- Start convolution ---- */
     printf("  Starting convolution (expect 98x98 = 9604 outputs)...\n");
     neurax_start(bsp, OP_CONVOLUTION);
 
@@ -307,8 +218,7 @@ static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_ba
            (status_after_start >> 4) & 1);
     check((status_after_start & STATUS_BUSY) != 0, "Accelerator is busy after start");
 
-    /* Wait for completion — 98x98x9 MACs at ~4 clk/MAC = ~346K cycles = ~7ms at 50MHz */
-    /* Give generous timeout of 5 seconds */
+    /* Wait for completion */
     printf("  Waiting for done (timeout 5s)...\n");
     int timeout = 5000000;
     while (!neurax_is_done(bsp) && timeout > 0) {
@@ -331,96 +241,66 @@ static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_ba
     }
     check(neurax_is_done(bsp), "Convolution completed (done flag set)");
 
-    /* ---- DMA: read results back from FPGA ---- */
-    printf("  Reading results via DMA...\n");
+    /* ---- Read results back from FPGA via /dev/msgdma ---- */
+    printf("  Reading results via /dev/msgdma...\n");
 
-    neurax_dma_reset(bsp->dma_read_csr);
-
-    uint32_t total_recv = RAM_TOTAL_WORDS * 4;
-
-    /* Chunked DMA recv (ST->MM).  Same 1024-byte chunk limit as send. */
-    {
-        uint32_t chunk = 1024;
-        uint32_t recvd = 0;
-        volatile uint32_t *desc = bsp->dma_read_desc;
-
-        while (recvd < total_recv) {
-            int fifo_wait = 10000;
-            while ((bsp->dma_read_csr[MSGDMA_CSR_STATUS / 4] & MSGDMA_CSR_DESC_FULL)
-                   && fifo_wait > 0) {
-                usleep(1);
-                fifo_wait--;
-            }
-
-            uint32_t len = (total_recv - recvd > chunk) ? chunk : (total_recv - recvd);
-            uint32_t ctrl = MSGDMA_DESC_CTL_GO
-                          | MSGDMA_DESC_CTL_END_ON_EOP
-                          | MSGDMA_DESC_CTL_END_ON_LEN;
-
-            desc[MSGDMA_DESC_READ_ADDR / 4]  = 0;
-            desc[MSGDMA_DESC_WRITE_ADDR / 4] = output_phys + recvd;
-            desc[MSGDMA_DESC_LENGTH / 4]     = len;
-            desc[MSGDMA_DESC_CONTROL / 4]    = ctrl;
-
-            recvd += len;
-        }
-    }
-
-    rc = neurax_dma_recv_wait(bsp);
-    if (rc) {
-        uint32_t dma_sts = bsp->dma_read_csr[MSGDMA_CSR_STATUS / 4];
-        uint32_t dma_fill = bsp->dma_read_csr[MSGDMA_CSR_RW_FILL / 4];
-        printf("  DMA read CSR STATUS=0x%08X  RW_FILL=0x%08X\n", dma_sts, dma_fill);
-        printf("  (busy=%d desc_empty=%d desc_full=%d stopped=%d stopped_err=%d)\n",
-               (dma_sts >> 0) & 1, (dma_sts >> 1) & 1,
-               (dma_sts >> 2) & 1, (dma_sts >> 5) & 1,
-               (dma_sts >> 7) & 1);
-        FAIL("DMA recv timeout");
+    uint32_t *output_buf = (uint32_t *)calloc(RAM_TOTAL_WORDS, sizeof(uint32_t));
+    if (!output_buf) {
+        FAIL("Could not allocate output buffer");
         tests_failed++;
         goto cleanup;
     }
-    printf("  DMA recv complete (%u bytes)\n", total_recv);
+
+    ssize_t nr = read(fd_dma, output_buf, total_bytes);
+    if (nr < 0) {
+        perror("  read /dev/msgdma");
+        FAIL("DMA read failed");
+        tests_failed++;
+        free(output_buf);
+        goto cleanup;
+    }
+    if ((uint32_t)nr != total_bytes) {
+        printf("  Short read: %zd / %u bytes\n", nr, total_bytes);
+        FAIL("DMA read incomplete");
+        tests_failed++;
+        free(output_buf);
+        goto cleanup;
+    }
+    printf("  DMA recv complete (%u bytes)\n", total_bytes);
 
     /* ---- Raw memory dump for debugging ---- */
     printf("\n  === RAW MEMORY DUMP ===\n");
-    
-    /* Check first few input words (should be 0x0100 = 1.0 in Q8.8) */
+
     printf("  Input area [0..7]:");
     for (int i = 0; i < 8; i++)
         printf(" %08X", output_buf[i]);
     printf("\n");
-    
-    /* Check weight area */
+
     printf("  Weight area [10000..10011]:");
     for (int i = 10000; i < 10012; i++)
         printf(" %08X", output_buf[i]);
     printf("\n");
-    
-    /* Check bias area */
+
     printf("  Bias area [13000..13003]:");
     for (int i = 13000; i < 13004; i++)
         printf(" %08X", output_buf[i]);
     printf("\n");
 
-    /* Check output area at new base (13016) */
     printf("  Output area [13016..13031] (first 16 outputs):\n    ");
     for (int i = 13016; i < 13032; i++)
         printf(" %08X", output_buf[i]);
     printf("\n");
-    
-    /* Check output at middle */
+
     printf("  Output area [13016+990..+1005] (row 10, col 10 region):\n    ");
     for (int i = 13016+990; i < 13016+1006; i++)
         printf(" %08X", output_buf[i]);
     printf("\n");
 
-    /* Check output at end */
     printf("  Output area [13016+9590..+9605] (last outputs):\n    ");
     for (int i = 13016+9590; i < 13016+9606; i++)
         printf(" %08X", output_buf[i]);
     printf("\n");
 
-    /* Also check OLD output base (8016) in case hardware still writes there */
     printf("  OLD output area [8016..8031]:");
     for (int i = 8016; i < 8032; i++)
         printf(" %08X", output_buf[i]);
@@ -438,7 +318,6 @@ static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_ba
     }
     printf("  Non-zero outputs: %d / 9604 (first=%d, last=%d)\n", nonzero, first_nz, last_nz);
 
-    /* Show first 10 non-zero */
     if (nonzero > 0) {
         printf("  First non-zero values:");
         int shown = 0;
@@ -453,19 +332,9 @@ static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_ba
     printf("  === END DUMP ===\n\n");
 
     /* ---- Verify a few output values ---- */
-    /*
-     * With uniform 1.0 input and all-ones 3x3 kernel:
-     *   Interior output elements = sum of 9 ones = 9.0
-     * In Q8.8: 9.0 = 0x0900
-     * Expected at RAM word 8016 onwards.
-     *
-     * Check a few interior positions (away from edges to avoid any
-     * potential boundary effects).
-     */
     float expected_val = 9.0f;
     printf("  Checking output values (expected %.1f for interior positions):\n", expected_val);
 
-    /* Check output positions [10][10], [50][50], [90][90] — all interior */
     int check_positions[][2] = { {10, 10}, {50, 50}, {90, 90}, {1, 1}, {97, 97} };
     int num_checks = sizeof(check_positions) / sizeof(check_positions[0]);
     int output_ok = 1;
@@ -473,9 +342,8 @@ static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_ba
     for (int c = 0; c < num_checks; c++) {
         int oh = check_positions[c][0];
         int ow = check_positions[c][1];
-        int out_idx = oh * TEST_OUTPUT_W + ow;  /* Linear index */
+        int out_idx = oh * TEST_OUTPUT_W + ow;
 
-        /* Hardware writes one Q8.8 value per 32-bit RAM word (low 16 bits) */
         uint32_t word = output_buf[RAM_OUTPUT_BASE + out_idx];
         int16_t val = (int16_t)(word & 0xFFFF);
 
@@ -489,8 +357,11 @@ static void test_convolution(neurax_bsp_t *bsp, int fd_mem, uint32_t dma_phys_ba
 
     check(output_ok, "Convolution output values correct");
 
+    free(output_buf);
+
 cleanup:
-    munmap(dma_region, DMA_REGION_SIZE);
+    free(ram_buf);
+    close(fd_dma);
 }
 
 /* =========================================================================
@@ -515,16 +386,12 @@ static void dump_registers(neurax_bsp_t *bsp) {
  * ========================================================================= */
 
 int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
+
     printf("========================================\n");
     printf("  Neurax BSP Integration Test\n");
     printf("========================================\n");
-
-    /* Parse optional DMA buffer address */
-    uint32_t dma_phys_base = DEFAULT_DMA_PHYS_BASE;
-    if (argc > 1) {
-        dma_phys_base = (uint32_t)strtoul(argv[1], NULL, 16);
-    }
-    printf("DMA buffer physical base: 0x%08X\n", dma_phys_base);
 
     /* Initialize BSP */
     neurax_bsp_t bsp;
@@ -538,9 +405,8 @@ int main(int argc, char *argv[]) {
     test_magic_id(&bsp);
     test_register_rw(&bsp);
     test_enable_reset(&bsp);
-    test_dma_status(&bsp);
     dump_registers(&bsp);
-    test_convolution(&bsp, bsp.fd_mem, dma_phys_base);
+    test_convolution(&bsp);
 
     /* Summary */
     printf("\n========================================\n");

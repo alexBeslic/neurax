@@ -11,7 +11,8 @@ use work.accel_types.all;
 entity neurax_register_block is
     generic (
         g_WIDTH      : natural := 32;
-        g_ADDR_WIDTH : natural := 4
+        g_ADDR_WIDTH : natural := 4;
+        g_DATA_ADDR_WIDTH : natural := 15
     );
 
     port (
@@ -67,6 +68,12 @@ entity neurax_register_block is
         neurax_operation_done_i : in  std_logic;
         neurax_operation_busy_i : in  std_logic;
         neurax_current_operation_i : in  std_logic_vector(1 downto 0);
+
+        neurax_data_start_o          : out std_logic;
+        neurax_data_start_addr_o     : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+        neurax_data_length_o         : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+        neurax_data_busy_i           : in std_logic;
+        neurax_data_done_i           : in std_logic;
         -- Debug/monitoring
         neurax_debug_cycle_i  : in std_logic_vector(g_WIDTH-1 downto 0);
         neurax_debug_status_i       : in std_logic_vector(7 downto 0)
@@ -137,6 +144,16 @@ begin
             ram(to_integer(c_REG_STATUS))(c_STATUS_OUTPUT_VALID) <= neurax_output_valid_i;
             ram(to_integer(c_REG_STATUS))(c_STATUS_INPUT_READY) <= neurax_input_ready_i;
 
+            ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_DONE) <= neurax_data_done_i;
+            ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_BUSY) <= neurax_data_busy_i;
+
+            -- Self-clear the START bit once the data FSM has accepted the command.
+            -- This makes CONTROL.START behave like a one-cycle pulse instead of a
+            -- software-latched level that can retrigger the read FSM indefinitely.
+            if neurax_data_busy_i = '1' then
+                ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_START) <= '0';
+            end if;
+
             ram(to_integer(c_REG_DEBUG_CYCLES)) <= neurax_debug_cycle_i;
             ram(to_integer(c_REG_DEBUG_STATUS))(t_DEBUG_STATUS) <= neurax_debug_status_i;
 
@@ -149,8 +166,21 @@ begin
                     -- Valid address range
                     for i in 0 to (g_WIDTH/8 - 1) loop
                         if avs_byteenable_i(i) = '1' then
-                            -- Write only the enabled bytes
-                            ram(to_integer(unsigned(avs_address_i)))(i*8 + 7 downto i*8) <= avs_writedata_i(i*8 + 7 downto i*8);
+                            -- Write only the enabled bytes.  REG_DATA_SC byte 0
+                            -- holds the hardware-owned DONE/BUSY mirror bits
+                            -- (driven every cycle from neurax_data_done_i /
+                            -- neurax_data_busy_i above); exclude them here so a
+                            -- software write (e.g. writing the whole word to set
+                            -- only the START bit) cannot momentarily clobber the
+                            -- real FSM status with a stale value.
+                            for b in i*8 to i*8 + 7 loop
+                                if unsigned(avs_address_i) = c_REG_DATA_SC and
+                                   (b = c_DATA_SC_DONE or b = c_DATA_SC_BUSY) then
+                                    null;  -- preserve hardware-owned status bit
+                                else
+                                    ram(to_integer(unsigned(avs_address_i)))(b) <= avs_writedata_i(b);
+                                end if;
+                            end loop;
                         end if;
                     end loop;
                 end if;
@@ -219,5 +249,10 @@ begin
 
     -- Batch size
     neurax_batch_size_o <= limit_range(ram(to_integer(c_REG_BATCH_SIZE))(t_BATCH_SIZE), 1, MAX_BATCH_SIZE);
+
+    -- Data interface
+    neurax_data_start_o <= ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_START);
+    neurax_data_start_addr_o <= ram(to_integer(c_REG_DATA_READ))(t_DATA_READ_START_ADDR);
+    neurax_data_length_o <= ram(to_integer(c_REG_DATA_READ))(t_DATA_READ_LENGTH);
 
 end arch;

@@ -3,7 +3,7 @@
 <name>soc_system</name>
 <peripherals>
 <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_stm</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_stm</name>
    <version>0.0</version>
    <description>Address space allocated to the STM. For detailed information about the use of this address space, [url=http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0444b/index.html]click here[/url] to access the ARM documentation for the CoreSight STM-101.</description>
    <baseAddress>0xfc000000</baseAddress>
@@ -33,7 +33,7 @@
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_dap</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_dap</name>
    <version>0.0</version>
    <description>Address space allocated to the DAP. For detailed information about the use of this address space, [url=http://infocenter.arm.com/help/topic/com.arm.doc.ddi0314h/index.html]click here[/url] to access the ARM documentation for the DAP.</description>
    <baseAddress>0xff000000</baseAddress>
@@ -63,13 +63,13 @@
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_lwfpgaslaves</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_lwfpgaslaves</name>
    <version>0.0</version>
    <baseAddress>0xff200000</baseAddress>
    <access>read-write</access>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_lwhps2fpgaregs</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_lwhps2fpgaregs</name>
    <version>0.0</version>
    <description>Registers in the LWHPS2FPGA AXI Bridge Module.</description>
    <baseAddress>0xff400000</baseAddress>
@@ -585,7 +585,7 @@
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_hps2fpgaregs</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_hps2fpgaregs</name>
    <version>0.0</version>
    <description>Registers in the HPS2FPGA AXI Bridge Module.</description>
    <baseAddress>0xff500000</baseAddress>
@@ -916,7 +916,7 @@
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_fpga2hpsregs</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_fpga2hpsregs</name>
    <version>0.0</version>
    <description>Registers in the FPGA2HPS AXI Bridge Module.</description>
    <baseAddress>0xff600000</baseAddress>
@@ -1247,7 +1247,7 @@
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_emac0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_emac0</name>
    <version>0.0</version>
    <description>Registers in the EMAC module.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;emac0 == 1)</disableCondition><baseAddress>0xff700000</baseAddress>
@@ -35768,7 +35768,7 @@ This register provides the active status of the AXI interface's read and write c
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_emac1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_emac1</name>
    <version>0.0</version>
    <description>Registers in the EMAC module.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;emac1 == 1)</disableCondition><baseAddress>0xff702000</baseAddress>
@@ -70289,7 +70289,7 @@ This register provides the active status of the AXI interface's read and write c
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_sdmmc</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_sdmmc</name>
    <version>0.0</version>
    <description>Registers in the SD/MMC module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;sdmmc == 1)</disableCondition><baseAddress>0xff704000</baseAddress>
@@ -73513,7 +73513,7 @@ IDINTEN[5] - Card Error Summary Interrupt</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_qspiregs</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_qspiregs</name>
    <version>0.0</version>
    <description>Registers in the QSPI Flash Controller module accessible via its APB slave</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;qspi == 1)</disableCondition><baseAddress>0xff705000</baseAddress>
@@ -75497,7 +75497,7 @@ IDINTEN[5] - Card Error Summary Interrupt</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_fpgamgrregs</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_fpgamgrregs</name>
    <version>0.0</version>
    <description>Registers in the FPGA Manager module accessible via its APB slave</description>
    <baseAddress>0xff706000</baseAddress>
@@ -78022,7 +78022,7 @@ Software can write CNT at any time.</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_acpidmap</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_acpidmap</name>
    <version>0.0</version>
    <description>Registers in the ACP ID Mapper module</description>
    <baseAddress>0xff707000</baseAddress>
@@ -78916,7 +78916,7 @@ Software can write CNT at any time.</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_gpio0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_gpio0</name>
    <version>0.0</version>
    <description>Registers in the GPIO module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;gpio0 == 1)</disableCondition><baseAddress>0xff708000</baseAddress>
@@ -79558,7 +79558,7 @@ Check the GPIO chapter in the handbook for details on how GPIO2 is implemented.<
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_gpio1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_gpio1</name>
    <version>0.0</version>
    <description>Registers in the GPIO module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;gpio1 == 1)</disableCondition><baseAddress>0xff709000</baseAddress>
@@ -80200,7 +80200,7 @@ Check the GPIO chapter in the handbook for details on how GPIO2 is implemented.<
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_gpio2</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_gpio2</name>
    <version>0.0</version>
    <description>Registers in the GPIO module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;gpio2 == 1)</disableCondition><baseAddress>0xff70a000</baseAddress>
@@ -80842,7 +80842,7 @@ Check the GPIO chapter in the handbook for details on how GPIO2 is implemented.<
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_l3regs</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_l3regs</name>
    <version>0.0</version>
    <description>Registers to control L3 interconnect settings</description>
    <baseAddress>0xff800000</baseAddress>
@@ -84655,19 +84655,19 @@ Check the GPIO chapter in the handbook for details on how GPIO2 is implemented.<
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_nanddata</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_nanddata</name>
    <version>0.0</version>
    <baseAddress>0xff900000</baseAddress>
    <access>read-write</access>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_qspidata</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_qspidata</name>
    <version>0.0</version>
    <baseAddress>0xffa00000</baseAddress>
    <access>read-write</access>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_usb0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_usb0</name>
    <version>0.0</version>
    <description>Registers in the USB OTG Controller Module.
 Only the Core Global, Power and Clock Gating, Data FIFO Access, and Host Port registers can be accessedin both Host and Device modes. When the USB OTG Controller is operating in one mode, either Device or Host, the application must not access registers from the other mode. If an illegal access occurs, a Mode Mismatch interrupt is generated and reflected in the Core Interrupt register (GINTSTS.ModeMis).
@@ -123881,7 +123881,7 @@ When Scatter/Gather DMA mode is enabled, this field indicates the base pointer f
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_usb1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_usb1</name>
    <version>0.0</version>
    <description>Registers in the USB OTG Controller Module.
 Only the Core Global, Power and Clock Gating, Data FIFO Access, and Host Port registers can be accessedin both Host and Device modes. When the USB OTG Controller is operating in one mode, either Device or Host, the application must not access registers from the other mode. If an illegal access occurs, a Mode Mismatch interrupt is generated and reflected in the Core Interrupt register (GINTSTS.ModeMis).
@@ -163095,7 +163095,7 @@ When Scatter/Gather DMA mode is enabled, this field indicates the base pointer f
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_nandregs</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_nandregs</name>
    <version>0.0</version>
    <description>Registers in the NAND Flash Controller module accessible via its register AXI slave</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;nand == 1)</disableCondition><baseAddress>0xffb80000</baseAddress>
@@ -165823,7 +165823,7 @@ When Scatter/Gather DMA mode is enabled, this field indicates the base pointer f
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_fpgamgrdata</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_fpgamgrdata</name>
    <version>0.0</version>
    <description>Registers in the FPGA Manager module accessible via its AXI slave</description>
    <baseAddress>0xffb90000</baseAddress>
@@ -165859,7 +165859,7 @@ The FPGA Manager waits to transmit the data to the CB until the FPGA is able to 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_can0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_can0</name>
    <version>0.0</version>
    <description>Registers in the CAN Controller module
 NOTE: These descriptions apply only to SoC devices that support the CAN module.</description>
@@ -178352,7 +178352,7 @@ ID28 - ID18 11-bit Identifier (Standard Frame).</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_can1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_can1</name>
    <version>0.0</version>
    <description>Registers in the CAN Controller module
 NOTE: These descriptions apply only to SoC devices that support the CAN module.</description>
@@ -190845,7 +190845,7 @@ ID28 - ID18 11-bit Identifier (Standard Frame).</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_uart0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_uart0</name>
    <version>0.0</version>
    <description>Registers in the UART module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;uart0 == 1)</disableCondition><baseAddress>0xffc02000</baseAddress>
@@ -192515,7 +192515,7 @@ Note, if FIFO's are not enabled, the setting of the halt Tx register will have n
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_uart1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_uart1</name>
    <version>0.0</version>
    <description>Registers in the UART module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;uart1 == 1)</disableCondition><baseAddress>0xffc03000</baseAddress>
@@ -194185,7 +194185,7 @@ Note, if FIFO's are not enabled, the setting of the halt Tx register will have n
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_i2c0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_i2c0</name>
    <version>0.0</version>
    <description>Registers in the I2C module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;i2c0 == 1)</disableCondition><baseAddress>0xffc04000</baseAddress>
@@ -195838,7 +195838,7 @@ Note: When ic_enable has been written with '0' a delay occurs for bit 0 to be re
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_i2c1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_i2c1</name>
    <version>0.0</version>
    <description>Registers in the I2C module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;i2c1 == 1)</disableCondition><baseAddress>0xffc05000</baseAddress>
@@ -197491,7 +197491,7 @@ Note: When ic_enable has been written with '0' a delay occurs for bit 0 to be re
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_i2c2</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_i2c2</name>
    <version>0.0</version>
    <description>Registers in the I2C module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;i2c2 == 1)</disableCondition><baseAddress>0xffc06000</baseAddress>
@@ -199144,7 +199144,7 @@ Note: When ic_enable has been written with '0' a delay occurs for bit 0 to be re
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_i2c3</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_i2c3</name>
    <version>0.0</version>
    <description>Registers in the I2C module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;i2c3 == 1)</disableCondition><baseAddress>0xffc07000</baseAddress>
@@ -200797,7 +200797,7 @@ Note: When ic_enable has been written with '0' a delay occurs for bit 0 to be re
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_sptimer0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_sptimer0</name>
    <version>0.0</version>
    <description>Registers in the timer module. The timer IP core supports multiple timers but it is configured for just one timer. The term Timer1 refers to this one timer in the IP core and not the module instance.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;sptimer0 == 1)</disableCondition><baseAddress>0xffc08000</baseAddress>
@@ -201053,7 +201053,7 @@ NOTE: You must set the timer1loadcount register to all ones before enabling the 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_sptimer1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_sptimer1</name>
    <version>0.0</version>
    <description>Registers in the timer module. The timer IP core supports multiple timers but it is configured for just one timer. The term Timer1 refers to this one timer in the IP core and not the module instance.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;sptimer1 == 1)</disableCondition><baseAddress>0xffc09000</baseAddress>
@@ -201309,7 +201309,7 @@ NOTE: You must set the timer1loadcount register to all ones before enabling the 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_sdr</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_sdr</name>
    <version>0.0</version>
    <description>Address map for the SDRAM Interface registers</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;sdr == 1)</disableCondition><baseAddress>0xffc20000</baseAddress>
@@ -202365,7 +202365,7 @@ A value of 2'b10 or 2'b11 will make the rule apply to secure and non-secure tran
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_osc1timer0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_osc1timer0</name>
    <version>0.0</version>
    <description>Registers in the timer module. The timer IP core supports multiple timers but it is configured for just one timer. The term Timer1 refers to this one timer in the IP core and not the module instance.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;osc1timer0 == 1)</disableCondition><baseAddress>0xffd00000</baseAddress>
@@ -202621,7 +202621,7 @@ NOTE: You must set the timer1loadcount register to all ones before enabling the 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_osc1timer1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_osc1timer1</name>
    <version>0.0</version>
    <description>Registers in the timer module. The timer IP core supports multiple timers but it is configured for just one timer. The term Timer1 refers to this one timer in the IP core and not the module instance.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;osc1timer1 == 1)</disableCondition><baseAddress>0xffd01000</baseAddress>
@@ -202877,7 +202877,7 @@ NOTE: You must set the timer1loadcount register to all ones before enabling the 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_l4wd0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_l4wd0</name>
    <version>0.0</version>
    <description>Registers in the L4 Watchdog module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;l4wd0 == 1)</disableCondition><baseAddress>0xffd02000</baseAddress>
@@ -203481,7 +203481,7 @@ t = 2**(16 + top_init)</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_l4wd1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_l4wd1</name>
    <version>0.0</version>
    <description>Registers in the L4 Watchdog module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;l4wd1 == 1)</disableCondition><baseAddress>0xffd03000</baseAddress>
@@ -204085,7 +204085,7 @@ t = 2**(16 + top_init)</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_clkmgr</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_clkmgr</name>
    <version>0.0</version>
    <description>Registers in the Clock Manager module</description>
    <baseAddress>0xffd04000</baseAddress>
@@ -206100,7 +206100,7 @@ The reset value of this bit is applied on a cold reset; warm reset has no affect
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_rstmgr</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_rstmgr</name>
    <version>0.0</version>
    <description>Registers in the Reset Manager module</description>
    <baseAddress>0xffd05000</baseAddress>
@@ -206997,7 +206997,7 @@ All fields are only reset by a cold reset</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_sysmgr</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_sysmgr</name>
    <version>0.0</version>
    <description>Registers in the System Manager module</description>
    <baseAddress>0xffd08000</baseAddress>
@@ -214810,7 +214810,7 @@ NOTE: These registers should not be modified after IO configuration.There is no 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_dmanonsecure</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_dmanonsecure</name>
    <version>0.0</version>
    <description>Address space allocated to the nonsecure DMA. For detailed information about the use of this address space, [url=http://infocenter.arm.com/help/topic/com.arm.doc.ddi0424b/index.html]click here[/url] to access the ARM documentation for the DMA-330.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;dma == 1)</disableCondition><baseAddress>0xffe00000</baseAddress>
@@ -214840,7 +214840,7 @@ NOTE: These registers should not be modified after IO configuration.There is no 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_dmasecure</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_dmasecure</name>
    <version>0.0</version>
    <description>Address space allocated to the secure DMA. For detailed information about the use of this address space, [url=http://infocenter.arm.com/help/topic/com.arm.doc.ddi0424b/index.html]click here[/url] to access the ARM documentation for the DMA-330.</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;dma == 1)</disableCondition><baseAddress>0xffe01000</baseAddress>
@@ -214870,7 +214870,7 @@ NOTE: These registers should not be modified after IO configuration.There is no 
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_spis0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_spis0</name>
    <version>0.0</version>
    <description>Registers in the SPI Slave module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;spis0 == 1)</disableCondition><baseAddress>0xffe02000</baseAddress>
@@ -215834,7 +215834,7 @@ Write = Transmit FIFO buffer</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_spis1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_spis1</name>
    <version>0.0</version>
    <description>Registers in the SPI Slave module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;spis1 == 1)</disableCondition><baseAddress>0xffe03000</baseAddress>
@@ -216798,7 +216798,7 @@ Write = Transmit FIFO buffer</description>
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_spim0</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_spim0</name>
    <version>0.0</version>
    <description>Registers in the SPI Master module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;spim0 == 1)</disableCondition><baseAddress>0xfff00000</baseAddress>
@@ -217861,7 +217861,7 @@ Note; If this register is programmed with a value that exceeds 64, a 0 delay wil
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_spim1</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_spim1</name>
    <version>0.0</version>
    <description>Registers in the SPI Master module</description>
    <disableCondition>(Peripherals-&gt;rstmgr-&gt;rstmgr_permodrst-&gt;spim1 == 1)</disableCondition><baseAddress>0xfff01000</baseAddress>
@@ -218924,7 +218924,7 @@ Note; If this register is programmed with a value that exceeds 64, a 0 delay wil
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_scanmgr</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_scanmgr</name>
    <version>0.0</version>
    <description>Registers in the Scan Manager module.
 
@@ -219222,13 +219222,13 @@ The name of this register in ARM documentation is BWFIFO4 for writes and BRFIFO4
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_rom</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_rom</name>
    <version>0.0</version>
    <baseAddress>0xfffd0000</baseAddress>
    <access>read-write</access>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_mpuscu</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_mpuscu</name>
    <version>0.0</version>
    <description>Address space allocated to the MPU SCU. For detailed information about the use of this address space, [url=http://infocenter.arm.com/help/topic/com.arm.doc.ddi0407f/index.html]click here[/url] to access the ARM documentation for the Cortex-A9 MPCore.</description>
    <baseAddress>0xfffec000</baseAddress>
@@ -219258,7 +219258,7 @@ The name of this register in ARM documentation is BWFIFO4 for writes and BRFIFO4
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_mpul2</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_mpul2</name>
    <version>0.0</version>
    <description>Address space allocated to the MPU L2 cache controller. For detailed information about the use of this address space, [url=http://infocenter.arm.com/help/topic/com.arm.doc.ddi0246e/index.html]click here[/url] to access the ARM documentation for the L2C-301.</description>
    <baseAddress>0xfffef000</baseAddress>
@@ -219288,7 +219288,7 @@ The name of this register in ARM documentation is BWFIFO4 for writes and BRFIFO4
    </registers>
   </peripheral>
   <peripheral>
-   <name>soc_system_hps_0_h2f_axi_master_ocram</name>
+   <name>soc_system_hps_0_h2f_lw_axi_master_ocram</name>
    <version>0.0</version>
    <baseAddress>0xffff0000</baseAddress>
    <access>read-write</access>

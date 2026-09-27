@@ -161,7 +161,8 @@ architecture behavioral of FPGA_accelerator is
             output_valid   : out std_logic;
             output_data    : out std_logic_vector(DATA_WIDTH-1 downto 0);
             output_addr    : out std_logic_vector(15 downto 0);
-            output_write_en: out std_logic
+            output_write_en: out std_logic;
+            kernel_done_o  : out std_logic
         );
     end component;
 
@@ -292,6 +293,7 @@ architecture behavioral of FPGA_accelerator is
     signal conv_read_phase_d1 : conv_read_phase_t;
     signal conv_data_ready    : std_logic;  -- pulses when all reads captured
     signal conv_need_bias     : std_logic;
+    signal conv_kernel_done   : std_logic;  -- from convolution_block: last tap of window
 
     -- Registered RAM read data per conv channel
     signal conv_input_data_reg  : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -354,7 +356,8 @@ begin
             output_valid   => conv_output_valid,
             output_data    => conv_output_data,
             output_addr    => conv_output_addr,
-            output_write_en=> conv_output_write_en
+            output_write_en=> conv_output_write_en,
+            kernel_done_o  => conv_kernel_done
         );
 
     pool_inst: pooling_block
@@ -492,8 +495,25 @@ begin
             if current_state = CONV_OP then
                 case conv_read_phase is
                     when PHASE_DONE =>
-                        -- Start a new read cycle when the conv block is requesting
-                        if conv_input_read_en = '1' then
+                        -- Start a new read cycle when the conv block is requesting,
+                        -- but NOT if the kernel window is already complete
+                        -- (conv_kernel_done='1'). input_read_en/weight_read_en are
+                        -- LEVEL signals held throughout CONV_COMPUTE, so without this
+                        -- guard the sequencer dispatches one extra "phantom" fetch
+                        -- right after the window's final tap, reusing stale
+                        -- (not-yet-reset) addresses. That phantom fetch's RAM read
+                        -- collides with the WRITE_OUTPUT write on the shared single
+                        -- Avalon-MM address bus, corrupting the next position's
+                        -- first tap with the echoed write data.
+                        --
+                        -- This is NOT off-by-one: conv_kernel_done is combinational
+                        -- from registered kh/kw/in_ch counters, which only reach
+                        -- their max value once the window's final tap has been
+                        -- ACCEPTED. At the dispatch decision for that final tap
+                        -- itself, the counters (and hence conv_kernel_done) still
+                        -- read '0', so the legitimate fetch is not blocked -- only
+                        -- the following (phantom) dispatch decision sees '1'.
+                        if conv_input_read_en = '1' and conv_kernel_done = '0' then
                             conv_read_phase <= PHASE_INPUT;
                         end if;
                     when PHASE_INPUT =>

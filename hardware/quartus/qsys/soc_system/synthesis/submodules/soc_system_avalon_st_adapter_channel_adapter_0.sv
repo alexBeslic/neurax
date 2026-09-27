@@ -45,9 +45,9 @@
 //   data_width:          32
 //   error_width:         1
 //   use_ready:           true
-//   use_packets:         false
-//   use_empty:           0
-//   empty_width:         0
+//   use_packets:         true
+//   use_empty:           1
+//   empty_width:         2
 
 // ------------------------------------------
 
@@ -60,11 +60,17 @@ module soc_system_avalon_st_adapter_channel_adapter_0
  input     [32-1: 0] in_data,
  input              in_channel,
  input              in_error,
+ input              in_startofpacket,
+ input              in_endofpacket,
+ input [2-1: 0] in_empty,
  // Interface: out
  input               out_ready,
  output reg          out_valid,
  output reg [32-1: 0] out_data,
  output reg          out_error,
+ output reg          out_startofpacket,
+ output reg          out_endofpacket,
+ output reg [2-1: 0] out_empty,
   // Interface: clk
  input              clk,
  // Interface: reset
@@ -83,6 +89,9 @@ module soc_system_avalon_st_adapter_channel_adapter_0
       out_valid = in_valid;
       out_data = in_data;
       out_error = in_error;
+      out_startofpacket = in_startofpacket;
+      out_endofpacket = in_endofpacket;
+      out_empty = in_empty;
 
       out_channel = in_channel; //TODO delete this to avoid Quartus warnings
 

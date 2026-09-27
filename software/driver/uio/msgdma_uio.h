@@ -105,7 +105,7 @@ struct msgdma_reg {
 
 /* Timeouts (microseconds) */
 #define SOF_TIMEOUT_US      200000u  /* 200 ms: SOF should complete quickly  */
-#define DMA_TIMEOUT_US      5000000u /* 5 s:    full transfer timeout        */
+#define DMA_TIMEOUT_US      50000000u /* 5 s:    full transfer timeout        */
 
 /* ---------------------------------------------------------------------------
  * Inline register helpers

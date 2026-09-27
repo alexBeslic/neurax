@@ -457,12 +457,12 @@
 									<content delegate="SplitDockStationFactory">
 										<fullscreen-action>false</fullscreen-action>
 										<node nodeId="1383784523349" orientation="HORIZONTAL" divider="0.1948176583493282">
-											<leaf id="0" nodeId="1383784523347">
+											<leaf id="1" nodeId="1383784523347">
 												<placeholders>
 													<placeholder>dock.single.Hierarchy</placeholder>
 												</placeholders>
 											</leaf>
-											<leaf id="1" nodeId="1383784501074">
+											<leaf id="0" nodeId="1383784501074">
 												<placeholders>
 													<placeholder>dock.single.System\ Contents</placeholder>
 													<placeholder>dock.single.Memory\-Mapped\ Interconnect</placeholder>
@@ -489,16 +489,6 @@
 								</layout>
 							</adjacent>
 							<children ignore="false">
-								<child>
-									<layout factory="predefined" placeholder="dock.single.Hierarchy">
-										<replacement id="dockablesingle Hierarchy"/>
-										<delegate id="delegate_ccontrol backup factory id">
-											<id>Hierarchy</id>
-											<area/>
-										</delegate>
-									</layout>
-									<children ignore="false"/>
-								</child>
 								<child>
 									<layout factory="delegate_StackDockStationFactory">
 										<selected>0</selected>
@@ -586,6 +576,16 @@
 											<children ignore="false"/>
 										</child>
 									</children>
+								</child>
+								<child>
+									<layout factory="predefined" placeholder="dock.single.Hierarchy">
+										<replacement id="dockablesingle Hierarchy"/>
+										<delegate id="delegate_ccontrol backup factory id">
+											<id>Hierarchy</id>
+											<area/>
+										</delegate>
+									</layout>
+									<children ignore="false"/>
 								</child>
 							</children>
 						</root>

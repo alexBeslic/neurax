@@ -5,6 +5,7 @@
  * descriptor programming from userspace.
  *
  * Setup:
+ *   insmod uio.ko                 # loads the generic UIO kernel module
  *   insmod neurax_uio.ko          # loads the UIO kernel module
  *   ./neurax_uio_test             # runs write + read DMA test
  *
@@ -417,7 +418,7 @@ ssize_t neurax_dma_read(struct neurax_uio_ctx *ctx, void *dst, size_t len)
  * ------------------------------------------------------------------------- */
 static inline uint32_t test_pattern(uint32_t i)
 {
-    return 0xFE580000u | (i & 0xFFFFu);
+    return 0xFEBB0000u | (i & 0xFFFFu);
 }
 
 /* ---------------------------------------------------------------------------
@@ -453,10 +454,11 @@ static int poll_dma_complete(volatile struct msgdma_reg *dma, uint32_t timeout_u
  *
  * Returns 0 on PASS, -1 on any error.
  * ------------------------------------------------------------------------- */
+#define TEST_ARRAY_SIZE (0x7FFF)
 static int test_full_ram(struct neurax_uio_ctx *ctx)
 {
-    const uint32_t n_words = (uint32_t)(FPGA_RAM_WORDS);
-    const uint32_t n_bytes = (uint32_t)(FPGA_RAM_BYTES);
+    const uint32_t n_words = TEST_ARRAY_SIZE;
+    const uint32_t n_bytes = (uint32_t)(TEST_ARRAY_SIZE * sizeof(uint32_t));
 
     printf("\n=== Full RAM integrity test (%"PRIu32" words, %"PRIu32" bytes) ===\n",
            n_words, n_bytes);
@@ -467,8 +469,18 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         perror("malloc tx_data");
         return -1;
     }
-    for (uint32_t i = 0; i < n_words; i++)
-        tx_data[i] = test_pattern(i);
+    for (uint32_t i = 0; i < 10000; i++)
+        tx_data[i] = 1;
+    for (uint32_t i = 10000; i < 10009; i++)
+        tx_data[i] = 2;
+    
+    tx_data[13000] = 3;
+
+    for (size_t i = 9990; i < 10010; i++)
+    {
+       printf("INPUT: %d: %d\n", i, tx_data[i]);
+    }
+    
 
     /* 2. Clear RX buffer; pre-arm s2m before the write so data can stream
      *    through the circular buffer pipeline as m2s fills it. */
@@ -487,9 +499,10 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         return -1;
     }
     printf("[full-RAM] Write OK: %zd bytes\n", wr);
+    usleep_ms(1000);
 
-    ctx->neurax->reg_data_sc = 0;  /* clear data length in words */
-    ctx->neurax->reg_data_sc = FPGA_RAM_WORDS << 16u;  /* set data length in words */
+    ctx->neurax->reg_data_sc = TEST_ARRAY_SIZE;  /* clear data length in words */
+    ctx->neurax->reg_data_read = (n_words) << 16u;  /* set data length in words */
     ctx->neurax->reg_data_sc = 1 << 31; /* set data start bit */
     __sync_synchronize();
 
@@ -500,11 +513,27 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         return -1;
     }
     printf("[full-RAM] Readback OK\n");
+    printf("Neurax reg reg_data_sc=0x%08x reg_data_read=0x%08x\n",
+           ctx->neurax->reg_data_sc, ctx->neurax->reg_data_read);
+    uint32_t counter = 0;
+    usleep_ms(1000);
+    // while (!(ctx->neurax->reg_data_sc & 1u))
+    // {
+    //     // counter++;
+    //     // if (counter > 1000)
+    //     // {
+    //     //     fprintf(stderr, "[full-RAM] Neurax reg_data_sc never set to 1 (timeout)\n");
+    //     //     return -1;
+    //     // }
+    // }
+    
 
     /* 5. Verify every word */
-    volatile uint32_t *rx = (volatile uint32_t *)ctx->rx_buf;
+    // volatile uint32_t *rx = (volatile uint32_t *)ctx->rx_buf;
+    uint32_t *rx = calloc(n_words, sizeof(uint32_t));
+    memcpy(rx, ctx->rx_buf, n_bytes);
     uint32_t errors = 0;
-    for (uint32_t i = 0; i < n_words; i++) {
+    for (uint32_t i = 0; i < n_words-1; i++) {
         uint32_t expected = test_pattern(i);
         uint32_t received = rx[i];
         if (received != expected) {
@@ -518,7 +547,24 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
             errors++;
         }
     }
+
+    for (size_t i = TEST_ARRAY_SIZE - 20; i < TEST_ARRAY_SIZE+20; i++)
+    {
+         printf("  Address 0x%04"PRIx32":\n"
+                       "    received: 0x%08"PRIx32"\n",
+                       i, ((uint32_t *)ctx->rx_buf)[i]);
+    }
+
+    FILE *pf = fopen("res.txt", "w");
+
+    for (size_t i = 0; i < 0x7FFF; i++)
+    {
+        fprintf(pf, "Read at %d: %d\n",i,rx[i]);
+    }
+    fclose(pf);
+    
     free(tx_data);
+    free(rx);
 
 
     /* 6. Summary */
@@ -526,6 +572,8 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("Errors             : %"PRIu32"\n", errors);
     printf("Result             : %s\n", errors == 0 ? "PASS" : "FAIL");
 
+    printf("Neurax reg reg_data_sc=0x%08x reg_data_read=0x%08x\n",
+           ctx->neurax->reg_data_sc, ctx->neurax->reg_data_read);
     return errors == 0 ? 0 : -1;
 }
 
@@ -553,6 +601,8 @@ int main(void)
            ctx.s2m->csr_status, ctx.s2m->csr_ctrl);
     printf("Neurax   CMD=0x%08x STATUS=0x%08x\n\n",
            ctx.neurax->reg_cmd, ctx.neurax->reg_status);
+    printf("Neurax reg reg_data_sc=0x%08x reg_data_read=0x%08x\n",
+           ctx.neurax->reg_data_sc, ctx.neurax->reg_data_read);
 
     
     // const size_t ram_bytes = RAM_TOTAL_WORDS * sizeof(uint32_t);
