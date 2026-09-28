@@ -8,37 +8,127 @@ z2
 !i10f 100
 cModel Technology
 Z0 dC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa
-Econvolution_block
-Z1 w1757958011
-Z2 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
-Z3 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
-Z4 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+Paccel_types
+Z1 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+Z2 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z3 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+Z4 w1758830196
 R0
-Z5 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd
-Z6 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd
+Z5 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd
+Z6 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd
 l0
-L5
-VC[m[4;oTX7hSQ>JfV2:^L1
-!s100 ]7?lJV[CUV:iE=TMhZlYW1
+L7
+VHh_9=X:5cEEccf>JH5zf@1
+!s100 ZQRSFm27HkzF9MdcVg?i?0
 Z7 OV;C;10.5b;63
 31
-Z8 !s110 1757959830
+Z8 !s110 1790613750
 !i10b 1
-Z9 !s108 1757959830.000000
-Z10 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd|
-Z11 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd|
+Z9 !s108 1790613749.000000
+Z10 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd|
+Z11 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd|
 !i113 1
 Z12 o-93 -work work
 Z13 tExplicit 1 CvgOpt 0
-Aconvolution_block_arch
+Eactivation_block
+Z14 w1758745992
+Z15 DPx4 work 11 accel_types 0 22 Hh_9=X:5cEEccf>JH5zf@1
+R1
 R2
 R3
+R0
+Z16 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd
+Z17 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd
+l0
+L7
+VM2KMYV97:f4UM6SC^2cEB3
+!s100 E>h^HUaL]Mb5G^]h10mfA1
+R7
+31
+R8
+!i10b 1
+Z18 !s108 1790613750.000000
+Z19 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd|
+Z20 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd|
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R1
+R2
+R3
+DEx4 work 16 activation_block 0 22 M2KMYV97:f4UM6SC^2cEB3
+l131
+L45
+VIJI0Lg@Uz5AG`6P6zWXGi3
+!s100 1`R7F5_J?SdMgdRZXb;Sc1
+R7
+31
+R8
+!i10b 1
+R18
+R19
+R20
+!i113 1
+R12
+R13
+Econvolution_block
+Z21 w1758826570
+R15
+R1
+R2
+R3
+R0
+Z22 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd
+Z23 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd
+l0
+L7
+VQWV4PgJ[n<E8mV=ELl<f91
+!s100 lHm0Q0Q<BhKfV[@GlHG_I3
+R7
+31
+R8
+!i10b 1
+R18
+Z24 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd|
+Z25 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd|
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R1
+R2
+R3
+Z26 DEx4 work 17 convolution_block 0 22 QWV4PgJ[n<E8mV=ELl<f91
+l98
+L51
+VnzAJlXObDkO?R@1A9b4QB0
+!s100 b]J^Q>KJfag]=]FBGg=I90
+R7
+31
+R8
+!i10b 1
+R18
+R24
+R25
+!i113 1
+R12
+R13
+Efpga_accelerator
 R4
-DEx4 work 17 convolution_block 0 22 C[m[4;oTX7hSQ>JfV2:^L1
-l34
-L22
-V@7`YPMFgU>kenQ3^hzNmP0
-!s100 bNWFo;:B0_R321LZCGSz63
+R15
+R1
+R2
+R3
+R0
+R5
+R6
+l0
+L67
+VdlJS<SdnmlUPV3FLHXRD@2
+!s100 aQckmcnCcO@Eo6_;i2S9Z3
 R7
 31
 R8
@@ -49,83 +139,114 @@ R11
 !i113 1
 R12
 R13
-Efpga_accelerator
-Z14 w1757954618
+Abehavioral
+R15
+R1
+R2
 R3
-R4
-R0
-Z15 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd
-Z16 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd
-l0
-L4
-V[egQl@8bP568fR;<Heeo@3
-!s100 C>G:zHV[^PefhzQIHf^UC2
+DEx4 work 16 fpga_accelerator 0 22 dlJS<SdnmlUPV3FLHXRD@2
+l276
+L136
+VVF]UKloSV7mLFcoHPJG7]3
+!s100 i3=YYKg3`3O7EOLKz9WTC1
 R7
 31
 R8
 !i10b 1
 R9
-Z17 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd|
-Z18 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd|
+R10
+R11
 !i113 1
 R12
 R13
-Afpga_accelerator_arch
+Epooling_block
+Z27 w1758741824
+R15
+Z28 DPx4 ieee 15 std_logic_arith 0 22 [G314=:2zXJ`VORJe1J@Z1
+Z29 DPx4 ieee 16 std_logic_signed 0 22 C<aanc0R`<LWPSe[JYRP^3
+R1
+R2
 R3
-R4
-DEx4 work 16 fpga_accelerator 0 22 [egQl@8bP568fR;<Heeo@3
-l42
-L21
-VS>ZlVXI^c[;7OVoBjZ8VE3
-!s100 X_M;1@oLP3165kF7iRRlF2
+R0
+Z30 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/pooling_block.vhd
+Z31 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/pooling_block.vhd
+l0
+L11
+VQgDc9JmzO7^nVVIAKj6C70
+!s100 D1CN?Y9U9484Zf[?7408I2
 R7
 31
 R8
 !i10b 1
-R9
-R17
 R18
+Z32 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/pooling_block.vhd|
+Z33 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/pooling_block.vhd|
 !i113 1
 R12
 R13
-Efpga_accelerator_vhd_tst
-Z19 w1757958755
+Abehavioral
+R15
+R28
+R29
+R1
 R2
 R3
-R4
+DEx4 work 13 pooling_block 0 22 QgDc9JmzO7^nVVIAKj6C70
+l113
+L50
+VfUo[e^hPLb:G3`X:=iCBe0
+!s100 mja^>90H=JPG7Sf;z5Q9J1
+R7
+31
+R8
+!i10b 1
+R18
+R32
+R33
+!i113 1
+R12
+R13
+Etb_convolution_block
+Z34 w1758832561
+R15
+R1
+R2
+R3
 R0
-Z20 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht
-Z21 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht
+Z35 8C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht
+Z36 FC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht
 l0
-L32
-VNo^fCON_jNL`?z:3CWO^80
-!s100 0VgliF=?h=C<Ob8mBRK1X0
+L6
+VXQWG[oC[m7eEW_YK5SCo03
+!s100 Ud3]U=m8g]j>WmWJK>LBX0
 R7
 31
 R8
 !i10b 1
-R9
-Z22 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht|
-Z23 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht|
+R18
+Z37 !s90 -reportprogress|300|-93|-work|work|C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht|
+Z38 !s107 C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht|
 !i113 1
 R12
 R13
-Afpga_accelerator_arch
+Asim
+R26
+R15
+R1
 R2
 R3
-R4
-DEx4 work 24 fpga_accelerator_vhd_tst 0 22 No^fCON_jNL`?z:3CWO^80
-l54
-L34
-VCJb7jfVJO:zJQ0aA2JePo0
-!s100 B:9gc:>L]h54`AjWl>D3X3
+DEx4 work 20 tb_convolution_block 0 22 XQWG[oC[m7eEW_YK5SCo03
+l59
+L9
+V:SiRNOiP@JX;?T>K4UglC0
+!s100 CmPl656MA?Jz8P`n;:^X80
 R7
 31
 R8
 !i10b 1
-R9
-R22
-R23
+R18
+R37
+R38
 !i113 1
 R12
 R13

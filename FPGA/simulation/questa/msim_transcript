@@ -13,25 +13,25 @@
 # Modifying modelsim.ini
 # vcom -93 -work altera {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_syn_attributes.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:20 on Sep 15,2025
+# Start time: 18:42:18 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_syn_attributes.vhd 
 # -- Loading package STANDARD
 # -- Compiling package altera_syn_attributes
-# End time: 20:10:20 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:19 on Sep 28,2026, Elapsed time: 0:00:01
 # Errors: 0, Warnings: 0
 # vcom -93 -work altera {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_standard_functions.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:20 on Sep 15,2025
+# Start time: 18:42:19 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_standard_functions.vhd 
 # -- Loading package STANDARD
 # -- Compiling package altera_standard_functions
 # -- Compiling package body altera_standard_functions
 # -- Loading package altera_standard_functions
-# End time: 20:10:20 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:19 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vcom -93 -work altera {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/alt_dspbuilder_package.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:20 on Sep 15,2025
+# Start time: 18:42:19 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/alt_dspbuilder_package.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -40,11 +40,11 @@
 # -- Compiling package alt_dspbuilder_package
 # -- Compiling package body alt_dspbuilder_package
 # -- Loading package alt_dspbuilder_package
-# End time: 20:10:20 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:19 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vcom -93 -work altera {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_europa_support_lib.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:20 on Sep 15,2025
+# Start time: 18:42:19 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_europa_support_lib.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -55,11 +55,11 @@
 # -- Compiling package altera_europa_support_lib
 # -- Compiling package body altera_europa_support_lib
 # -- Loading package altera_europa_support_lib
-# End time: 20:10:20 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:19 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vcom -93 -work altera {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_primitives_components.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:20 on Sep 15,2025
+# Start time: 18:42:19 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_primitives_components.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -69,11 +69,11 @@
 # -- Compiling package dffeas_pack
 # -- Loading package dffeas_pack
 # -- Compiling package altera_primitives_components
-# End time: 20:10:20 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:19 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vcom -93 -work altera {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_primitives.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:20 on Sep 15,2025
+# Start time: 18:42:19 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_primitives.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -161,7 +161,7 @@
 # -- Compiling architecture BEHAVIOR of alt_bidir_diff
 # -- Compiling entity alt_bidir_buf
 # -- Compiling architecture BEHAVIOR of alt_bidir_buf
-# End time: 20:10:20 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:19 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # 
 # vlib vhdl_libs/lpm
@@ -172,17 +172,17 @@
 # Modifying modelsim.ini
 # vcom -93 -work lpm {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/220pack.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:21 on Sep 15,2025
+# Start time: 18:42:19 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work lpm c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/220pack.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
 # -- Loading package std_logic_1164
 # -- Compiling package LPM_COMPONENTS
-# End time: 20:10:21 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:19 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vcom -93 -work lpm {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/220model.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:21 on Sep 15,2025
+# Start time: 18:42:19 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work lpm c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/220model.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -278,7 +278,7 @@
 # -- Compiling architecture LPM_SYN of LPM_OUTpad
 # -- Compiling entity LPM_BIpad
 # -- Compiling architecture LPM_SYN of LPM_BIpad
-# End time: 20:10:21 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:20 on Sep 28,2026, Elapsed time: 0:00:01
 # Errors: 0, Warnings: 0
 # 
 # vlib vhdl_libs/sgate
@@ -289,7 +289,7 @@
 # Modifying modelsim.ini
 # vcom -93 -work sgate {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/sgate_pack.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:21 on Sep 15,2025
+# Start time: 18:42:20 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work sgate c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/sgate_pack.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -297,11 +297,11 @@
 # -- Compiling package sgate_pack
 # -- Compiling package body sgate_pack
 # -- Loading package sgate_pack
-# End time: 20:10:21 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:20 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vcom -93 -work sgate {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/sgate.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:21 on Sep 15,2025
+# Start time: 18:42:20 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work sgate c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/sgate.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -351,7 +351,7 @@
 # -- Compiling architecture sim_arch of oper_bus_mux
 # -- Compiling entity oper_latch
 # -- Compiling architecture sim_arch of oper_latch
-# End time: 20:10:21 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:20 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # 
 # vlib vhdl_libs/altera_mf
@@ -362,17 +362,17 @@
 # Modifying modelsim.ini
 # vcom -93 -work altera_mf {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_mf_components.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:22 on Sep 15,2025
+# Start time: 18:42:20 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera_mf c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_mf_components.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
 # -- Loading package std_logic_1164
 # -- Compiling package altera_mf_components
-# End time: 20:10:22 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:21 on Sep 28,2026, Elapsed time: 0:00:01
 # Errors: 0, Warnings: 0
 # vcom -93 -work altera_mf {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_mf.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:22 on Sep 15,2025
+# Start time: 18:42:21 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera_mf c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_mf.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -611,7 +611,7 @@
 # -- Compiling architecture sim_sld_virtual_jtag_basic of sld_virtual_jtag_basic
 # -- Compiling entity altsource_probe
 # -- Compiling architecture sim_altsource_probe of altsource_probe
-# End time: 20:10:23 on Sep 15,2025, Elapsed time: 0:00:01
+# End time: 18:42:22 on Sep 28,2026, Elapsed time: 0:00:01
 # Errors: 0, Warnings: 0
 # 
 # vlib vhdl_libs/altera_lnsim
@@ -622,21 +622,21 @@
 # Modifying modelsim.ini
 # vlog -sv -work altera_lnsim {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/mentor/altera_lnsim_for_vhdl.sv}
 # Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:23 on Sep 15,2025
+# Start time: 18:42:22 on Sep 28,2026
 # vlog -reportprogress 300 -sv -work altera_lnsim c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/mentor/altera_lnsim_for_vhdl.sv 
 # 
 # Top level modules:
-# End time: 20:10:24 on Sep 15,2025, Elapsed time: 0:00:01
+# End time: 18:42:23 on Sep 28,2026, Elapsed time: 0:00:01
 # Errors: 0, Warnings: 0
 # vcom -93 -work altera_lnsim {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_lnsim_components.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:24 on Sep 15,2025
+# Start time: 18:42:23 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work altera_lnsim c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/altera_lnsim_components.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
 # -- Loading package std_logic_1164
 # -- Compiling package altera_lnsim_components
-# End time: 20:10:24 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:23 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # 
 # vlib vhdl_libs/cyclonev
@@ -647,7 +647,7 @@
 # Modifying modelsim.ini
 # vlog -vlog01compat -work cyclonev {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/mentor/cyclonev_atoms_ncrypt.v}
 # Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:24 on Sep 15,2025
+# Start time: 18:42:23 on Sep 28,2026
 # vlog -reportprogress 300 -vlog01compat -work cyclonev c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/mentor/cyclonev_atoms_ncrypt.v 
 # ** Warning: (vlog-2083) <protected>(<protected>): Carriage return (0x0D) is not followed by a newline (0x0A).
 # ** Warning: (vlog-2083) <protected>(<protected>): Carriage return (0x0D) is not followed by a newline (0x0A).
@@ -661,11 +661,11 @@
 # ** Warning: (vlog-2083) <protected>(<protected>): Carriage return (0x0D) is not followed by a newline (0x0A).
 # 
 # Top level modules:
-# End time: 20:10:26 on Sep 15,2025, Elapsed time: 0:00:02
+# End time: 18:42:26 on Sep 28,2026, Elapsed time: 0:00:03
 # Errors: 0, Warnings: 20
 # vcom -93 -work cyclonev {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_atoms.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:27 on Sep 15,2025
+# Start time: 18:42:26 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work cyclonev c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_atoms.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -805,11 +805,11 @@
 # -- Compiling architecture behavior of cyclonev_ir_fifo_userdes
 # -- Compiling entity cyclonev_oscillator
 # -- Compiling architecture behavior of cyclonev_oscillator
-# End time: 20:10:27 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:26 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 1
 # vcom -93 -work cyclonev {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_components.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:27 on Sep 15,2025
+# Start time: 18:42:27 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work cyclonev c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_components.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -818,7 +818,7 @@
 # -- Loading package VITAL_Primitives
 # -- Loading package cyclonev_atom_pack
 # -- Compiling package cyclonev_components
-# End time: 20:10:27 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:27 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # 
 # vlib vhdl_libs/cyclonev_hssi
@@ -829,7 +829,7 @@
 # Modifying modelsim.ini
 # vcom -93 -work cyclonev_hssi {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_hssi_components.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:27 on Sep 15,2025
+# Start time: 18:42:27 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work cyclonev_hssi c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_hssi_components.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -837,19 +837,19 @@
 # -- Compiling package CYCLONEV_HSSI_COMPONENTS
 # -- Compiling package body CYCLONEV_HSSI_COMPONENTS
 # -- Loading package CYCLONEV_HSSI_COMPONENTS
-# End time: 20:10:27 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:27 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vlog -vlog01compat -work cyclonev_hssi {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/mentor/cyclonev_hssi_atoms_ncrypt.v}
 # Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:27 on Sep 15,2025
+# Start time: 18:42:27 on Sep 28,2026
 # vlog -reportprogress 300 -vlog01compat -work cyclonev_hssi c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/mentor/cyclonev_hssi_atoms_ncrypt.v 
 # 
 # Top level modules:
-# End time: 20:10:29 on Sep 15,2025, Elapsed time: 0:00:02
+# End time: 18:42:29 on Sep 28,2026, Elapsed time: 0:00:02
 # Errors: 0, Warnings: 0
 # vcom -93 -work cyclonev_hssi {c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_hssi_atoms.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:29 on Sep 15,2025
+# Start time: 18:42:29 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work cyclonev_hssi c:/intelfpga_lite/24.1std/quartus/eda/sim_lib/cyclonev_hssi_atoms.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
@@ -903,7 +903,7 @@
 # -- Compiling architecture behavior of cyclonev_hssi_pma_hi_pmaif
 # -- Compiling entity cyclonev_hssi_pma_hi_xcvrif
 # -- Compiling architecture behavior of cyclonev_hssi_pma_hi_xcvrif
-# End time: 20:10:29 on Sep 15,2025, Elapsed time: 0:00:00
+# End time: 18:42:29 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # 
 # if {[file exists rtl_work]} {
@@ -917,67 +917,93 @@
 # 
 # vcom -93 -work work {C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:30 on Sep 15,2025
+# Start time: 18:42:29 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work work C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/FPGA_accelerator.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
 # -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling package accel_types
+# -- Loading package accel_types
 # -- Compiling entity FPGA_accelerator
-# -- Compiling architecture FPGA_accelerator_arch of FPGA_accelerator
-# End time: 20:10:30 on Sep 15,2025, Elapsed time: 0:00:00
+# -- Compiling architecture behavioral of FPGA_accelerator
+# End time: 18:42:30 on Sep 28,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+# vcom -93 -work work {C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/pooling_block.vhd}
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 18:42:30 on Sep 28,2026
+# vcom -reportprogress 300 -93 -work work C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/pooling_block.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package std_logic_arith
+# -- Loading package STD_LOGIC_SIGNED
+# -- Loading package accel_types
+# -- Compiling entity pooling_block
+# -- Compiling architecture behavioral of pooling_block
+# End time: 18:42:30 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vcom -93 -work work {C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:30 on Sep 15,2025
+# Start time: 18:42:30 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work work C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/convolution_block.vhd 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
 # -- Loading package std_logic_1164
 # -- Loading package NUMERIC_STD
+# -- Loading package accel_types
 # -- Compiling entity convolution_block
-# -- Compiling architecture convolution_block_arch of convolution_block
-# End time: 20:10:30 on Sep 15,2025, Elapsed time: 0:00:00
+# -- Compiling architecture behavioral of convolution_block
+# End time: 18:42:30 on Sep 28,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# vcom -93 -work work {C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd}
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 18:42:30 on Sep 28,2026
+# vcom -reportprogress 300 -93 -work work C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/activation_block.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package accel_types
+# -- Compiling entity activation_block
+# -- Compiling architecture behavioral of activation_block
+# End time: 18:42:30 on Sep 28,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # 
 # vcom -93 -work work {C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht}
 # Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
-# Start time: 20:10:30 on Sep 15,2025
+# Start time: 18:42:30 on Sep 28,2026
 # vcom -reportprogress 300 -93 -work work C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht 
 # -- Loading package STANDARD
 # -- Loading package TEXTIO
 # -- Loading package std_logic_1164
 # -- Loading package NUMERIC_STD
-# -- Compiling entity FPGA_accelerator_vhd_tst
-# -- Compiling architecture FPGA_accelerator_arch of FPGA_accelerator_vhd_tst
-# End time: 20:10:30 on Sep 15,2025, Elapsed time: 0:00:00
-# Errors: 0, Warnings: 0
+# -- Loading package accel_types
+# -- Compiling entity tb_convolution_block
+# -- Compiling architecture sim of tb_convolution_block
+# -- Loading entity convolution_block
+# ** Warning: C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht(157): (vcom-1083) Implicit array operator "=" always returns FALSE (left length 16 is not equal to right length 8).
+# End time: 18:42:30 on Sep 28,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1
 # 
-# vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi -L rtl_work -L work -voptargs="+acc"  FPGA_accelerator_vhd_tst
-# vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi -L rtl_work -L work -voptargs=""+acc"" FPGA_accelerator_vhd_tst 
-# Start time: 20:10:30 on Sep 15,2025
-# Loading std.standard
-# Loading std.textio(body)
-# Loading ieee.std_logic_1164(body)
-# Loading ieee.numeric_std(body)
-# Loading work.fpga_accelerator_vhd_tst(fpga_accelerator_arch)
-# Loading work.fpga_accelerator(fpga_accelerator_arch)
-# Loading work.convolution_block(convolution_block_arch)
-# 
-# add wave *
-# view structure
-# .main_pane.structure.interior.cs.body.struct
-# view signals
-# .main_pane.objects.interior.cs.body.tree
-# run -all
-# ** Note: Convolution result 1: 67
-#    Time: 385 ns  Iteration: 0  Instance: /fpga_accelerator_vhd_tst
-# ** Note: Convolution result 2: -23
-#    Time: 405 ns  Iteration: 0  Instance: /fpga_accelerator_vhd_tst
-# ** Note: Convolution result 3: 88
-#    Time: 425 ns  Iteration: 0  Instance: /fpga_accelerator_vhd_tst
-# ** Note: Convolution result 4: 10
-#    Time: 445 ns  Iteration: 0  Instance: /fpga_accelerator_vhd_tst
-# Break key hit
-# Break in Process clk_process at C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/FPGA_accelerator.vht line 71
-# End time: 20:12:20 on Sep 15,2025, Elapsed time: 0:01:50
-# Errors: 0, Warnings: 0
+# vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi -L rtl_work -L work -voptargs="+acc"  tb_fpga_accelerator
+# vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi -L rtl_work -L work -voptargs=""+acc"" tb_fpga_accelerator 
+# Start time: 18:42:30 on Sep 28,2026
+# ** Error: (vsim-3170) Could not find 'tb_fpga_accelerator'.
+#         Searched libraries:
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/vhdl_libs/altera
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/vhdl_libs/lpm
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/vhdl_libs/sgate
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/vhdl_libs/altera_mf
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/vhdl_libs/altera_lnsim
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/vhdl_libs/cyclonev
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/vhdl_libs/cyclonev_hssi
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/rtl_work
+#             C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/simulation/questa/rtl_work
+# Error loading design
+# Error: Error loading design
+#        Pausing macro execution
+# MACRO ./FPGA_accelerator_run_msim_rtl_vhdl.do PAUSED at line 60
+# End time: 18:42:40 on Sep 28,2026, Elapsed time: 0:00:10
+# Errors: 1, Warnings: 0

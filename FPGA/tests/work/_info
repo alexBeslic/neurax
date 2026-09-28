@@ -1,0 +1,844 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/FPGA/tests
+Paccel_types
+Z1 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+Z2 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z3 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+Z4 w1758830196
+R0
+Z5 8../FPGA_accelerator.vhd
+Z6 F../FPGA_accelerator.vhd
+l0
+L7
+V6@J:nSNnGelg^loicC_mj0
+!s100 ZQRSFm27HkzF9MdcVg?i?0
+Z7 OV;C;10.5b;63
+33
+Z8 !s110 1790613060
+!i10b 1
+Z9 !s108 1790613060.000000
+Z10 !s90 -2008|../FPGA_accelerator.vhd|
+Z11 !s107 ../FPGA_accelerator.vhd|
+!i113 1
+Z12 o-2008
+Z13 tExplicit 1 CvgOpt 0
+Eactivation_block
+Z14 w1758745992
+Z15 DPx4 work 11 accel_types 0 22 6@J:nSNnGelg^loicC_mj0
+R1
+R2
+R3
+R0
+Z16 8../activation_block.vhd
+Z17 F../activation_block.vhd
+l0
+L7
+V:_@lf=8[Y_Ee=7?PbN4H30
+!s100 E>h^HUaL]Mb5G^]h10mfA1
+R7
+33
+R8
+!i10b 1
+Z18 !s108 1790613059.000000
+Z19 !s90 -2008|../activation_block.vhd|
+Z20 !s107 ../activation_block.vhd|
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R1
+R2
+R3
+DEx4 work 16 activation_block 0 22 :_@lf=8[Y_Ee=7?PbN4H30
+l131
+L45
+VfNW8^`m9E3CJcETb]:;YR2
+!s100 1`R7F5_J?SdMgdRZXb;Sc1
+R7
+33
+R8
+!i10b 1
+R18
+R19
+R20
+!i113 1
+R12
+R13
+Abeh
+R1
+R2
+R3
+DEx4 work 16 activation_block 0 22 jPjfKAGYLHF=c7NHX;md_0
+l23
+L22
+Vla_G3AF=gL2nDPQK4WeM91
+!s100 N:MLzKCX0R?QK0XOd_koF1
+R7
+33
+Z21 !s110 1758657715
+!i10b 1
+Z22 !s108 1758657715.000000
+R19
+R20
+!i113 1
+R12
+R13
+w1758648783
+Aactivation_block_arch
+R1
+R2
+R3
+Z23 DEx4 work 16 activation_block 0 22 SGHidNQV0KIRXfUC47PIc1
+l67
+L22
+VN?Hj]=Y`UgP7aIeoDMPHN1
+!s100 592eNHl=02<m1zPjBPg[z1
+R7
+33
+!s110 1758647740
+!i10b 1
+!s108 1758647740.000000
+R19
+R20
+!i113 1
+R12
+R13
+w1758224427
+Eadvanced_conv_tb
+Z24 w1758657709
+Z25 DPx4 ieee 15 std_logic_arith 0 22 [G314=:2zXJ`VORJe1J@Z1
+Z26 DPx4 ieee 16 std_logic_signed 0 22 C<aanc0R`<LWPSe[JYRP^3
+Z27 DPx4 work 10 conv_types 0 22 c?I8DXTHZ[[gWcgj8P[_D2
+R1
+R2
+R3
+R0
+Z28 8../simulation/questa/FPGA_accelerator.vht
+Z29 F../simulation/questa/FPGA_accelerator.vht
+l0
+L7
+VNF2zOnP_9U5k<3C]6YEi81
+!s100 ^HNHEY<=lz=>DKa7]OWZ<1
+R7
+33
+R21
+!i10b 1
+R22
+Z30 !s90 -2008|../simulation/questa/FPGA_accelerator.vht|
+Z31 !s107 ../simulation/questa/FPGA_accelerator.vht|
+!i113 1
+R12
+R13
+Atestbench
+R25
+R26
+R27
+R1
+R2
+R3
+DEx4 work 16 advanced_conv_tb 0 22 NF2zOnP_9U5k<3C]6YEi81
+l134
+L10
+VbW]7dD85A;i<^VUc8IQGc3
+!s100 VKDIP33ZO<M0;QA88;EGh2
+R7
+33
+R21
+!i10b 1
+R22
+R30
+R31
+!i113 1
+R12
+R13
+Pconv_types
+R25
+R26
+R1
+R2
+R3
+w1758656333
+R0
+R5
+R6
+l0
+L10
+Vc?I8DXTHZ[[gWcgj8P[_D2
+!s100 a4LPbE>5<fFM^MYCb:FCi3
+R7
+33
+R21
+!i10b 1
+R22
+R10
+R11
+!i113 1
+R12
+R13
+Econvolution_block
+Z32 w1758826570
+R15
+R1
+R2
+R3
+R0
+Z33 8../convolution_block.vhd
+Z34 F../convolution_block.vhd
+l0
+L7
+VPVIbCSXMBG60=8GhCWb7z2
+!s100 lHm0Q0Q<BhKfV[@GlHG_I3
+R7
+33
+R8
+!i10b 1
+R9
+Z35 !s90 -2008|../convolution_block.vhd|
+Z36 !s107 ../convolution_block.vhd|
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R1
+R2
+R3
+Z37 DEx4 work 17 convolution_block 0 22 PVIbCSXMBG60=8GhCWb7z2
+l98
+L51
+V_:lCDeY74N`]l:m[WT@cl2
+!s100 b]J^Q>KJfag]=]FBGg=I90
+R7
+33
+R8
+!i10b 1
+R9
+R35
+R36
+!i113 1
+R12
+R13
+Artl
+R1
+R2
+R3
+DEx4 work 17 convolution_block 0 22 lVo7YjI>z?I:7Uk@i:KkO1
+l73
+L28
+VOzJc>ge3KC[7]56J_;LC`0
+!s100 nnXgHPPY^M7ED1I>lia5L1
+R7
+33
+R21
+!i10b 1
+R22
+R35
+R36
+!i113 1
+R12
+R13
+w1758651262
+Aconvolution_block_arch
+R1
+R2
+R3
+DEx4 work 17 convolution_block 0 22 NA15lzoaDUO[l6^MI:GJX0
+l76
+L25
+VfGV_OCd<T<6VV<W9A72_H0
+!s100 VPI0jGDVmD[nIn1Me2=g;3
+R7
+33
+Z38 !s110 1758648842
+!i10b 1
+Z39 !s108 1758648842.000000
+R35
+R36
+!i113 1
+R12
+R13
+w1758648764
+Econvolution_tb
+Z40 w1758656611
+R25
+R26
+R27
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L7
+V9]SkTi9J`EJfCADiMndWn3
+!s100 =VP]1l9<k5dzTLa1>hdTQ0
+R7
+33
+Z41 !s110 1758656617
+!i10b 1
+Z42 !s108 1758656617.000000
+R30
+R31
+!i113 1
+R12
+R13
+Atestbench
+R25
+R26
+R27
+R1
+R2
+R3
+Z43 DEx4 work 14 convolution_tb 0 22 9]SkTi9J`EJfCADiMndWn3
+l111
+L10
+VoYc410XWRYYBlkm3@Z^5i3
+!s100 V75Y[ZMKN?19F8R3E=A>W0
+R7
+33
+R41
+!i10b 1
+R42
+R30
+R31
+!i113 1
+R12
+R13
+Cconvolution_tb_config
+econvolution_tb
+atestbench
+DEx4 work 16 fpga_accelerator 0 22 PS0;HUg5oGRV8@ea^bz9n3
+DAx4 work 14 convolution_tb 9 testbench 22 oYc410XWRYYBlkm3@Z^5i3
+R25
+R26
+R27
+R1
+R2
+R3
+R43
+R40
+R0
+R28
+R29
+l0
+L343
+V2j9DfgJEoHN_Odffc4L340
+!s100 CWFd_DzYS0=c]zcMEggo>1
+R7
+33
+R41
+!i10b 1
+R42
+R30
+R31
+!i113 1
+R12
+R13
+Efpga_accelerator
+R4
+R15
+R1
+R2
+R3
+R0
+R5
+R6
+l0
+L67
+V5M4Ta92RIm?hGPIW^<h8B2
+!s100 aQckmcnCcO@Eo6_;i2S9Z3
+R7
+33
+R8
+!i10b 1
+R9
+R10
+R11
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R1
+R2
+R3
+DEx4 work 16 fpga_accelerator 0 22 5M4Ta92RIm?hGPIW^<h8B2
+l276
+L136
+V`Y5G<`9eeEd;PWc]5?7ba3
+!s100 i3=YYKg3`3O7EOLKz9WTC1
+R7
+33
+R8
+!i10b 1
+R9
+R10
+R11
+!i113 1
+R12
+R13
+Afpga_accelerator_arch
+R1
+R2
+R3
+DEx4 work 16 fpga_accelerator 0 22 PJRKAmO_XkjRnNkE_2@9X3
+l98
+L28
+VPF@S=j3^M1KcOZmj@zPGb0
+!s100 3F6fB3BVlHHLBZcVNeoT93
+R7
+33
+Z44 !s110 1758653170
+!i10b 1
+Z45 !s108 1758653170.000000
+R10
+R11
+!i113 1
+R12
+R13
+w1758649389
+Efpga_accelerator_tb
+w1758819459
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L6
+VL9Z2Di2mi23bH7bbA7E7a1
+!s100 _LC0Q=d2VOH1C``j7@7;?2
+R7
+33
+!s110 1758819465
+!i10b 1
+!s108 1758819465.000000
+R30
+R31
+!i113 1
+R12
+R13
+Emax_pool
+Z46 w1758648807
+R1
+R2
+R3
+R0
+Z47 8../max_pool.vhd
+Z48 F../max_pool.vhd
+l0
+L5
+Vn?bk3`YP7<@zc=RN7U]BS1
+!s100 O8T4kNLKTd<A=h[0GJRl81
+R7
+33
+R21
+!i10b 1
+R22
+Z49 !s90 -2008|../max_pool.vhd|
+Z50 !s107 ../max_pool.vhd|
+!i113 1
+R12
+R13
+Artl
+R1
+R2
+R3
+DEx4 work 8 max_pool 0 22 n?bk3`YP7<@zc=RN7U]BS1
+l29
+L24
+VlN]Ild6zc71f2bJb2?AWk2
+!s100 8DMzb<D`9T3gGe<_h45W`1
+R7
+33
+R21
+!i10b 1
+R22
+R49
+R50
+!i113 1
+R12
+R13
+Amax_pool_arch
+R1
+R2
+R3
+Z51 DEx4 work 8 max_pool 0 22 Y@QoLX6DGb8TdaGkFW8OA0
+l28
+L20
+V<=OQD?1h:m<>?QKT`SaNB0
+!s100 =8a[Cb<n[5BD1InV?_8>B0
+R7
+33
+!s110 1758315203
+!i10b 1
+!s108 1758315203.000000
+R49
+R50
+!i113 1
+R12
+R13
+w1758314136
+Epooling_block
+Z52 w1758741824
+R15
+R25
+R26
+R1
+R2
+R3
+R0
+Z53 8../pooling_block.vhd
+Z54 F../pooling_block.vhd
+l0
+L11
+VGLaSOVdMoX9bLfBn5>0]`3
+!s100 D1CN?Y9U9484Zf[?7408I2
+R7
+33
+Z55 !s110 1758819873
+!i10b 1
+Z56 !s108 1758819873.000000
+Z57 !s90 -2008|../pooling_block.vhd|
+Z58 !s107 ../pooling_block.vhd|
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R25
+R26
+R1
+R2
+R3
+DEx4 work 13 pooling_block 0 22 GLaSOVdMoX9bLfBn5>0]`3
+l113
+L50
+VgfQ7K:Q<7aP:ebOe`YU1Q3
+!s100 mja^>90H=JPG7Sf;z5Q9J1
+R7
+33
+R55
+!i10b 1
+R56
+R57
+R58
+!i113 1
+R12
+R13
+Esimple_conv_test
+Z59 w1758824171
+R15
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L7
+V6m[iSI?Mg5IDM;@@l<2<h2
+!s100 ZOD_T=>?4ndeVlg8=9WY>0
+R7
+33
+Z60 !s110 1758824184
+!i10b 1
+Z61 !s108 1758824184.000000
+R30
+R31
+!i113 1
+R12
+R13
+Asim
+R15
+R1
+R2
+R3
+DEx4 work 16 simple_conv_test 0 22 6m[iSI?Mg5IDM;@@l<2<h2
+l75
+L10
+VF:H7LBJN:a5D;25X]lcb_1
+!s100 RkcgP6oYiAJma36kb7hJj1
+R7
+33
+R60
+!i10b 1
+R61
+R30
+R31
+!i113 1
+R12
+R13
+Etb_conv_file
+w1758314782
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L6
+VZIWc2F3^A5^7;;FYa<5OR2
+!s100 LL^mb7^S<1;WG30kYCW=]0
+R7
+33
+!s110 1758314785
+!i10b 1
+!s108 1758314785.000000
+R30
+R31
+!i113 1
+R12
+R13
+Asim
+Z62 DPx3 std 3 env 0 22 d?`1ck@NdeD@H3RZG7FgZ2
+R23
+DPx4 ieee 9 math_real 0 22 Sk6CSihbPL<f[^Shm]=KX0
+DEx4 work 17 convolution_block 0 22 cMOa?`:nj8XJbPB[JNNl>0
+R51
+R1
+R2
+R3
+DEx4 work 12 tb_conv_file 0 22 ZIWc2F3^A5^7;;FYa<5OR2
+l38
+L9
+VbOBZ^e`HG2AO1F@dhYN=Z1
+!s100 z7C<gEiDda:W@l8MBi7?60
+R7
+33
+!s110 1758314277
+!i10b 1
+!s108 1758314277.000000
+R30
+R31
+!i113 1
+R12
+R13
+w1758314275
+Etb_convolution_block
+Z63 w1758832561
+R15
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L6
+VcB1OZKjQkmgVllz;i]MmR0
+!s100 Ud3]U=m8g]j>WmWJK>LBX0
+R7
+33
+R8
+!i10b 1
+R9
+R30
+R31
+!i113 1
+R12
+R13
+Asim
+R37
+R15
+R1
+R2
+R3
+Z64 DEx4 work 20 tb_convolution_block 0 22 cB1OZKjQkmgVllz;i]MmR0
+l59
+L9
+Z65 V`km_8GmT9JNQd2Lm0FPY70
+Z66 !s100 CmPl656MA?Jz8P`n;:^X80
+R7
+33
+R8
+!i10b 1
+R9
+R30
+R31
+!i113 1
+R12
+R13
+Etb_fpga_accel
+Z67 w1758648837
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L6
+VLj?AZ19od?QHU:NlmPc=I1
+!s100 KF4;LT1AHXHMIf<89[=Ef2
+R7
+33
+R44
+!i10b 1
+R45
+R30
+R31
+!i113 1
+R12
+R13
+Atb
+DEx4 work 16 fpga_accelerator 0 22 36JUCbSI>1Va4T^U?HFCU1
+R1
+R2
+R3
+DEx4 work 13 tb_fpga_accel 0 22 Lj?AZ19od?QHU:NlmPc=I1
+l37
+L9
+V?Rf;QenB0CW78MU:6_6Xc3
+!s100 [MXlAzbj[?Z:nLFVdfh2I0
+R7
+33
+R38
+!i10b 1
+R39
+R30
+R31
+!i113 1
+R12
+R13
+Etb_fpga_accelerator
+Z68 w1758821783
+R15
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L6
+VIVmOBgZXzLK6:lBVZL4c=0
+!s100 KLL3mB42^@Oe4^=LIV9DK1
+R7
+33
+Z69 !s110 1758821843
+!i10b 1
+Z70 !s108 1758821843.000000
+R30
+R31
+!i113 1
+R12
+R13
+Asim
+R15
+R1
+R2
+R3
+DEx4 work 19 tb_fpga_accelerator 0 22 IVmOBgZXzLK6:lBVZL4c=0
+l113
+L9
+VA>lfcS4C;hc<X^;@R@^Q51
+!s100 JPO4hkfRPOi44aFQBjP9J2
+R7
+33
+R69
+!i10b 1
+R70
+R30
+R31
+!i113 1
+R12
+R13
+Etb_fpga_accelerator_debug
+Z71 w1758824662
+R15
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L6
+VB3@aXFcmA6TOD:VRnR4J[2
+!s100 <KBT6KNeRJnl]kjNRWJzO0
+R7
+33
+Z72 !s110 1758826687
+!i10b 1
+Z73 !s108 1758826687.000000
+R30
+R31
+!i113 1
+R12
+R13
+Asim
+R15
+R1
+R2
+R3
+DEx4 work 25 tb_fpga_accelerator_debug 0 22 B3@aXFcmA6TOD:VRnR4J[2
+l108
+L9
+Vf1fUcJm2`NkU:0CD4<j5=3
+!s100 :[O;K>W1f<j1fZ4JKb2:D1
+R7
+33
+R72
+!i10b 1
+R73
+R30
+R31
+!i113 1
+R12
+R13
+Etb_max_pool
+Z74 w1758316942
+R1
+R2
+R3
+R0
+R28
+R29
+l0
+L6
+Ve9E[?dUg0_Pzz[o6f:k5=1
+!s100 I4k[<:KALC_3lVBIHc5A;0
+R7
+33
+Z75 !s110 1758317132
+!i10b 1
+Z76 !s108 1758317132.000000
+R30
+R31
+!i113 1
+R12
+R13
+Asim
+R62
+DEx4 work 8 max_pool 0 22 ML]e8MNkncgKGoBcQKlJA3
+R1
+R2
+R3
+DEx4 work 11 tb_max_pool 0 22 e9E[?dUg0_Pzz[o6f:k5=1
+l29
+L9
+VV>mj[8<kVdbA3177j7Rkm1
+!s100 <[eXgjH56a>=GXQoEZT3C0
+R7
+33
+R75
+!i10b 1
+R76
+R30
+R31
+!i113 1
+R12
+R13

@@ -1,5 +1,5 @@
 Flow report for FPGA_accelerator
-Wed Sep 24 22:44:14 2025
+Thu Sep 25 22:03:06 2025
 Quartus Prime Version 24.1std.0 Build 1077 03/04/2025 SC Lite Edition
 
 
@@ -41,16 +41,16 @@ on the Quartus Prime software download page.
 +-----------------------------------------------------------------------------------+
 ; Flow Summary                                                                      ;
 +---------------------------------+-------------------------------------------------+
-; Flow Status                     ; Successful - Wed Sep 24 22:44:14 2025           ;
+; Flow Status                     ; Successful - Thu Sep 25 22:03:06 2025           ;
 ; Quartus Prime Version           ; 24.1std.0 Build 1077 03/04/2025 SC Lite Edition ;
 ; Revision Name                   ; FPGA_accelerator                                ;
 ; Top-level Entity Name           ; FPGA_accelerator                                ;
 ; Family                          ; Cyclone V                                       ;
 ; Device                          ; 5CSEMA5F31C6                                    ;
 ; Timing Models                   ; Final                                           ;
-; Logic utilization (in ALMs)     ; 2,037 / 32,070 ( 6 % )                          ;
-; Total registers                 ; 353                                             ;
-; Total pins                      ; 285 / 457 ( 62 % )                              ;
+; Logic utilization (in ALMs)     ; 2,109 / 32,070 ( 7 % )                          ;
+; Total registers                 ; 357                                             ;
+; Total pins                      ; 282 / 457 ( 62 % )                              ;
 ; Total virtual pins              ; 0                                               ;
 ; Total block memory bits         ; 0 / 4,065,280 ( 0 % )                           ;
 ; Total DSP Blocks                ; 1 / 87 ( 1 % )                                  ;
@@ -68,7 +68,7 @@ on the Quartus Prime software download page.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 09/24/2025 22:38:21 ;
+; Start date & time ; 09/25/2025 21:57:02 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; FPGA_accelerator    ;
 +-------------------+---------------------+
@@ -79,19 +79,19 @@ on the Quartus Prime software download page.
 +--------------------------------------+----------------------------------------+---------------+-------------+-----------------------------------+
 ; Assignment Name                      ; Value                                  ; Default Value ; Entity Name ; Section Id                        ;
 +--------------------------------------+----------------------------------------+---------------+-------------+-----------------------------------+
-; COMPILER_SIGNATURE_ID                ; 10995770589197.175874630107716         ; --            ; --          ; --                                ;
-; EDA_DESIGN_INSTANCE_NAME             ; NA                                     ; --            ; --          ; FPGA_accelerator_vhd              ;
+; COMPILER_SIGNATURE_ID                ; 10995770589197.175883022201452         ; --            ; --          ; --                                ;
+; EDA_DESIGN_INSTANCE_NAME             ; NA                                     ; --            ; --          ; --                                ;
 ; EDA_GENERATE_FUNCTIONAL_NETLIST      ; Off                                    ; --            ; --          ; eda_board_design_timing           ;
 ; EDA_GENERATE_FUNCTIONAL_NETLIST      ; Off                                    ; --            ; --          ; eda_board_design_boundary_scan    ;
 ; EDA_GENERATE_FUNCTIONAL_NETLIST      ; Off                                    ; --            ; --          ; eda_board_design_signal_integrity ;
 ; EDA_GENERATE_FUNCTIONAL_NETLIST      ; Off                                    ; --            ; --          ; eda_board_design_symbol           ;
-; EDA_NATIVELINK_SIMULATION_TEST_BENCH ; FPGA_accelerator_vhd                   ; --            ; --          ; eda_simulation                    ;
+; EDA_NATIVELINK_SIMULATION_TEST_BENCH ; FPGA_accelerator                       ; --            ; --          ; eda_simulation                    ;
 ; EDA_OUTPUT_DATA_FORMAT               ; Vhdl                                   ; --            ; --          ; eda_simulation                    ;
 ; EDA_SIMULATION_TOOL                  ; QuestaSim (VHDL)                       ; <None>        ; --          ; --                                ;
 ; EDA_TEST_BENCH_ENABLE_STATUS         ; TEST_BENCH_MODE                        ; --            ; --          ; eda_simulation                    ;
-; EDA_TEST_BENCH_FILE                  ; simulation/questa/FPGA_accelerator.vht ; --            ; --          ; FPGA_accelerator_vhd              ;
-; EDA_TEST_BENCH_MODULE_NAME           ; FPGA_accelerator_vhd_tst               ; --            ; --          ; FPGA_accelerator_vhd              ;
-; EDA_TEST_BENCH_NAME                  ; FPGA_accelerator_vhd                   ; --            ; --          ; eda_simulation                    ;
+; EDA_TEST_BENCH_FILE                  ; simulation/questa/FPGA_accelerator.vht ; --            ; --          ; --                                ;
+; EDA_TEST_BENCH_MODULE_NAME           ; tb_fpga_accelerator                    ; --            ; --          ; --                                ;
+; EDA_TEST_BENCH_NAME                  ; FPGA_accelerator                       ; --            ; --          ; eda_simulation                    ;
 ; EDA_TIME_SCALE                       ; 1 ps                                   ; --            ; --          ; eda_simulation                    ;
 ; MAX_CORE_JUNCTION_TEMP               ; 85                                     ; --            ; --          ; --                                ;
 ; MIN_CORE_JUNCTION_TEMP               ; 0                                      ; --            ; --          ; --                                ;
@@ -109,12 +109,12 @@ on the Quartus Prime software download page.
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name          ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis ; 00:01:20     ; 1.0                     ; 6286 MB             ; 00:01:28                           ;
-; Fitter               ; 00:04:08     ; 1.1                     ; 7323 MB             ; 00:19:47                           ;
-; Assembler            ; 00:00:09     ; 1.0                     ; 4886 MB             ; 00:00:06                           ;
-; Timing Analyzer      ; 00:00:09     ; 2.9                     ; 5312 MB             ; 00:00:20                           ;
-; EDA Netlist Writer   ; 00:00:02     ; 1.0                     ; 4772 MB             ; 00:00:01                           ;
-; Total                ; 00:05:48     ; --                      ; --                  ; 00:21:42                           ;
+; Analysis & Synthesis ; 00:01:24     ; 1.0                     ; 6278 MB             ; 00:01:34                           ;
+; Fitter               ; 00:04:18     ; 1.1                     ; 7333 MB             ; 00:20:06                           ;
+; Assembler            ; 00:00:06     ; 1.0                     ; 4890 MB             ; 00:00:06                           ;
+; Timing Analyzer      ; 00:00:09     ; 3.0                     ; 5315 MB             ; 00:00:20                           ;
+; EDA Netlist Writer   ; 00:00:02     ; 1.0                     ; 4768 MB             ; 00:00:01                           ;
+; Total                ; 00:05:59     ; --                      ; --                  ; 00:22:07                           ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 

@@ -66,9 +66,9 @@ use work.accel_types.all;
 
 entity FPGA_accelerator is
     generic (
-        INPUT_HEIGHT        : integer := 8;
-        INPUT_WIDTH         : integer := 8;
-        MAX_CHANNELS        : integer := 4;
+        INPUT_HEIGHT        : integer := 256;
+        INPUT_WIDTH         : integer := 256;
+        MAX_CHANNELS        : integer := 3;
         PARALLEL_UNITS      : integer := 4
     );
     port (

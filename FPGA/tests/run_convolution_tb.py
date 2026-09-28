@@ -7,7 +7,7 @@ IMAGE_TXT  = "image.txt"
 OUTPUT_TXT = "output.txt"
 OUTPUT_PNG = "output.png"
 VHDL_FILES = ["../activation_block.vhd", "../FPGA_accelerator.vhd", "../convolution_block.vhd", "../simulation/questa/FPGA_accelerator.vht"]
-TB_ENTITY  = "tb_conv_file"
+TB_ENTITY  = "simple_conv_test"
 BPP        = 8
 CHANNELS   = 3
 

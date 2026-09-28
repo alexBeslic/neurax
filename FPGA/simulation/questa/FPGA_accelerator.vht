@@ -1,235 +1,189 @@
--- Testbench za FPGA Accelerator Top Module
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use work.conv_types.all;
-use work.pooling_types.all;
-use work.activation_types.all;
+use work.accel_types.all;
 
-entity FPGA_accelerator_tb is
-end FPGA_accelerator_tb;
+entity tb_convolution_block is
+end tb_convolution_block;
 
-architecture testbench of FPGA_accelerator_tb is
+architecture sim of tb_convolution_block is
+
+    -- Parametri slike i kernel
+    constant INPUT_HEIGHT : integer := 256;
+    constant INPUT_WIDTH  : integer := 256;
+    constant INPUT_CHANNELS : integer := 3; -- RGB
+    constant KERNEL_SIZE : integer := 3;
+    constant DATA_WID : integer := DATA_WIDTH; -- 16-bit fixed point
+    constant OUTPUT_HEIGHT : integer := INPUT_HEIGHT - KERNEL_SIZE + 1;
+    constant OUTPUT_WIDTH  : integer := INPUT_WIDTH  - KERNEL_SIZE + 1;
     
-    -- Konstante
-    constant CLK_PERIOD : time := 10 ns;
-    constant INPUT_HEIGHT_TB : integer := 8;
-    constant INPUT_WIDTH_TB : integer := 8;
-    constant MAX_CHANNELS_TB : integer := 4;
-    constant DATA_WIDTH_TB : integer := 16;
-    constant PARALLEL_UNITS_TB : integer := 4;
-    
-    -- Component declaration
-    component FPGA_accelerator
-        generic (
-            INPUT_HEIGHT        : integer := 8;
-            INPUT_WIDTH         : integer := 8;
-            MAX_CHANNELS        : integer := 4;
-            DATA_WIDTH          : integer := 16;
-            PARALLEL_UNITS      : integer := 4
-        );
-        port (
-            clk : in std_logic;
-            rst : in std_logic;
-            enable : in std_logic;
-            operation_select : in std_logic_vector(1 downto 0);
-            start_operation : in std_logic;
-            
-            -- Configuration inputs
-            conv_kernel_size : in integer range 1 to MAX_KERNEL_SIZE;
-            conv_stride : in integer range 1 to 4;
-            conv_padding : in integer range 0 to MAX_KERNEL_SIZE/2;
-            conv_input_channels : in integer range 1 to MAX_CHANNELS_TB;
-            conv_output_channels : in integer range 1 to MAX_CHANNELS_TB;
-            
-            pool_size : in integer range 1 to MAX_POOL_SIZE;
-            pool_stride : in integer range 1 to MAX_POOL_SIZE;
-            pool_type : in pooling_type_t;
-            pool_channels : in integer range 1 to MAX_CHANNELS_TB;
-            
-            activation_type : in activation_type_t;
-            tensor_size : in integer range 1 to MAX_TENSOR_SIZE;
-            alpha : in std_logic_vector(DATA_WIDTH_TB-1 downto 0);
-            
-            batch_size : in integer range 1 to MAX_BATCH_SIZE;
-            
-            input_valid : in std_logic;
-            input_data : in std_logic_vector((PARALLEL_UNITS_TB*DATA_WIDTH_TB)-1 downto 0);
-            input_ready : out std_logic;
-            
-            weight_valid : in std_logic;
-            weight_data : in std_logic_vector(DATA_WIDTH_TB-1 downto 0);
-            weight_ready : out std_logic;
-            
-            bias_valid : in std_logic;
-            bias_data : in std_logic_vector(DATA_WIDTH_TB-1 downto 0);
-            bias_ready : out std_logic;
-            
-            output_valid : out std_logic;
-            output_data : out std_logic_vector((PARALLEL_UNITS_TB*DATA_WIDTH_TB)-1 downto 0);
-            output_ready : in std_logic;
-            
-            operation_done : out std_logic;
-            operation_busy : out std_logic;
-            current_operation : out std_logic_vector(1 downto 0);
-            
-            debug_cycles : out std_logic_vector(31 downto 0);
-            debug_status : out std_logic_vector(7 downto 0)
-        );
-    end component;
-    
-    -- Test signals
+    -- Signali
     signal clk : std_logic := '0';
-    signal rst : std_logic := '1';
-    signal enable : std_logic := '0';
-    signal operation_select : std_logic_vector(1 downto 0) := "00";
-    signal start_operation : std_logic := '0';
+    signal rst : std_logic := '0';
+    signal start : std_logic := '0';
+    signal done  : std_logic;
+    signal ready : std_logic;
     
-    -- Configuration signals
-    signal conv_kernel_size : integer range 1 to MAX_KERNEL_SIZE := 3;
-    signal conv_stride : integer range 1 to 4 := 1;
-    signal conv_padding : integer range 0 to MAX_KERNEL_SIZE/2 := 0;
-    signal conv_input_channels : integer range 1 to MAX_CHANNELS_TB := 1;
-    signal conv_output_channels : integer range 1 to MAX_CHANNELS_TB := 1;
+    -- Config
+    signal config : conv_config_t;
+    signal batch_size : integer := 1;
     
-    signal pool_size : integer range 1 to MAX_POOL_SIZE := 2;
-    signal pool_stride : integer range 1 to MAX_POOL_SIZE := 2;
-    signal pool_type : pooling_type_t := MAX_POOL;
-    signal pool_channels : integer range 1 to MAX_CHANNELS_TB := 4;
-    
-    signal activation_type : activation_type_t := RELU;
-    signal tensor_size : integer range 1 to MAX_TENSOR_SIZE := 64;
-    signal alpha : std_logic_vector(DATA_WIDTH_TB-1 downto 0);
-    
-    signal batch_size : integer range 1 to MAX_BATCH_SIZE := 1;
-    
-    -- Data signals
+    -- Input
     signal input_valid : std_logic := '0';
-    signal input_data : std_logic_vector((PARALLEL_UNITS_TB*DATA_WIDTH_TB)-1 downto 0);
-    signal input_ready : std_logic;
+    signal input_data  : std_logic_vector(DATA_WID-1 downto 0) := (others=>'0');
+    signal input_addr  : std_logic_vector(15 downto 0);
+    signal input_read_en : std_logic;
     
+    -- Weight
     signal weight_valid : std_logic := '0';
-    signal weight_data : std_logic_vector(DATA_WIDTH_TB-1 downto 0);
-    signal weight_ready : std_logic;
+    signal weight_data  : std_logic_vector(DATA_WID-1 downto 0) := (others=>'0');
+    signal weight_addr  : std_logic_vector(15 downto 0);
+    signal weight_read_en : std_logic;
     
+    -- Bias
     signal bias_valid : std_logic := '0';
-    signal bias_data : std_logic_vector(DATA_WIDTH_TB-1 downto 0);
-    signal bias_ready : std_logic;
+    signal bias_data  : std_logic_vector(DATA_WID-1 downto 0) := (others=>'0');
+    signal bias_addr  : std_logic_vector(7 downto 0);
+    signal bias_read_en : std_logic;
     
+    -- Output
     signal output_valid : std_logic;
-    signal output_data : std_logic_vector((PARALLEL_UNITS_TB*DATA_WIDTH_TB)-1 downto 0);
-    signal output_ready : std_logic := '1';
-    
-    signal operation_done : std_logic;
-    signal operation_busy : std_logic;
-    signal current_operation : std_logic_vector(1 downto 0);
-    
-    signal debug_cycles : std_logic_vector(31 downto 0);
-    signal debug_status : std_logic_vector(7 downto 0);
-    
-    -- Helper functions
-    function to_fixed(real_val : real) return std_logic_vector is
-        variable int_val : integer;
-    begin
-        int_val := integer(real_val * real(2**8));  -- 8 fractional bits
-        if int_val > 2**(DATA_WIDTH_TB-1)-1 then int_val := 2**(DATA_WIDTH_TB-1)-1; end if;
-        if int_val < -2**(DATA_WIDTH_TB-1) then int_val := -2**(DATA_WIDTH_TB-1); end if;
-        return std_logic_vector(to_signed(int_val, DATA_WIDTH_TB));
-    end function;
-    
-    function from_fixed(fixed_val : std_logic_vector) return real is
-    begin
-        return real(to_integer(signed(fixed_val))) / real(2**8);
-    end function;
-    
-    -- Test procedure
-    procedure run_operation_test(
-        signal clk : in std_logic;
-        signal rst : out std_logic;
-        signal enable : out std_logic;
-        signal operation_select : out std_logic_vector;
-        signal start_operation : out std_logic;
-        signal operation_done : in std_logic;
-        signal operation_busy : in std_logic;
-        op_code : std_logic_vector(1 downto 0);
-        test_name : string
-    ) is
-    begin
-        report "=== Running Test: " & test_name & " ===" severity note;
-        
-        -- Reset system
-        rst <= '1';
-        enable <= '0';
-        wait for 5 * CLK_PERIOD;
-        rst <= '0';
-        wait for CLK_PERIOD;
-        
-        -- Configure and start operation
-        operation_select <= op_code;
-        enable <= '1';
-        wait for CLK_PERIOD;
-        
-        start_operation <= '1';
-        wait for CLK_PERIOD;
-        start_operation <= '0';
-        
-        -- Wait for operation to complete
-        wait until operation_done = '1' or operation_busy = '0';
-        
-        report "=== Test " & test_name & " Completed ===" severity note;
-        wait for 5 * CLK_PERIOD;
-    end procedure;
+    signal output_data  : std_logic_vector(DATA_WID-1 downto 0);
+    signal output_addr  : std_logic_vector(15 downto 0);
+    signal output_write_en : std_logic;
+
+    -- Counteri
+    signal pixel_cnt : integer := 0;
+    signal channel_cnt : integer := 0;
 
 begin
-    
-    -- Clock generation
-    clk_process: process
-    begin
-        clk <= '0';
-        wait for CLK_PERIOD/2;
-        clk <= '1';
-        wait for CLK_PERIOD/2;
-    end process;
-    
-    -- DUT instantiation
-    DUT: FPGA_accelerator
+
+    -- DUT
+    dut: entity work.convolution_block
         generic map (
-            INPUT_HEIGHT => INPUT_HEIGHT_TB,
-            INPUT_WIDTH => INPUT_WIDTH_TB,
-            MAX_CHANNELS => MAX_CHANNELS_TB,
-            DATA_WIDTH => DATA_WIDTH_TB,
-            PARALLEL_UNITS => PARALLEL_UNITS_TB
+            INPUT_HEIGHT => INPUT_HEIGHT,
+            INPUT_WIDTH  => INPUT_WIDTH
         )
         port map (
-            clk => clk,
-            rst => rst,
-            enable => enable,
-            operation_select => operation_select,
-            start_operation => start_operation,
-            
-            conv_kernel_size => conv_kernel_size,
-            conv_stride => conv_stride,
-            conv_padding => conv_padding,
-            conv_input_channels => conv_input_channels,
-            conv_output_channels => conv_output_channels,
-            
-            pool_size => pool_size,
-            pool_stride => pool_stride,
-            pool_type => pool_type,
-            pool_channels => pool_channels,
-            
-            activation_type => activation_type,
-            tensor_size => tensor_size,
-            alpha => alpha,
-            
+            clk => clk, rst => rst,
+            start => start, done => done, ready => ready,
+            config => config,
             batch_size => batch_size,
-            
             input_valid => input_valid,
-            input_data => input_data,
-            input_ready => input_ready,
-            
+            input_data  => input_data,
+            input_addr  => input_addr,
+            input_read_en => input_read_en,
             weight_valid => weight_valid,
-            weight_data => weight_data,
-            weight_ready => weight_ready,
+            weight_data  => weight_data,
+            weight_addr  => weight_addr,
+            weight_read_en => weight_read_en,
+            bias_valid => bias_valid,
+            bias_data  => bias_data,
+            bias_addr  => bias_addr,
+            bias_read_en => bias_read_en,
+            output_valid => output_valid,
+            output_data  => output_data,
+            output_addr  => output_addr,
+            output_write_en => output_write_en
+        );
+
+    -- Clock 50 MHz
+    clk <= not clk after 10 ns;
+
+    -- Reset i start
+    process
+    begin
+        rst <= '1';
+        wait for 100 ns;
+        rst <= '0';
+        wait for 50 ns;
+        
+        -- Config
+        config.input_channels <= INPUT_CHANNELS;
+        config.output_channels <= 1; -- test 1 filter
+        config.kernel_size <= KERNEL_SIZE;
+        config.stride <= 1;
+        config.padding <= 0;
+
+        -- Start convolution
+        start <= '1';
+        wait for 20 ns;
+        start <= '0';
+        
+        wait until done = '1';
+        report "Convolution finished!" severity note;
+        wait;
+    end process;
+
+    -- Input feeder (RGB)
+    process(clk)
+        variable r_val, g_val, b_val : integer := 0;
+    begin
+        if rising_edge(clk) then
+            input_valid <= '0';
             
-            bias_vali
+            if input_read_en = '1' then
+                input_valid <= '1';
+                
+                -- Simple test pattern: R, G, B sequential
+                case channel_cnt is
+                    when 0 =>
+                        r_val := pixel_cnt mod 256;
+                        input_data <= std_logic_vector(to_signed(r_val*256, DATA_WID));
+                        channel_cnt <= 1;
+                    when 1 =>
+                        g_val := pixel_cnt mod 256;
+                        input_data <= std_logic_vector(to_signed(g_val*256, DATA_WID));
+                        channel_cnt <= 2;
+                    when 2 =>
+                        b_val := pixel_cnt mod 256;
+                        input_data <= std_logic_vector(to_signed(b_val*256, DATA_WID));
+                        channel_cnt <= 0;
+                        pixel_cnt <= pixel_cnt + 1; -- next pixel
+                    when others =>
+                        channel_cnt <= 0;
+                end case;
+            end if;
+        end if;
+    end process;
+
+    -- Weight feeder (identity kernel)
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            weight_valid <= '0';
+            if weight_read_en = '1' then
+                weight_valid <= '1';
+                if weight_addr = x"04" then
+                    weight_data <= std_logic_vector(to_signed(256, DATA_WID)); -- center = 1.0
+                else
+                    weight_data <= (others=>'0');
+                end if;
+            end if;
+        end if;
+    end process;
+
+    -- Bias feeder
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            bias_valid <= '0';
+            if bias_read_en = '1' then
+                bias_valid <= '1';
+                bias_data <= (others=>'0'); -- zero bias
+            end if;
+        end if;
+    end process;
+
+    -- Output monitor
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if output_valid = '1' then
+                report "OUTPUT addr=" & integer'image(to_integer(unsigned(output_addr))) &
+                       " value=" & integer'image(to_integer(signed(output_data))) severity note;
+            end if;
+        end if;
+    end process;
+
+end sim;

@@ -472,18 +472,6 @@
 					"strict" : false
 				},
 				{
-					"name" : "conv_output_channels[0]",
-					"strict" : false
-				},
-				{
-					"name" : "conv_output_channels[1]",
-					"strict" : false
-				},
-				{
-					"name" : "conv_output_channels[2]",
-					"strict" : false
-				},
-				{
 					"name" : "conv_input_channels[0]",
 					"strict" : false
 				},
@@ -500,7 +488,11 @@
 					"strict" : false
 				},
 				{
-					"name" : "conv_input_channels[2]",
+					"name" : "input_valid",
+					"strict" : false
+				},
+				{
+					"name" : "weight_valid",
 					"strict" : false
 				},
 				{
@@ -520,43 +512,75 @@
 					"strict" : false
 				},
 				{
-					"name" : "pool_channels[2]",
+					"name" : "bias_data[5]",
 					"strict" : false
 				},
 				{
-					"name" : "pool_channels[0]",
+					"name" : "bias_data[4]",
 					"strict" : false
 				},
 				{
-					"name" : "pool_channels[1]",
+					"name" : "bias_data[3]",
 					"strict" : false
 				},
 				{
-					"name" : "input_valid",
+					"name" : "bias_data[2]",
 					"strict" : false
 				},
 				{
-					"name" : "weight_valid",
-					"strict" : false
-				},
-				{
-					"name" : "pool_stride[3]",
-					"strict" : false
-				},
-				{
-					"name" : "pool_stride[1]",
-					"strict" : false
-				},
-				{
-					"name" : "pool_stride[0]",
-					"strict" : false
-				},
-				{
-					"name" : "pool_stride[2]",
+					"name" : "bias_data[1]",
 					"strict" : false
 				},
 				{
 					"name" : "bias_data[0]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[15]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[14]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[13]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[12]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[11]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[10]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[9]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[8]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[7]",
+					"strict" : false
+				},
+				{
+					"name" : "bias_data[6]",
+					"strict" : false
+				},
+				{
+					"name" : "conv_output_channels[0]",
+					"strict" : false
+				},
+				{
+					"name" : "conv_output_channels[1]",
 					"strict" : false
 				},
 				{
@@ -633,66 +657,6 @@
 				},
 				{
 					"name" : "input_data[1]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[1]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[2]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[3]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[4]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[5]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[6]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[7]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[8]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[9]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[10]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[11]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[12]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[13]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[14]",
-					"strict" : false
-				},
-				{
-					"name" : "bias_data[15]",
 					"strict" : false
 				},
 				{
@@ -888,18 +852,6 @@
 					"strict" : false
 				},
 				{
-					"name" : "conv_stride[2]",
-					"strict" : false
-				},
-				{
-					"name" : "conv_stride[1]",
-					"strict" : false
-				},
-				{
-					"name" : "conv_stride[0]",
-					"strict" : false
-				},
-				{
 					"name" : "weight_data[0]",
 					"strict" : false
 				},
@@ -964,11 +916,39 @@
 					"strict" : false
 				},
 				{
+					"name" : "pool_stride[3]",
+					"strict" : false
+				},
+				{
+					"name" : "pool_stride[2]",
+					"strict" : false
+				},
+				{
 					"name" : "conv_padding[1]",
 					"strict" : false
 				},
 				{
 					"name" : "conv_padding[0]",
+					"strict" : false
+				},
+				{
+					"name" : "conv_stride[2]",
+					"strict" : false
+				},
+				{
+					"name" : "pool_stride[0]",
+					"strict" : false
+				},
+				{
+					"name" : "pool_stride[1]",
+					"strict" : false
+				},
+				{
+					"name" : "conv_stride[0]",
+					"strict" : false
+				},
+				{
+					"name" : "conv_stride[1]",
 					"strict" : false
 				}
 			]

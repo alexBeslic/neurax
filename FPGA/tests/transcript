@@ -1,0 +1,68 @@
+# vsim -c simple_conv_test -do "run -all; quit" 
+# Start time: 18:31:03 on Sep 28,2026
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.numeric_std(body)
+# Loading work.accel_types
+# Loading work.simple_conv_test(sim)
+# Loading work.convolution_block(behavioral)
+# run -all
+# ** Note: Starting simple convolution test: 3x3 input, 2x2 kernel -> 2x2 output
+#    Time: 70 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 1
+#    Time: 85 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 2
+#    Time: 95 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 3
+#    Time: 105 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 4
+#    Time: 115 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 5
+#    Time: 125 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: OUTPUT #0 = 1536 (addr=0)
+#    Time: 135 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 6
+#    Time: 145 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 7
+#    Time: 155 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 8
+#    Time: 165 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 0
+#    Time: 175 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 1
+#    Time: 185 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: OUTPUT #1 = 5376 (addr=1)
+#    Time: 195 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 2
+#    Time: 205 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 3
+#    Time: 215 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 4
+#    Time: 225 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 5
+#    Time: 235 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 6
+#    Time: 245 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: OUTPUT #2 = 2304 (addr=2)
+#    Time: 255 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 7
+#    Time: 265 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 8
+#    Time: 275 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 0
+#    Time: 285 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 1
+#    Time: 295 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Feeding input: 2
+#    Time: 305 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: OUTPUT #3 = 6144 (addr=3)
+#    Time: 315 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Convolution completed! Received 4 outputs
+#    Time: 315 ns  Iteration: 2  Instance: /simple_conv_test
+# Break key hit
+# Break at ../simulation/questa/FPGA_accelerator.vht line 77
+# Stopped at ../simulation/questa/FPGA_accelerator.vht line 77
+#  quit
+# End time: 18:38:27 on Sep 28,2026, Elapsed time: 0:07:24
+# Errors: 0, Warnings: 0
