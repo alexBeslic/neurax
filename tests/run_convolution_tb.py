@@ -4,9 +4,10 @@ from pathlib import Path
 from PIL import Image
 
 
-# Select convolution, activation, both, or neither.
+# Select convolution, activation, pooling, or any combination.
 RUN_CONVOLUTION_TEST = True
 RUN_ACTIVATION_TEST = True
+RUN_POOLING_TEST = True
 
 TEST_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = TEST_DIR.parent
@@ -20,6 +21,7 @@ VHDL_FILES = [
     PROJECT_DIR / "hardware/hdl/FPGA_accelerator.vhd",
     PROJECT_DIR / "hardware/hdl/convolution_block.vhd",
     PROJECT_DIR / "hardware/hdl/activation_block.vhd",
+    PROJECT_DIR / "hardware/hdl/pooling_block.vhd",
     TESTBENCH,
 ]
 
@@ -30,17 +32,34 @@ KERNEL_RADIUS = 1
 TILE_CORE_WIDTH = MAX_WIDTH - 2 * KERNEL_RADIUS
 TILE_CORE_HEIGHT = MAX_HEIGHT - 2 * KERNEL_RADIUS
 
-if not RUN_CONVOLUTION_TEST and not RUN_ACTIVATION_TEST:
+if not RUN_CONVOLUTION_TEST and not RUN_ACTIVATION_TEST and not RUN_POOLING_TEST:
     print("No tests selected; skipping simulation and image I/O.")
     raise SystemExit(0)
 
-image = Image.open(PNG_INPUT).convert("RGB")
-image_width, image_height = image.size
-print(f"Loaded PNG: {image_width}x{image_height}")
+POOLING_ONLY = RUN_POOLING_TEST and not RUN_CONVOLUTION_TEST and not RUN_ACTIVATION_TEST
+if not POOLING_ONLY:
+    image = Image.open(PNG_INPUT).convert("RGB")
+    image_width, image_height = image.size
+    print(f"Loaded PNG: {image_width}x{image_height}")
 
 subprocess.run(["vlib", "work"], cwd=TEST_DIR, check=True)
 for vhdl_file in VHDL_FILES:
     subprocess.run(["vcom", "-2008", str(vhdl_file)], cwd=TEST_DIR, check=True)
+
+if POOLING_ONLY:
+    subprocess.run(
+        [
+            "vsim", "-c",
+            "-gRUN_CONVOLUTION=false",
+            "-gRUN_ACTIVATION=false",
+            "-gRUN_POOLING=true",
+            "conv_activation_tb",
+            "-do", "run -all; quit -f",
+        ],
+        cwd=TEST_DIR,
+        check=True,
+    )
+    raise SystemExit(0)
 
 output_image = Image.new("RGB", (image_width, image_height))
 
@@ -66,6 +85,7 @@ for core_top in range(0, image_height, TILE_CORE_HEIGHT):
                 "vsim", "-c",
                 f"-gRUN_CONVOLUTION={str(RUN_CONVOLUTION_TEST).lower()}",
                 f"-gRUN_ACTIVATION={str(RUN_ACTIVATION_TEST).lower()}",
+                f"-gRUN_POOLING={str(RUN_POOLING_TEST).lower()}",
                 "-gIMAGE_MODE=true",
                 f"-gIMG_WIDTH={tile_width}",
                 f"-gIMG_HEIGHT={tile_height}",

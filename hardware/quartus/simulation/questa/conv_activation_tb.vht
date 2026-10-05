@@ -9,6 +9,7 @@ entity conv_activation_tb is
     generic (
         RUN_CONVOLUTION : boolean := true;
         RUN_ACTIVATION  : boolean := true;
+        RUN_POOLING     : boolean := true;
         IMAGE_MODE      : boolean := false;
         IMG_WIDTH       : integer := 4;
         IMG_HEIGHT      : integer := 4;
@@ -40,9 +41,16 @@ architecture sim of conv_activation_tb is
     constant KERNEL_SIZE    : integer := configured_kernel_size;
     constant PADDING        : integer := configured_padding;
     constant TENSOR_SIZE    : integer := IMG_WIDTH * IMG_HEIGHT * CHANNELS;
+    constant POOL_SIZE      : integer := 2;
+    constant POOL_STRIDE    : integer := 2;
+    constant POOL_OUT_HEIGHT: integer := (IMG_HEIGHT-POOL_SIZE)/POOL_STRIDE+1;
+    constant POOL_OUT_WIDTH : integer := (IMG_WIDTH-POOL_SIZE)/POOL_STRIDE+1;
+    constant POOL_OUT_COUNT : integer := POOL_OUT_HEIGHT*POOL_OUT_WIDTH;
     constant UNWRITTEN      : integer := 32767;
 
     type sample_mem_t is array (0 to TENSOR_SIZE-1) of integer;
+    type pool_input_mem_t is array (0 to IMG_HEIGHT*IMG_WIDTH-1) of integer;
+    type pool_output_mem_t is array (0 to POOL_OUT_COUNT-1) of integer;
     type weight_mem_t is array (0 to KERNEL_SIZE*KERNEL_SIZE*CHANNELS*CHANNELS-1) of integer;
 
     impure function load_input return sample_mem_t is
@@ -169,9 +177,42 @@ architecture sim of conv_activation_tb is
     signal act_current_element : std_logic_vector(15 downto 0);
     signal act_cycles          : std_logic_vector(31 downto 0);
     signal conv_write_count   : integer := 0;
+    signal pool_enable        : std_logic := '0';
+    signal pool_done          : std_logic;
+    signal pool_ready         : std_logic;
+    signal pool_busy          : std_logic;
+    signal pool_config        : pooling_config_t := (
+        pool_size => POOL_SIZE,
+        stride => POOL_STRIDE,
+        pool_type => MAX_POOL,
+        channels => 1
+    );
+    signal pool_input_valid   : std_logic;
+    signal pool_input_data    : data_array_1d(0 to 0);
+    signal pool_input_addr    : std_logic_vector(17 downto 0);
+    signal pool_input_read_en : std_logic;
+    signal pool_output_valid  : std_logic;
+    signal pool_output_data   : data_array_1d(0 to 0);
+    signal pool_output_addr   : std_logic_vector(17 downto 0);
+    signal pool_output_write  : std_logic;
+    signal pool_position      : std_logic_vector(31 downto 0);
+    signal pool_cycles        : std_logic_vector(31 downto 0);
+    signal pool_windows       : std_logic_vector(15 downto 0);
+    signal pool_input_mem     : pool_input_mem_t;
+    signal pool_results       : pool_output_mem_t := (others => UNWRITTEN);
+    signal pool_write_count   : integer := 0;
+
+    function make_pool_input return pool_input_mem_t is
+        variable values : pool_input_mem_t;
+    begin
+        for index in values'range loop
+            values(index) := index + 1;
+        end loop;
+        return values;
+    end function;
 
 begin
-    assert RUN_CONVOLUTION or RUN_ACTIVATION
+    assert RUN_CONVOLUTION or RUN_ACTIVATION or RUN_POOLING
         report "Enable at least one test stage" severity failure;
     assert IMG_WIDTH <= MAX_WIDTH and IMG_HEIGHT <= MAX_HEIGHT
         report "Image tile exceeds convolution dimensions" severity failure;
@@ -209,6 +250,20 @@ begin
     end process;
 
     bias_data <= (others => '0');
+    pool_input_mem <= make_pool_input;
+    pool_input_valid <= pool_input_read_en;
+
+    pool_input_memory : process(pool_input_addr, pool_input_read_en, pool_input_mem)
+        variable address : integer;
+    begin
+        pool_input_data(0) <= (others => '0');
+        if pool_input_read_en = '1' and not is_x(pool_input_addr) then
+            address := to_integer(unsigned(pool_input_addr));
+            if address < pool_input_mem'length then
+                pool_input_data(0) <= std_logic_vector(to_signed(pool_input_mem(address), DATA_WIDTH));
+            end if;
+        end if;
+    end process;
 
     activation_input_memory : process(act_input_addr, act_chunk_base, conv_results)
         variable base_addr : integer;
@@ -267,6 +322,24 @@ begin
             current_element => act_current_element, processing_cycles => act_cycles
         );
 
+    pooling : entity work.pooling_block
+        generic map (
+            INPUT_HEIGHT => IMG_HEIGHT,
+            INPUT_WIDTH => IMG_WIDTH,
+            PARALLEL_CHANNELS => 1
+        )
+        port map (
+            clk => clk, rst => rst, start => pool_enable,
+            done => pool_done, ready => pool_ready, busy => pool_busy,
+            config => pool_config, batch_size => 1,
+            input_valid => pool_input_valid, input_data => pool_input_data,
+            input_addr => pool_input_addr, input_read_en => pool_input_read_en,
+            output_valid => pool_output_valid, output_data => pool_output_data,
+            output_addr => pool_output_addr, output_write_en => pool_output_write,
+            current_position => pool_position, processing_cycles => pool_cycles,
+            pool_window_count => pool_windows
+        );
+
     conv_monitor : process(clk)
         variable address : integer;
     begin
@@ -275,6 +348,18 @@ begin
             if address < TENSOR_SIZE then
                 conv_results(address) <= to_integer(signed(conv_output_data));
                 conv_write_count <= conv_write_count + 1;
+            end if;
+        end if;
+    end process;
+
+    pool_monitor : process(clk)
+        variable address : integer;
+    begin
+        if rising_edge(clk) and pool_output_write = '1' and pool_output_valid = '1' then
+            address := to_integer(unsigned(pool_output_addr));
+            if address < POOL_OUT_COUNT and pool_results(address) = UNWRITTEN then
+                pool_results(address) <= to_integer(signed(pool_output_data(0)));
+                pool_write_count <= pool_write_count + 1;
             end if;
         end if;
     end process;
@@ -290,6 +375,8 @@ begin
         variable accumulated : integer;
         variable input_y, input_x, input_index, weight_index, output_index : integer;
         variable chunk_base, chunk_size : integer;
+        variable pool_expected : integer;
+        variable pool_cycle_count : integer;
     begin
         if IMAGE_MODE then
             file_open(output_handle, OUTPUT_FILE, write_mode);
@@ -407,6 +494,39 @@ begin
                 chunk_base := chunk_base + chunk_size;
             end loop;
             report "Activation RELU test passed" severity note;
+        end if;
+
+        if RUN_POOLING then
+            wait until rising_edge(clk) and pool_ready = '1';
+            pool_enable <= '1';
+            wait until rising_edge(clk);
+            pool_enable <= '0';
+            pool_cycle_count := 0;
+            while pool_done /= '1' loop
+                wait until rising_edge(clk);
+                pool_cycle_count := pool_cycle_count + 1;
+                assert pool_cycle_count < IMG_WIDTH*IMG_HEIGHT*10
+                    report "Timeout waiting for max pooling" severity failure;
+            end loop;
+            wait until rising_edge(clk);
+            wait for 1 ns;
+            assert pool_write_count = POOL_OUT_COUNT
+                report "Pooling wrote " & integer'image(pool_write_count) &
+                       " values; expected " & integer'image(POOL_OUT_COUNT)
+                severity failure;
+            for y in 0 to POOL_OUT_HEIGHT-1 loop
+                for x in 0 to POOL_OUT_WIDTH-1 loop
+                    pool_expected := (y*POOL_STRIDE+POOL_SIZE-1)*IMG_WIDTH +
+                                     (x*POOL_STRIDE+POOL_SIZE);
+                    output_index := y*POOL_OUT_WIDTH+x;
+                    assert pool_results(output_index) = pool_expected
+                        report "MAX pooling mismatch at output " & integer'image(output_index) &
+                               ": expected " & integer'image(pool_expected) & ", received " &
+                               integer'image(pool_results(output_index))
+                        severity failure;
+                end loop;
+            end loop;
+            report "MAX pooling test passed" severity note;
         end if;
 
         if IMAGE_MODE then

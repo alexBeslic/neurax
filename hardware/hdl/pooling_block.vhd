@@ -229,12 +229,12 @@ begin
                             pool_w_cnt <= 0;
                             pool_h_cnt <= 0;
                             
-                            -- Finalize pooling results
+                            -- The output is formed combinationally from the accumulator
+                            -- and this final input sample; clear state for the next window.
                             for c in 0 to PARALLEL_CHANNELS-1 loop
-                                if config.pool_type = AVERAGE_POOL and pool_accumulators(c).count > 0 then
-                                    pool_accumulators(c).value <= 
-                                        pool_accumulators(c).value / pool_accumulators(c).count;
-                                end if;
+                                pool_accumulators(c).value <= (others => '0');
+                                pool_accumulators(c).count <= 0;
+                                pool_accumulators(c).initialized <= '0';
                             end loop;
                             
                             -- Move to next output position
@@ -328,24 +328,42 @@ begin
         output_addr <= std_logic_vector(to_unsigned(out_addr, 18));
     end process;
     
-    -- Output data generation
-    output_data_gen: process(clk)
+    -- Present the complete result, including the sample currently completing the window.
+    output_data_gen: process(current_state, window_complete, input_valid,
+                             input_data, pool_accumulators, config)
+        variable result_value : signed(31 downto 0);
+        variable input_value  : signed(DATA_WIDTH-1 downto 0);
     begin
-        if rising_edge(clk) then
-            if current_state = WRITE_OUTPUT or 
-               (current_state = POOL_COMPUTE and 
-                pool_h_cnt = config.pool_size - 1 and 
-                pool_w_cnt = config.pool_size - 1) then
-                
-                for c in 0 to PARALLEL_CHANNELS-1 loop
-                    output_data(c) <= std_logic_vector(pool_accumulators(c).value(DATA_WIDTH-1 downto 0));
-                end loop;
-            else
-                for c in 0 to PARALLEL_CHANNELS-1 loop
-                    output_data(c) <= (others => '0');
-                end loop;
+        for c in 0 to PARALLEL_CHANNELS-1 loop
+            output_data(c) <= (others => '0');
+            if current_state = POOL_COMPUTE and window_complete = '1' and input_valid = '1' then
+                input_value := signed(input_data(c));
+                case config.pool_type is
+                    when MAX_POOL =>
+                        if pool_accumulators(c).initialized = '0' or
+                           input_value > pool_accumulators(c).value(DATA_WIDTH-1 downto 0) then
+                            result_value := resize(input_value, 32);
+                        else
+                            result_value := pool_accumulators(c).value;
+                        end if;
+                    when MIN_POOL =>
+                        if pool_accumulators(c).initialized = '0' or
+                           input_value < pool_accumulators(c).value(DATA_WIDTH-1 downto 0) then
+                            result_value := resize(input_value, 32);
+                        else
+                            result_value := pool_accumulators(c).value;
+                        end if;
+                    when SUM_POOL =>
+                        result_value := pool_accumulators(c).value + resize(input_value, 32);
+                    when AVERAGE_POOL =>
+                        result_value := (pool_accumulators(c).value + resize(input_value, 32)) /
+                                        (pool_accumulators(c).count + 1);
+                    when others =>
+                        result_value := resize(input_value, 32);
+                end case;
+                output_data(c) <= std_logic_vector(result_value(DATA_WIDTH-1 downto 0));
             end if;
-        end if;
+        end loop;
     end process;
     
     -- Control signals
@@ -355,11 +373,10 @@ begin
     
     input_read_en <= pool_operation_active;
     
-    output_valid <= '1' when current_state = WRITE_OUTPUT or 
-                            (current_state = POOL_COMPUTE and window_complete = '1') else '0';
+    output_valid <= '1' when current_state = POOL_COMPUTE and
+                            window_complete = '1' and input_valid = '1' else '0';
     
-    output_write_en <= '1' when current_state = WRITE_OUTPUT or 
-                            (current_state = POOL_COMPUTE and window_complete = '1') else '0';
+    output_write_en <= output_valid;
     
     -- Status signals
     ready <= '1' when current_state = IDLE else '0';
