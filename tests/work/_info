@@ -22,66 +22,204 @@ VfK@zRL@jokB[Nmace@QcE2
 !s100 SQ2jmiCgg@F4OZ[GBhUY92
 Z7 OV;C;10.5b;63
 33
-Z8 !s110 1791203042
+Z8 !s110 1791230188
 !i10b 1
-Z9 !s108 1791203042.000000
+Z9 !s108 1791230188.000000
 Z10 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\FPGA_accelerator.vhd|
 Z11 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\FPGA_accelerator.vhd|
 !i113 1
 Z12 o-2008
 Z13 tExplicit 1 CvgOpt 0
 Eactivation_block
-R4
-Z14 DPx4 work 11 accel_types 0 22 fK@zRL@jokB[Nmace@QcE2
+Z14 w1791226128
+Z15 DPx4 work 11 accel_types 0 22 fK@zRL@jokB[Nmace@QcE2
 R1
 R2
 R3
 R0
-Z15 8../hardware/hdl/activation_block.vhd
-Z16 F../hardware/hdl/activation_block.vhd
+Z16 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\activation_block.vhd
+Z17 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\activation_block.vhd
 l0
 L7
 V:_@lf=8[Y_Ee=7?PbN4H30
 !s100 E>h^HUaL]Mb5G^]h10mfA1
 R7
 33
-Z17 !s110 1790626258
+R8
 !i10b 1
-Z18 !s108 1790626258.000000
-Z19 !s90 -2008|../hardware/hdl/activation_block.vhd|
-Z20 !s107 ../hardware/hdl/activation_block.vhd|
+R9
+Z18 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\activation_block.vhd|
+Z19 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\activation_block.vhd|
 !i113 1
 R12
 R13
 Abehavioral
-R14
+R15
 R1
 R2
 R3
-DEx4 work 16 activation_block 0 22 :_@lf=8[Y_Ee=7?PbN4H30
+Z20 DEx4 work 16 activation_block 0 22 :_@lf=8[Y_Ee=7?PbN4H30
 l131
 L45
-VfNW8^`m9E3CJcETb]:;YR2
-!s100 1`R7F5_J?SdMgdRZXb;Sc1
+VnbF=L=;PL5;DBGSR[;2J40
+!s100 6h1C<:7GE7Jg;Q_dJFL9M0
 R7
 33
-R17
+R8
 !i10b 1
+R9
 R18
 R19
-R20
 !i113 1
 R12
 R13
-Econvolution_block
-Z21 w1791199065
+Eactivation_block_tb
 R14
+R15
 R1
 R2
 R3
 R0
-Z22 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd
-Z23 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd
+Z21 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_tb.vht
+Z22 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_tb.vht
+l0
+L6
+VhFh>2>^CBG@jRa3fbn2K00
+!s100 akMo@:U[gfH;JmOn:iPVl3
+R7
+33
+Z23 !s110 1791229247
+!i10b 1
+Z24 !s108 1791229246.000000
+Z25 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_tb.vht|
+Z26 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_tb.vht|
+!i113 1
+R12
+R13
+Asim
+Z27 DPx3 std 3 env 0 22 d?`1ck@NdeD@H3RZG7FgZ2
+R20
+R15
+R1
+R2
+R3
+DEx4 work 19 activation_block_tb 0 22 hFh>2>^CBG@jRa3fbn2K00
+l37
+L9
+V2kX<NcOo0>@7RVZTQ@e?V0
+!s100 zO[kb>TheJ@d2AHeV7<0V0
+R7
+33
+R23
+!i10b 1
+R24
+R25
+R26
+!i113 1
+R12
+R13
+Eactivation_image_tb
+Z28 w1791227446
+R15
+R27
+R1
+R2
+R3
+R0
+Z29 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_image_tb.vht
+Z30 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_image_tb.vht
+l0
+L8
+V;>d1Y6_UXg]D229ECMiN@1
+!s100 gQ8>:z@NzV:::zO3dEHLn2
+R7
+33
+R23
+!i10b 1
+Z31 !s108 1791229247.000000
+Z32 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_image_tb.vht|
+Z33 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\activation_image_tb.vht|
+!i113 1
+R12
+R13
+Asim
+R20
+R15
+R27
+R1
+R2
+R3
+DEx4 work 19 activation_image_tb 0 22 ;>d1Y6_UXg]D229ECMiN@1
+l74
+L17
+Vgm2IFQXNmfE6:MUB?MSoF1
+!s100 EhMnfT;PlfA<J_jz2;9463
+R7
+33
+R23
+!i10b 1
+R31
+R32
+R33
+!i113 1
+R12
+R13
+Econv_activation_tb
+Z34 w1791230084
+R15
+R27
+R1
+R2
+R3
+R0
+Z35 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\conv_activation_tb.vht
+Z36 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\conv_activation_tb.vht
+l0
+L8
+VeB6iO4^_Vgn=ZIjHBREQZ2
+!s100 dj;OV;58G7lagX315a?7A0
+R7
+33
+R8
+!i10b 1
+R9
+Z37 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\conv_activation_tb.vht|
+Z38 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\conv_activation_tb.vht|
+!i113 1
+R12
+R13
+Asim
+R20
+Z39 DEx4 work 17 convolution_block 0 22 ;Q3ojUN8zQ1Q>:7BGI[LK0
+R15
+R27
+R1
+R2
+R3
+Z40 DEx4 work 18 conv_activation_tb 0 22 eB6iO4^_Vgn=ZIjHBREQZ2
+l173
+L20
+Z41 VKKJUl=5@Pf@_JMX?]Y<NE0
+Z42 !s100 ]eOV;j2>mKYB8cZU0_LSC0
+R7
+33
+R8
+!i10b 1
+R9
+R37
+R38
+!i113 1
+R12
+R13
+Econvolution_block
+Z43 w1791203597
+R15
+R1
+R2
+R3
+R0
+Z44 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd
+Z45 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd
 l0
 L9
 V;Q3ojUN8zQ1Q>:7BGI[LK0
@@ -91,17 +229,17 @@ R7
 R8
 !i10b 1
 R9
-Z24 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd|
-Z25 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd|
+Z46 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd|
+Z47 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\hdl\convolution_block.vhd|
 !i113 1
 R12
 R13
 Abehavioral
-R14
+R15
 R1
 R2
 R3
-Z26 DEx4 work 17 convolution_block 0 22 ;Q3ojUN8zQ1Q>:7BGI[LK0
+R39
 l98
 L53
 V5SW[L3[Sk@?Y;MV_VO7ac0
@@ -111,83 +249,83 @@ R7
 R8
 !i10b 1
 R9
-R24
-R25
+R46
+R47
 !i113 1
 R12
 R13
 Econvolution_block_tb
-Z27 w1790619785
-R14
-Z28 DPx3 std 3 env 0 22 d?`1ck@NdeD@H3RZG7FgZ2
+Z48 w1791199065
+R15
+R27
 R1
 R2
 R3
 R0
-Z29 8..\hardware\quartus\simulation\questa\convolution_tb.vht
-Z30 F..\hardware\quartus\simulation\questa\convolution_tb.vht
+Z49 8..\hardware\quartus\simulation\questa\convolution_tb.vht
+Z50 F..\hardware\quartus\simulation\questa\convolution_tb.vht
 l0
 L12
 V^gM97=SeWTCH5m?ddY41e0
 !s100 ;2WdN;:6b1cVQGA?AcP]i2
 R7
 33
-Z31 !s110 1790619787
+Z51 !s110 1791225951
 !i10b 1
-Z32 !s108 1790619787.000000
-Z33 !s90 -2008|..\hardware\quartus\simulation\questa\convolution_tb.vht|
-Z34 !s107 ..\hardware\quartus\simulation\questa\convolution_tb.vht|
+Z52 !s108 1791225951.000000
+Z53 !s90 -2008|..\hardware\quartus\simulation\questa\convolution_tb.vht|
+Z54 !s107 ..\hardware\quartus\simulation\questa\convolution_tb.vht|
 !i113 1
 R12
 R13
 Asim
-R26
-R14
-R28
+R39
+R15
+R27
 R1
 R2
 R3
 DEx4 work 20 convolution_block_tb 0 22 ^gM97=SeWTCH5m?ddY41e0
 l73
 L27
-V8`Cd6IISY8N?Lbk7_b`fF3
-!s100 4dkWS?>?nTKehWYF3lE1?2
+VSkSggaS:dEOJe2n=594Vo2
+!s100 QFbh:CWz_HZ:aYnERbQl61
 R7
 33
-R31
+R51
 !i10b 1
-R32
-R33
-R34
+R52
+R53
+R54
 !i113 1
 R12
 R13
 Econvolution_tb
-Z35 w1790620075
-R14
+Z55 w1790620075
+R15
 R1
 R2
 R3
 R0
-Z36 8..\hardware\quartus\simulation\questa\convolution_io_tb.vht
-Z37 F..\hardware\quartus\simulation\questa\convolution_io_tb.vht
+Z56 8..\hardware\quartus\simulation\questa\convolution_io_tb.vht
+Z57 F..\hardware\quartus\simulation\questa\convolution_io_tb.vht
 l0
 L7
 V5R;NkUT`llLLd1]h8;^121
 !s100 66KN]5`b`N1EDbD>BH0V?0
 R7
 33
-Z38 !s110 1790620078
+Z58 !s110 1790620078
 !i10b 1
-Z39 !s108 1790620078.000000
-Z40 !s90 -2008|..\hardware\quartus\simulation\questa\convolution_io_tb.vht|
-Z41 !s107 ..\hardware\quartus\simulation\questa\convolution_io_tb.vht|
+Z59 !s108 1790620078.000000
+Z60 !s90 -2008|..\hardware\quartus\simulation\questa\convolution_io_tb.vht|
+Z61 !s107 ..\hardware\quartus\simulation\questa\convolution_io_tb.vht|
 !i113 1
 R12
 R13
 Abehavior
-R26
-R14
+R39
+R15
 R1
 R2
 R3
@@ -198,17 +336,17 @@ V9HQk_KVT2kNR]fbl8Q57[3
 !s100 lg5ACPeLe^e]kT9C4P;mC3
 R7
 33
-R38
+R58
 !i10b 1
-R39
-R40
-R41
+R59
+R60
+R61
 !i113 1
 R12
 R13
 Efpga_accelerator
 R4
-R14
+R15
 R1
 R2
 R3
@@ -230,7 +368,7 @@ R11
 R12
 R13
 Abehavioral
-R14
+R15
 R1
 R2
 R3
@@ -250,46 +388,46 @@ R11
 R12
 R13
 Esimple_conv_test
-R21
-R14
+R48
+R15
 R1
 R2
 R3
 R0
-Z42 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht
-Z43 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht
+Z62 8C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht
+Z63 FC:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht
 l0
 L18
 VZ]8;`bS1f]9NZL[5z4:U32
 !s100 Jn>bOD@OPaWYMG5j8nMj31
 R7
 33
-R8
+Z64 !s110 1791229246
 !i10b 1
-R9
-Z44 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht|
-Z45 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht|
+R24
+Z65 !s90 -2008|C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht|
+Z66 !s107 C:\Users\cenic\OneDrive\Desktop\NEURAX\neurax\hardware\quartus\simulation\questa\convolution_io_tb.vht|
 !i113 1
 R12
 R13
 Asim
-R26
-R14
+R39
+R15
 R1
 R2
 R3
-Z46 DEx4 work 16 simple_conv_test 0 22 Z]8;`bS1f]9NZL[5z4:U32
+DEx4 work 16 simple_conv_test 0 22 Z]8;`bS1f]9NZL[5z4:U32
 l177
 L28
-Z47 VR[81Z;;aH^F_eWU1KJTBA1
-Z48 !s100 >5DI;lY6KBj:Jl<n:EAQj3
+VR[81Z;;aH^F_eWU1KJTBA1
+!s100 >5DI;lY6KBj:Jl<n:EAQj3
 R7
 33
-R8
+R64
 !i10b 1
-R9
-R44
-R45
+R24
+R65
+R66
 !i113 1
 R12
 R13

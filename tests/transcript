@@ -1,21 +1,21 @@
-# vsim -c simple_conv_test -do "run -all; quit -f" -gIMG_WIDTH=5 -gIMG_HEIGHT=5 -gKERNEL_TYPE=4 
-# Start time: 14:24:46 on Oct 05,2026
+# vsim -c conv_activation_tb -do "run -all; quit -f" -gOUTPUT_FILE="output.txt" -gIMG_WIDTH=5 -gRUN_CONVOLUTION=true -gIMG_HEIGHT=5 -gRUN_ACTIVATION=false -gINPUT_FILE="image.txt" -gIMAGE_MODE=true 
+# Start time: 21:57:17 on Oct 05,2026
 # Loading std.standard
 # Loading std.textio(body)
 # Loading ieee.std_logic_1164(body)
 # Loading ieee.numeric_std(body)
+# Loading std.env(body)
 # Loading work.accel_types
-# Loading work.simple_conv_test(sim)
+# Loading work.conv_activation_tb(sim)
 # Loading work.convolution_block(behavioral)
+# Loading work.activation_block(behavioral)
 # run -all
-# ** Note: Image 5x5, kernel type 4
-#    Time: 0 ps  Iteration: 0  Instance: /simple_conv_test
-# ** Note: DUT finished after 2101 cycles, 75 outputs written
-#    Time: 21106 ns  Iteration: 0  Instance: /simple_conv_test
-# ** Note: Golden check PASSED (75 values)
-#    Time: 21106 ns  Iteration: 0  Instance: /simple_conv_test
-# ** Note: Wrote output.txt
-#    Time: 21106 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Convolution passed
+#    Time: 21096 ns  Iteration: 0  Instance: /conv_activation_tb
+# ** Note: *** SELECTED TEST STAGES PASSED ***
+#    Time: 21096 ns  Iteration: 0  Instance: /conv_activation_tb
+# Break in Process stimulus at C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/hardware/quartus/simulation/questa/conv_activation_tb.vht line 416
+# Stopped at C:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/hardware/quartus/simulation/questa/conv_activation_tb.vht line 416
 #  quit -f
-# End time: 14:24:46 on Oct 05,2026, Elapsed time: 0:00:00
+# End time: 21:57:17 on Oct 05,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0

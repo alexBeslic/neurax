@@ -61,9 +61,9 @@ architecture behavioral of activation_block is
     signal pipeline : parallel_pipeline_t;
     
     -- Counters
-    signal element_counter : integer range 0 to MAX_TENSOR_SIZE;
+    signal element_counter : integer range 0 to MAX_TENSOR_SIZE := 0;
     signal cycle_counter : unsigned(31 downto 0);
-    signal lut_init_counter : integer range 0 to 255;
+    signal lut_init_counter : integer range 0 to 256;
     
     -- LUT memories za aproksimacije
     signal sigmoid_lut : lut_array_t;
@@ -251,7 +251,8 @@ begin
     ---------------------------------------------------------------------------
     -- Next state logic (combinational)
     ---------------------------------------------------------------------------
-    process(current_state, start, lut_initialized, element_counter, tensor_size, lut_init_counter)
+        process(current_state, start, lut_initialized, element_counter, tensor_size,
+            lut_init_counter, output_valid)
     begin
         next_state <= current_state;
         
@@ -276,8 +277,9 @@ begin
                 end if;
                 
             when PIPELINE_FLUSH =>
-                -- Po završetku flush-a idemo u DONE
-                next_state <= DONE_ST;
+                if output_valid = '0' then
+                    next_state <= DONE_ST;
+                end if;
                 
             when DONE_ST =>
                 next_state <= IDLE;
