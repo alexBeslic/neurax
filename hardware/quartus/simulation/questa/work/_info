@@ -1,0 +1,208 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Users/cenic/OneDrive/Desktop/NEURAX/neurax/hardware/quartus/simulation/questa
+Paccel_types
+Z1 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+Z2 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z3 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+Z4 w1790614293
+R0
+Z5 8..\..\..\..\hardware\hdl\FPGA_accelerator.vhd
+Z6 F..\..\..\..\hardware\hdl\FPGA_accelerator.vhd
+l0
+L10
+VfK@zRL@jokB[Nmace@QcE2
+!s100 SQ2jmiCgg@F4OZ[GBhUY92
+Z7 OV;C;10.5b;63
+33
+Z8 !s110 1791198666
+!i10b 1
+Z9 !s108 1791198666.000000
+Z10 !s90 -2008|..\..\..\..\hardware\hdl\FPGA_accelerator.vhd|
+Z11 !s107 ..\..\..\..\hardware\hdl\FPGA_accelerator.vhd|
+!i113 1
+Z12 o-2008
+Z13 tExplicit 1 CvgOpt 0
+Econvolution_block
+Z14 w1791198211
+Z15 DPx4 work 11 accel_types 0 22 fK@zRL@jokB[Nmace@QcE2
+R1
+R2
+R3
+R0
+Z16 8..\..\..\..\hardware\hdl\convolution_block.vhd
+Z17 F..\..\..\..\hardware\hdl\convolution_block.vhd
+l0
+L9
+V;Q3ojUN8zQ1Q>:7BGI[LK0
+!s100 [om8ZIBG0:k;i0R1]ESh00
+R7
+33
+Z18 !s110 1791198703
+!i10b 1
+Z19 !s108 1791198703.000000
+Z20 !s90 -2008|..\..\..\..\hardware\hdl\convolution_block.vhd|
+Z21 !s107 ..\..\..\..\hardware\hdl\convolution_block.vhd|
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R1
+R2
+R3
+Z22 DEx4 work 17 convolution_block 0 22 ;Q3ojUN8zQ1Q>:7BGI[LK0
+l98
+L53
+V5SW[L3[Sk@?Y;MV_VO7ac0
+!s100 N@4BGX;=[Vf]9RfaZM=V<0
+R7
+33
+R18
+!i10b 1
+R19
+R20
+R21
+!i113 1
+R12
+R13
+Econvolution_block_tb
+Z23 w1791198690
+R15
+Z24 DPx3 std 3 env 0 22 d?`1ck@NdeD@H3RZG7FgZ2
+R1
+R2
+R3
+R0
+Z25 8convolution_tb.vht
+Z26 Fconvolution_tb.vht
+l0
+L12
+V^gM97=SeWTCH5m?ddY41e0
+!s100 ;2WdN;:6b1cVQGA?AcP]i2
+R7
+33
+R18
+!i10b 1
+R19
+Z27 !s90 -2008|convolution_tb.vht|
+Z28 !s107 convolution_tb.vht|
+!i113 1
+R12
+R13
+Asim
+R22
+R15
+R24
+R1
+R2
+R3
+DEx4 work 20 convolution_block_tb 0 22 ^gM97=SeWTCH5m?ddY41e0
+l73
+L27
+VSkSggaS:dEOJe2n=594Vo2
+!s100 QFbh:CWz_HZ:aYnERbQl61
+R7
+33
+R18
+!i10b 1
+R19
+R27
+R28
+!i113 1
+R12
+R13
+Efpga_accelerator
+R4
+R15
+R1
+R2
+R3
+R0
+R5
+R6
+l0
+L70
+VED:9?kI?E8lOQXfA>Ao6N1
+!s100 3g08U2067o>g=3b42BM2@2
+R7
+33
+R8
+!i10b 1
+R9
+R10
+R11
+!i113 1
+R12
+R13
+Abehavioral
+R15
+R1
+R2
+R3
+DEx4 work 16 fpga_accelerator 0 22 ED:9?kI?E8lOQXfA>Ao6N1
+l308
+L133
+V4Tj@nFb2hBkkU7RNOO1F<2
+!s100 >nFfL_Qbc^a;4]j>6feNd3
+R7
+33
+R8
+!i10b 1
+R9
+R10
+R11
+!i113 1
+R12
+R13
+Esimple_conv_test
+Z29 w1791198805
+R15
+R1
+R2
+R3
+R0
+Z30 8convolution_io_tb.vht
+Z31 Fconvolution_io_tb.vht
+l0
+L18
+ViU1K:5hK?k;;eY?>U`3n32
+!s100 fDD6FU^TBZ=2:jkkE@bCE1
+R7
+33
+Z32 !s110 1791198829
+!i10b 1
+Z33 !s108 1791198829.000000
+Z34 !s90 -2008|convolution_io_tb.vht|
+Z35 !s107 convolution_io_tb.vht|
+!i113 1
+R12
+R13
+Asim
+R22
+R15
+R1
+R2
+R3
+DEx4 work 16 simple_conv_test 0 22 iU1K:5hK?k;;eY?>U`3n32
+l177
+L26
+V`njIT?gNDVn@]iJID<A]01
+!s100 RRdPWW5BShIO?LXJbR1Ik1
+R7
+33
+R32
+!i10b 1
+R33
+R34
+R35
+!i113 1
+R12
+R13

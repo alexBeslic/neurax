@@ -1,0 +1,21 @@
+# vsim -c simple_conv_test -do "run -all; quit -f" -gIMG_WIDTH=5 -gIMG_HEIGHT=5 -gKERNEL_TYPE=4 
+# Start time: 14:24:46 on Oct 05,2026
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.numeric_std(body)
+# Loading work.accel_types
+# Loading work.simple_conv_test(sim)
+# Loading work.convolution_block(behavioral)
+# run -all
+# ** Note: Image 5x5, kernel type 4
+#    Time: 0 ps  Iteration: 0  Instance: /simple_conv_test
+# ** Note: DUT finished after 2101 cycles, 75 outputs written
+#    Time: 21106 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Golden check PASSED (75 values)
+#    Time: 21106 ns  Iteration: 0  Instance: /simple_conv_test
+# ** Note: Wrote output.txt
+#    Time: 21106 ns  Iteration: 0  Instance: /simple_conv_test
+#  quit -f
+# End time: 14:24:46 on Oct 05,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0

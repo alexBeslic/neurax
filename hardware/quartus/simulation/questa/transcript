@@ -1,0 +1,42 @@
+# vsim -c convolution_block_tb -do "run -all; quit -f" 
+# Start time: 13:11:44 on Oct 05,2026
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.numeric_std(body)
+# Loading std.env(body)
+# Loading work.accel_types
+# Loading work.convolution_block_tb(sim)
+# Loading work.convolution_block(behavioral)
+# run -all
+# ** Note: === T1: 3x3, s1, p0, 1->1 ch, batch 1 ===
+#    Time: 65 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: T1: 3x3, s1, p0, 1->1 ch, batch 1: PASSED (4 outputs, 41 cycles)
+#    Time: 516 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: === T2: 3x3, s1, p0, 2->2 ch, batch 1 ===
+#    Time: 535 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: T2: 3x3, s1, p0, 2->2 ch, batch 1: PASSED (8 outputs, 153 cycles)
+#    Time: 2106 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: === T3: 3x3, s2, p0, 3->4 ch, batch 2 ===
+#    Time: 2125 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: T3: 3x3, s2, p0, 3->4 ch, batch 2: PASSED (8 outputs, 225 cycles)
+#    Time: 4416 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: === T4: 1x1, s1, p0, 2->3 ch (pointwise) ===
+#    Time: 4435 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: T4: 1x1, s1, p0, 2->3 ch (pointwise): PASSED (48 outputs, 145 cycles)
+#    Time: 5926 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: === T5: 5x5, s1, p1, 1->2 ch ===
+#    Time: 5945 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: T5: 5x5, s1, p1, 1->2 ch: PASSED (8 outputs, 209 cycles)
+#    Time: 8076 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: === T6: 3x3, s1, p1 (zero padding) ===
+#    Time: 8095 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: T6: 3x3, s1, p1 (zero padding): PASSED (16 outputs, 161 cycles)
+#    Time: 9746 ns  Iteration: 0  Instance: /convolution_block_tb
+# ** Note: *** ALL TESTS PASSED ***
+#    Time: 9765 ns  Iteration: 0  Instance: /convolution_block_tb
+# Break in Process stim at convolution_tb.vht line 384
+# Stopped at convolution_tb.vht line 384
+#  quit -f
+# End time: 13:11:44 on Oct 05,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0

@@ -82,6 +82,7 @@ architecture behavioral of convolution_block is
     signal last_output : std_logic;  -- '1' when current output is the very last one
     -- Track whether the kernel window for current output position is complete
     signal kernel_done : std_logic;
+    signal input_in_bounds : std_logic;
     
     -- Helper funkcije
     function calculate_output_dim(input_dim, kernel_size, padding, stride : integer) return integer is
@@ -99,6 +100,13 @@ begin
     -- Izračunaj output dimenzije
     output_height <= calculate_output_dim(INPUT_HEIGHT, config.kernel_size, config.padding, config.stride);
     output_width <= calculate_output_dim(INPUT_WIDTH, config.kernel_size, config.padding, config.stride);
+
+    input_in_bounds <= '1' when
+        calculate_input_pos(out_h_cnt, config.stride, kh_cnt, config.padding) >= 0 and
+        calculate_input_pos(out_h_cnt, config.stride, kh_cnt, config.padding) < INPUT_HEIGHT and
+        calculate_input_pos(out_w_cnt, config.stride, kw_cnt, config.padding) >= 0 and
+        calculate_input_pos(out_w_cnt, config.stride, kw_cnt, config.padding) < INPUT_WIDTH
+        else '0';
 
     -- Detect when kernel iteration for current output position is at its last element
     kernel_done <= '1' when kh_cnt = config.kernel_size - 1 and
@@ -146,7 +154,11 @@ begin
                     -- Multiply-accumulate operacija
                     if input_valid = '1' and weight_valid = '1' then
                         -- Compute multiply (registered for timing)
-                        mult_result <= signed(input_data) * signed(weight_data);
+                        if input_in_bounds = '1' then
+                            mult_result <= signed(input_data) * signed(weight_data);
+                        else
+                            mult_result <= (others => '0');
+                        end if;
                         -- Accumulate: add previous mult result to accumulator
                         -- (1-cycle pipeline: we accumulate the result from the
                         --  previous cycle's multiply)
