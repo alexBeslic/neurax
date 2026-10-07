@@ -85,6 +85,7 @@ architecture behavioral of pooling_block is
     signal window_complete : std_logic;
     signal cycle_counter : unsigned(31 downto 0);
     signal window_counter : unsigned(15 downto 0);
+    signal output_valid_driver : std_logic;
     
     -- Helper funkcije
     function calculate_output_dim(input_dim, pool_size, stride : integer) return integer is
@@ -373,11 +374,12 @@ begin
     
     input_read_en <= pool_operation_active;
     
-    output_valid <= '1' when current_state = POOL_COMPUTE and
+    output_valid_driver <= '1' when current_state = POOL_COMPUTE and
                             window_complete = '1' and input_valid = '1' else '0';
     
-    output_write_en <= output_valid;
-    
+    output_write_en <= output_valid_driver;
+    output_valid <= output_valid_driver;
+
     -- Status signals
     ready <= '1' when current_state = IDLE else '0';
     busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';

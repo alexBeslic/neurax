@@ -74,6 +74,7 @@ architecture behavioral of activation_block is
     -- Control signali
     signal pipeline_enable : std_logic;
     signal processing_active : std_logic;
+    signal output_valid_driver : std_logic;
     
     -- ---- Helper funkcije (ostale bez promena osim uklanjanja "declare") ----
     function to_fixed(real_val : real) return std_logic_vector is
@@ -252,7 +253,7 @@ begin
     -- Next state logic (combinational)
     ---------------------------------------------------------------------------
         process(current_state, start, lut_initialized, element_counter, tensor_size,
-            lut_init_counter, output_valid)
+            lut_init_counter, output_valid_driver)
     begin
         next_state <= current_state;
         
@@ -277,7 +278,7 @@ begin
                 end if;
                 
             when PIPELINE_FLUSH =>
-                if output_valid = '0' then
+                if output_valid_driver = '0' then
                     next_state <= DONE_ST;
                 end if;
                 
@@ -375,7 +376,7 @@ begin
     
     input_read_en <= pipeline_enable;
     
-    -- output_valid: '1' ako bilo koja paralelna ćelija u poslednjem stage-u ima valid
+    -- output_valid_driver: '1' ako bilo koja paralelna ćelija u poslednjem stage-u ima valid
     process(pipeline)
         variable any_valid : std_logic := '0';
         variable idx : integer;
@@ -386,8 +387,8 @@ begin
                 any_valid := '1';
             end if;
         end loop;
-        output_valid <= any_valid;
-		  output_write_en <= any_valid;
+        output_valid_driver <= any_valid;
+        output_write_en <= any_valid;
     end process;
     
     
@@ -399,5 +400,7 @@ begin
     -- Debug outputs
     current_element <= std_logic_vector(to_unsigned(element_counter, 16));
     processing_cycles <= std_logic_vector(cycle_counter);
+
+    output_valid <= output_valid_driver;
 
 end behavioral;
