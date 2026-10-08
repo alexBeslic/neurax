@@ -100,6 +100,9 @@ struct msgdma_reg {
  * ------------------------------------------------------------------------- */
 #define DMA_BUF_SIZE        (1u << 20)          /* 1 MB per TX/RX buffer    */
 
+/* Must not exceed MAX_BYTE configured for the Neurax mSGDMA instances in Qsys. */
+#define MSGDMA_MAX_TRANSFER_BYTES 4096u
+
 /* neurax_data_interface output RAM size: g_RAM_SIZE = 23000 × 32-bit words */
 #define FPGA_OUTPUT_SIZE    (23000u * sizeof(uint32_t))
 

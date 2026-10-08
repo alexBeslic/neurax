@@ -260,7 +260,8 @@ void neurax_uio_deinit(struct neurax_uio_ctx *ctx)
  *
  * The FPGA neurax_data_interface resets write_index and clears buffer_full
  * on asi_channel_i=1, breaking any "buffer full / asi_ready=0" deadlock.
- * Call this before every write to guarantee the FPGA side is ready.
+ * Call this once before each complete RAM image to guarantee the FPGA side
+ * is ready; the image itself may be split across multiple mSGDMA descriptors.
  * Returns 0 on success, -1 on timeout.
  * ------------------------------------------------------------------------- */
 static int msgdma_send_sof(struct neurax_uio_ctx *ctx)
@@ -317,45 +318,59 @@ ssize_t neurax_dma_write(struct neurax_uio_ctx *ctx,
     if (msgdma_send_sof(ctx) < 0)
         return -1;
 
-    ssize_t xfer = (ssize_t)(len > DMA_BUF_SIZE ? DMA_BUF_SIZE : len);
+    size_t total = len > DMA_BUF_SIZE ? DMA_BUF_SIZE : len;
+    size_t offset = 0;
 
-    /* Fill TX buffer */
-    memcpy(ctx->tx_buf, src, (size_t)xfer);
+    while (offset < total) {
+        size_t user_len = total - offset;
+        if (user_len > MSGDMA_MAX_TRANSFER_BYTES)
+            user_len = MSGDMA_MAX_TRANSFER_BYTES;
 
-    /* mSGDMA requires full-word (4-byte) transfers; pad to word boundary */
-    uint32_t dma_len = ((uint32_t)xfer + 3u) & ~3u;
-    if (dma_len > (uint32_t)xfer)
-        memset((uint8_t *)ctx->tx_buf + xfer, 0, dma_len - (uint32_t)xfer);
+        /* mSGDMA requires full-word (4-byte) transfers; pad the final chunk. */
+        uint32_t dma_len = ((uint32_t)user_len + 3u) & ~3u;
+        memcpy(ctx->tx_buf, (const uint8_t *)src + offset, user_len);
+        if (dma_len > user_len)
+            memset((uint8_t *)ctx->tx_buf + user_len, 0, dma_len - user_len);
 
-    /* Push m2s descriptor: read from TX buffer phys, stream to FPGA sink */
-    msgdma_push_descr(ctx->m2s, ctx->tx_phys, 0, dma_len, 0);
+        /* Keep the write pointer continuous; send SOF only once per full image. */
+        msgdma_push_descr(ctx->m2s, (uint32_t)ctx->tx_phys, 0, dma_len, 0);
 
-    uint32_t status = ctx->m2s->csr_status;
-    uint32_t fill   = ctx->m2s->csr_fill_lvl;
-    printf("[DMA write] CSR=0x%08x fill_rd=%u fill_wr=%u dma_len=%u user_len=%zd\n",
-           status, fill & 0xffffu, fill >> 16, dma_len, xfer);
+        uint32_t status = ctx->m2s->csr_status;
+        if (offset == 0) {
+            uint32_t fill = ctx->m2s->csr_fill_lvl;
+            printf("[DMA write] first chunk CSR=0x%08x fill_rd=%u fill_wr=%u "
+                   "dma_len=%u\n",
+                   status, fill & 0xffffu, fill >> 16, dma_len);
+        }
 
-    /* Poll for completion */
-    uint64_t deadline = now_us() + DMA_TIMEOUT_US;
-    do {
-        status = ctx->m2s->csr_status;
-        if (!(status & CSR_ST_BUSY)) break;
-        usleep_ms(1);
-    } while (now_us() < deadline);
+        uint64_t deadline = now_us() + DMA_TIMEOUT_US;
+        do {
+            status = ctx->m2s->csr_status;
+            if (!(status & CSR_ST_BUSY)) break;
+            usleep_ms(1);
+        } while (now_us() < deadline);
 
-    if (status & CSR_ST_BUSY) {
-        fprintf(stderr, "[DMA write] timeout — stream stall? CSR=0x%08x fill=0x%08x resp=%u\n",
-                status, ctx->m2s->csr_fill_lvl, ctx->m2s->csr_resp_fill);
-        msgdma_reset(ctx->m2s);
-        return -1;
+        if (status & CSR_ST_BUSY) {
+            fprintf(stderr,
+                    "[DMA write] timeout at byte %zu: CSR=0x%08x "
+                    "fill=0x%08x resp=%u\n",
+                    offset, status, ctx->m2s->csr_fill_lvl,
+                    ctx->m2s->csr_resp_fill);
+            msgdma_reset(ctx->m2s);
+            return -1;
+        }
+        if (status & (CSR_ST_STOPPED_ON_ERR | CSR_ST_STOPPED_EOP)) {
+            fprintf(stderr,
+                    "[DMA write] stopped at byte %zu: CSR=0x%08x\n",
+                    offset, status);
+            msgdma_reset(ctx->m2s);
+            return -1;
+        }
+
+        offset += user_len;
     }
-    if (status & (CSR_ST_STOPPED_ON_ERR | CSR_ST_STOPPED_EOP)) {
-        fprintf(stderr, "[DMA write] stopped (bus error?) CSR=0x%08x\n", status);
-        msgdma_reset(ctx->m2s);
-        return -1;
-    }
 
-    return xfer;
+    return (ssize_t)total;
 }
 
 /* ---------------------------------------------------------------------------
@@ -476,6 +491,54 @@ static int poll_readback_complete(struct neurax_uio_ctx *ctx,
     return -1;
 }
 
+static int readback_ram_chunk(struct neurax_uio_ctx *ctx,
+                              uint32_t start_word,
+                              uint32_t word_count)
+{
+    const uint32_t byte_count = word_count * sizeof(uint32_t);
+    const uint32_t read_command = (word_count << 16) | start_word;
+    const uint32_t destination = (uint32_t)(
+        ctx->rx_phys + (uintptr_t)start_word * sizeof(uint32_t));
+    uint64_t deadline;
+    uint32_t data_status;
+
+    ctx->neurax->reg_data_sc = 0;
+    ctx->neurax->reg_data_read = read_command;
+    __sync_synchronize();
+
+    msgdma_push_descr(ctx->s2m, 0, destination, byte_count, 0);
+    if (msgdma_wait_descriptor_armed(ctx->s2m, 100000u) < 0)
+        return -1;
+
+    ctx->neurax->reg_data_sc = 1u << 31;
+    __sync_synchronize();
+
+    deadline = now_us() + 100000u;
+    do {
+        data_status = ctx->neurax->reg_data_sc;
+        if (data_status & (1u << 1))
+            break;
+        usleep_ms(1);
+    } while (now_us() < deadline);
+
+    if (!(data_status & (1u << 1))) {
+        fprintf(stderr,
+                "[DMA read] FPGA did not start chunk at word %u "
+                "(reg_data_sc=0x%08x)\n",
+                start_word, data_status);
+        return -1;
+    }
+
+    if (poll_readback_complete(ctx, DMA_TIMEOUT_US) < 0) {
+        fprintf(stderr,
+                "[DMA read] chunk at word %u (%u words) did not complete\n",
+                start_word, word_count);
+        return -1;
+    }
+
+    return 0;
+}
+
 /* ---------------------------------------------------------------------------
  * Q8.8 fixed-point helpers (mirrors software/bsp/neurax_bsp.h)
  * ------------------------------------------------------------------------- */
@@ -512,9 +575,9 @@ static inline float q8_8_to_float(int16_t val)
  * interior output values (see software/bsp/neurax_test.c for the reference
  * sequence this mirrors).
  *
- * DMA plumbing is unchanged from the earlier RAM-integrity test: s2m is
- * pre-armed before neurax_dma_write() (which itself sends the channel=1 SOF
- * descriptor), then FPGA and DMA completion are checked together.
+ * Both DMA directions use descriptors no larger than the Qsys MAX_BYTE
+ * setting. The m2s image is sent as sequential chunks after one SOF, while
+ * each s2m chunk is paired with an FPGA RAM-read command.
  *
  * Returns 0 on PASS, -1 on any error.
  * ------------------------------------------------------------------------- */
@@ -573,19 +636,11 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     ctx->neurax->reg_batch_size    = 1;  /* MUST be 1, 0 skips computation */
     volatile uint32_t status;
 
-    /* 3. Clear RX buffer; pre-arm s2m before the write so data can stream
-     *    through the circular buffer pipeline as m2s fills it. */
+    /* 3. Clear the readback buffer. Output is read in bounded DMA chunks
+     *    after convolution, matching the Qsys mSGDMA MAX_BYTE setting. */
     memset(ctx->rx_buf, 0, n_bytes);
     __sync_synchronize();
     msgdma_reset(ctx->s2m);
-    msgdma_push_descr(ctx->s2m, 0, (uint32_t)ctx->rx_phys, n_bytes, 0);
-    if (msgdma_wait_descriptor_armed(ctx->s2m, 100000u) < 0) {
-        fprintf(stderr, "[conv] s2m did not arm before convolution\n");
-        free(tx_data);
-        return -1;
-    }
-    printf("[conv][diag] s2m descriptor accepted: CSR=0x%08x fill=0x%08x\n",
-           ctx->s2m->csr_status, ctx->s2m->csr_fill_lvl);
 
     /* 4. Write full RAM image to FPGA (neurax_dma_write sends SOF first) */
     printf("[conv] Writing %"PRIu32" words...\n", n_words);
@@ -639,27 +694,29 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("[conv] Done. STATUS=0x%08x cycles=%u\n",
            status, ctx->neurax->reg_debug_cycles);
 
-    /* Data length must match the s2m DMA descriptor pushed in step 3
-     * (n_bytes = n_words words) -- requesting more words here than the
-     * mSGDMA descriptor is sized for desyncs the internal read FSM from
-     * the external DMA (FSM keeps streaming, mSGDMA stops accepting). */
-    ctx->neurax->reg_data_sc = 0;  /* clear data length in words */
-    ctx->neurax->reg_data_read = (n_words << 16u);  /* set data length in words */
-    printf("[conv][diag] reg_data_sc before START=0x%08x reg_data_read=0x%08x\n",
-           ctx->neurax->reg_data_sc, ctx->neurax->reg_data_read);
-    ctx->neurax->reg_data_sc = 1 << 31; /* set data start bit */
-    __sync_synchronize();
-    printf("[conv][diag] reg_data_sc right after START=0x%08x\n",
-           ctx->neurax->reg_data_sc);
+    /* Qsys configures each mSGDMA with MAX_BYTE=4096. Keep every descriptor
+     * within that limit, pairing each descriptor with a matching FPGA RAM
+     * read command (word-addressed start and word count). */
+    const uint32_t words_per_chunk =
+        MSGDMA_MAX_TRANSFER_BYTES / sizeof(uint32_t);
+    for (uint32_t start_word = 0; start_word < n_words;
+         start_word += words_per_chunk) {
+        uint32_t word_count = n_words - start_word;
+        if (word_count > words_per_chunk)
+            word_count = words_per_chunk;
 
-    /* 7. Poll s2m: full RAM image (including output region) streams back */
-    printf("[conv] Waiting for readback to complete...\n");
-    if (poll_readback_complete(ctx, DMA_TIMEOUT_US) < 0) {
-        fprintf(stderr, "[conv] Readback did not complete on both FPGA and DMA\n");
-        free(tx_data);
-        return -1;
+        printf("[conv] Reading RAM words %u..%u (%u bytes)\n",
+               start_word, start_word + word_count - 1,
+               word_count * (uint32_t)sizeof(uint32_t));
+        if (readback_ram_chunk(ctx, start_word, word_count) < 0) {
+            fprintf(stderr, "[conv] RAM readback failed at word %u\n",
+                    start_word);
+            free(tx_data);
+            return -1;
+        }
     }
-    printf("[conv] Readback OK\n");
+    printf("[conv] Readback OK: %u words in %u-byte-limited chunks\n",
+           n_words, MSGDMA_MAX_TRANSFER_BYTES);
 
     /* 8. Verify a few interior output values (expected 3x3 sum = 9.0) */
     uint32_t *rx = malloc(n_bytes);
