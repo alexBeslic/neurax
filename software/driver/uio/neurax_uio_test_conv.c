@@ -490,15 +490,14 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         return -1;
     }
 
-    // int16_t val_one = float_to_q8_8(1.0f);
-    int16_t val_one = 1;
+    int16_t val_one = float_to_q8_8(1.0f);
     for (uint32_t i = 0; i < (uint32_t)(CONV_INPUT_H * CONV_INPUT_W); i++)
-        tx_data[RAM_INPUT_BASE + i] = 1;
+        tx_data[RAM_INPUT_BASE + i] = (uint16_t)val_one;
 
     for (uint32_t i = 0; i < (uint32_t)(CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH); i++)
-        tx_data[RAM_WEIGHT_BASE + i] = 2;
+        tx_data[RAM_WEIGHT_BASE + i] = (uint16_t)val_one;
 
-    tx_data[RAM_BIAS_BASE] = 3;
+    tx_data[RAM_BIAS_BASE] = (uint16_t)float_to_q8_8(0.0f);
 
     /* [diag] Overlay a unique, unambiguous ramp on the first 10 input words
      * (row 0, cols 0-9). These border pixels are NOT read by any of the
@@ -558,24 +557,33 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     usleep_ms(1);
     ctx->neurax->reg_cmd = CMD_ENABLE | CMD_OP_CONV;
 
-    /* 6. Poll for completion (STATUS_DONE) */
-    // uint64_t conv_deadline = now_us() + DMA_TIMEOUT_US;
-    // volatile uint32_t status;
-    // do {
-    //     status = ctx->neurax->reg_status;
-    //     if (status & STATUS_DONE) break;
-    //     usleep_ms(1);
-    // } while (now_us() < conv_deadline);
+    /* 6. Poll for completion (STATUS_DONE). This MUST happen before triggering
+     *    the RAM->HPS readback below: the data_interface read FSM and the
+     *    accelerator's writes to RAM Port B are otherwise unsynchronized, so
+     *    without this wait the readback can start (and even finish) before
+     *    the accelerator has written any/all of the output region, yielding
+     *    stale or all-zero output words regardless of correct Q8.8 data. */
+    uint64_t conv_deadline = now_us() + DMA_TIMEOUT_US;
+    volatile uint32_t status;
+    do {
+        status = ctx->neurax->reg_status;
+        if (status & STATUS_DONE) break;
+        usleep_ms(1);
+    } while (now_us() < conv_deadline);
 
-    // if (!(status & STATUS_DONE)) {
-    //     fprintf(stderr, "[conv] Convolution TIMEOUT (STATUS=0x%08x)\n", status);
-    //     return -1;
-    // }
-    // printf("[conv] Done. STATUS=0x%08x cycles=%u\n",
-    //        status, ctx->neurax->reg_debug_cycles);
+    if (!(status & STATUS_DONE)) {
+        fprintf(stderr, "[conv] Convolution TIMEOUT (STATUS=0x%08x)\n", status);
+        return -1;
+    }
+    printf("[conv] Done. STATUS=0x%08x cycles=%u\n",
+           status, ctx->neurax->reg_debug_cycles);
 
+    /* Data length must match the s2m DMA descriptor pushed in step 3
+     * (n_bytes = n_words words) -- requesting more words here than the
+     * mSGDMA descriptor is sized for desyncs the internal read FSM from
+     * the external DMA (FSM keeps streaming, mSGDMA stops accepting). */
     ctx->neurax->reg_data_sc = 0;  /* clear data length in words */
-    ctx->neurax->reg_data_read = ((0x7FFF) << 16u);  /* set data length in words */
+    ctx->neurax->reg_data_read = (n_words << 16u);  /* set data length in words */
     printf("[conv][diag] reg_data_sc before START=0x%08x reg_data_read=0x%08x\n",
            ctx->neurax->reg_data_sc, ctx->neurax->reg_data_read);
     ctx->neurax->reg_data_sc = 1 << 31; /* set data start bit */
@@ -642,7 +650,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("Input values:\n");
     for (size_t i = 0; i < 10; i++)
     {
-        printf("Read at %d: 0x%08x (expected 0x%08x)\n", (int)i, rx[i], 0x2000u + (uint32_t)i);
+        printf("Read at %d: 0x%08x (expected 0x%08x)\n", (int)i, rx[i], (uint32_t)(uint16_t)val_one);
     }
     
     printf("Ouput values:\n");
@@ -653,7 +661,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     
     FILE *pf = fopen("res.txt", "w");
 
-    for (size_t i = 0; i < 0x7FFF; i++)
+    for (size_t i = 0; i < n_words; i++)
     {
         fprintf(pf, "Read at %d: %d\n",i,rx[i]);
     }

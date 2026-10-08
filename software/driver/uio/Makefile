@@ -32,8 +32,8 @@ module:
 
 userspace: neurax_uio_test
 
-neurax_uio_test: neurax_uio_test_2.c msgdma_uio.h
-	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_2.c 
+neurax_uio_test: neurax_uio_test_conv.c msgdma_uio.h
+	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_conv.c 
 
 UIO_KO := $(KERNEL_SRC)/drivers/uio/uio.ko
 
