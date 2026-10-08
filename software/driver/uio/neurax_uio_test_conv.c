@@ -451,12 +451,12 @@ ssize_t neurax_dma_read(struct neurax_uio_ctx *ctx, void *dst, size_t len)
 
 /* Wait until both the FPGA source FSM and the s2m DMA finish the readback. */
 static int poll_readback_complete(struct neurax_uio_ctx *ctx,
-                                 uint32_t timeout_us)
+                                 uint32_t timeout_us,
+                                 bool busy_seen)
 {
     uint64_t deadline = now_us() + timeout_us;
     uint32_t status = 0;
     uint32_t data_status = 0;
-    bool busy_seen = false;
 
     printf("[conv][diag] s2m armed: CSR=0x%08x fill=0x%08x resp=%u\n",
            ctx->s2m->csr_status, ctx->s2m->csr_fill_lvl,
@@ -529,13 +529,52 @@ static int readback_ram_chunk(struct neurax_uio_ctx *ctx,
         return -1;
     }
 
-    if (poll_readback_complete(ctx, DMA_TIMEOUT_US) < 0) {
+    if (poll_readback_complete(ctx, DMA_TIMEOUT_US, true) < 0) {
         fprintf(stderr,
                 "[DMA read] chunk at word %u (%u words) did not complete\n",
                 start_word, word_count);
         return -1;
     }
 
+    return 0;
+}
+
+static int save_ram_readback(const uint32_t *words,
+                             uint32_t word_count,
+                             uint32_t confirmed_words,
+                             uint32_t failed_start,
+                             uint32_t failed_count)
+{
+    FILE *file = fopen("res.txt", "w");
+    if (!file) {
+        perror("fopen res.txt");
+        return -1;
+    }
+
+    if (fprintf(file,
+                "# Confirmed readback words: %u of %u\n"
+                "# Failed/uncertain chunk: start=%u count=%u\n",
+                confirmed_words, word_count, failed_start, failed_count) < 0) {
+        perror("write res.txt");
+        fclose(file);
+        return -1;
+    }
+
+    for (uint32_t i = 0; i < word_count; i++) {
+        if (fprintf(file, "Read at %u: 0x%08" PRIx32 "\n", i, words[i]) < 0) {
+            perror("write res.txt");
+            fclose(file);
+            return -1;
+        }
+    }
+
+    if (fclose(file) != 0) {
+        perror("close res.txt");
+        return -1;
+    }
+
+    printf("[conv] RAM readback saved to res.txt "
+           "(%u confirmed words)\n", confirmed_words);
     return 0;
 }
 
@@ -711,6 +750,9 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         if (readback_ram_chunk(ctx, start_word, word_count) < 0) {
             fprintf(stderr, "[conv] RAM readback failed at word %u\n",
                     start_word);
+            if (save_ram_readback(ctx->rx_buf, n_words, start_word,
+                                  start_word, word_count) < 0)
+                fprintf(stderr, "[conv] Could not save partial readback\n");
             free(tx_data);
             return -1;
         }
@@ -798,18 +840,11 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         printf("Read at %d: %d\n",i,rx[i]);
     }
     
-    FILE *pf = fopen("res.txt", "w");
-
-    if (!pf) {
-        perror("fopen res.txt");
+    if (save_ram_readback(rx, n_words, n_words, n_words, 0) < 0) {
         free(rx);
         free(tx_data);
         return -1;
     }
-    for (size_t i = 0; i < n_words; i++)
-        fprintf(pf, "Read at %zu: 0x%08" PRIx32 "\n", i, rx[i]);
-    fclose(pf);
-    
 
     free(rx);
     free(tx_data);
