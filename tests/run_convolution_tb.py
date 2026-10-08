@@ -1,124 +1,143 @@
-import subprocess
+"""Runs convolution_block through ModelSim/Questa and saves image and raw output.
+
+The convolution block supports input tiles up to 128x128. Larger images are
+processed in overlapping tiles, one color plane at a time. Raw convolution
+values are saved to output_conv.txt as interleaved RGB values, one integer per
+line.
+
+Requires convolution_tb.vhd (in this directory) and vcom/vsim (ModelSim or
+Questa) on PATH.
+"""
 from pathlib import Path
 
-from PIL import Image
+import tb_common as tbc
+
+PNG_INPUT = "input.png"
+OUTPUT_PNG = "output_conv.png"
+OUTPUT_TXT = "output_conv.txt"
+DESIGN_FILES = ["..\\hardware\\hdl\\FPGA_accelerator.vhd", "..\\hardware\\hdl\\convolution_block.vhd"]
+TB_FILE = "..\\hardware\\quartus\\simulation\\questa\\convolution_tb.vhd"
+TB_ENTITY = "convolution_tb"
+
+KERNEL_SIZE = 3
+STRIDE = 1
+PADDING = 1
+
+# 3x3 four-neighbor Laplacian edge detector in Q8.8 fixed point.
+# The positive center and negative neighbors highlight intensity changes.
+EDGE_DETECT_Q88 = [0,   -256, 0,
+                   -256, 1024, -256,
+                    0,   -256, 0]
+BIAS_Q88 = [0]
+MAX_TILE_WIDTH = 128
+MAX_TILE_HEIGHT = 128
 
 
-# Select convolution, activation, pooling, or any combination.
-RUN_CONVOLUTION_TEST = True
-RUN_ACTIVATION_TEST = True
-RUN_POOLING_TEST = True
+def run_channel(width, height, plane, channel_name):
+    tbc.write_values("weight.txt", EDGE_DETECT_Q88)
+    tbc.write_values("bias.txt", BIAS_Q88)
 
-TEST_DIR = Path(__file__).resolve().parent
-PROJECT_DIR = TEST_DIR.parent
-PNG_INPUT = TEST_DIR / "input.png"
-INPUT_TXT = TEST_DIR / "image.txt"
-OUTPUT_TXT = TEST_DIR / "output.txt"
-OUTPUT_PNG = TEST_DIR / "output.png"
-OUTPUT_PNG_FALLBACK = TEST_DIR / "output_fallback.png"
-TESTBENCH = PROJECT_DIR / "hardware/quartus/simulation/questa/conv_activation_tb.vht"
-VHDL_FILES = [
-    PROJECT_DIR / "hardware/hdl/FPGA_accelerator.vhd",
-    PROJECT_DIR / "hardware/hdl/convolution_block.vhd",
-    PROJECT_DIR / "hardware/hdl/activation_block.vhd",
-    PROJECT_DIR / "hardware/hdl/pooling_block.vhd",
-    TESTBENCH,
-]
+    out_h = (height + 2 * PADDING - KERNEL_SIZE) // STRIDE + 1
+    out_w = (width + 2 * PADDING - KERNEL_SIZE) // STRIDE + 1
+    output_plane = [0] * (out_h * out_w)
+    core_height = MAX_TILE_HEIGHT - 2 * PADDING
+    core_width = MAX_TILE_WIDTH - 2 * PADDING
+    output_path = Path("output.txt")
 
-MAX_WIDTH = 128
-MAX_HEIGHT = 128
-CHANNELS = 3
-KERNEL_RADIUS = 1
-TILE_CORE_WIDTH = MAX_WIDTH - 2 * KERNEL_RADIUS
-TILE_CORE_HEIGHT = MAX_HEIGHT - 2 * KERNEL_RADIUS
+    if core_height <= 0 or core_width <= 0:
+        raise ValueError("Padding leaves no room for an output tile")
 
-if not RUN_CONVOLUTION_TEST and not RUN_ACTIVATION_TEST and not RUN_POOLING_TEST:
-    print("No tests selected; skipping simulation and image I/O.")
-    raise SystemExit(0)
+    for core_top in range(0, height, core_height):
+        core_bottom = min(core_top + core_height, height)
+        tile_top = max(0, core_top - PADDING)
+        tile_bottom = min(height, core_bottom + PADDING)
 
-POOLING_ONLY = RUN_POOLING_TEST and not RUN_CONVOLUTION_TEST and not RUN_ACTIVATION_TEST
-if not POOLING_ONLY:
-    image = Image.open(PNG_INPUT).convert("RGB")
-    image_width, image_height = image.size
-    print(f"Loaded PNG: {image_width}x{image_height}")
+        for core_left in range(0, width, core_width):
+            core_right = min(core_left + core_width, width)
+            tile_left = max(0, core_left - PADDING)
+            tile_right = min(width, core_right + PADDING)
+            tile_height = tile_bottom - tile_top
+            tile_width = tile_right - tile_left
+            tile_plane = [
+                plane[y * width + x]
+                for y in range(tile_top, tile_bottom)
+                for x in range(tile_left, tile_right)
+            ]
+            tbc.write_values("input.txt", tile_plane)
 
-subprocess.run(["vlib", "work"], cwd=TEST_DIR, check=True)
-for vhdl_file in VHDL_FILES:
-    subprocess.run(["vcom", "-2008", str(vhdl_file)], cwd=TEST_DIR, check=True)
+            tile_out_h = (tile_height + 2 * PADDING - KERNEL_SIZE) // STRIDE + 1
+            tile_out_w = (tile_width + 2 * PADDING - KERNEL_SIZE) // STRIDE + 1
+            generics = {
+                "INPUT_HEIGHT": tile_height,
+                "INPUT_WIDTH": tile_width,
+                "INPUT_CHANNELS": 1,
+                "OUTPUT_CHANNELS": 1,
+                "KERNEL_SIZE": KERNEL_SIZE,
+                "STRIDE": STRIDE,
+                "PADDING": PADDING,
+                "OUTPUT_HEIGHT": tile_out_h,
+                "OUTPUT_WIDTH": tile_out_w,
+            }
 
-if POOLING_ONLY:
-    subprocess.run(
-        [
-            "vsim", "-c",
-            "-gRUN_CONVOLUTION=false",
-            "-gRUN_ACTIVATION=false",
-            "-gRUN_POOLING=true",
-            "conv_activation_tb",
-            "-do", "run -all; quit -f",
-        ],
-        cwd=TEST_DIR,
-        check=True,
-    )
-    raise SystemExit(0)
-
-output_image = Image.new("RGB", (image_width, image_height))
-
-for core_top in range(0, image_height, TILE_CORE_HEIGHT):
-    core_bottom = min(core_top + TILE_CORE_HEIGHT, image_height)
-    tile_top = max(0, core_top - KERNEL_RADIUS)
-    tile_bottom = min(image_height, core_bottom + KERNEL_RADIUS)
-
-    for core_left in range(0, image_width, TILE_CORE_WIDTH):
-        core_right = min(core_left + TILE_CORE_WIDTH, image_width)
-        tile_left = max(0, core_left - KERNEL_RADIUS)
-        tile_right = min(image_width, core_right + KERNEL_RADIUS)
-        tile = image.crop((tile_left, tile_top, tile_right, tile_bottom))
-        tile_width, tile_height = tile.size
-
-        with INPUT_TXT.open("w", encoding="ascii") as image_file:
-            for pixel in tile.getdata():
-                for channel_value in pixel:
-                    image_file.write(f"{channel_value}\n")
-
-        subprocess.run(
-            [
-                "vsim", "-c",
-                f"-gRUN_CONVOLUTION={str(RUN_CONVOLUTION_TEST).lower()}",
-                f"-gRUN_ACTIVATION={str(RUN_ACTIVATION_TEST).lower()}",
-                f"-gRUN_POOLING={str(RUN_POOLING_TEST).lower()}",
-                "-gIMAGE_MODE=true",
-                f"-gIMG_WIDTH={tile_width}",
-                f"-gIMG_HEIGHT={tile_height}",
-                f'-gINPUT_FILE="{INPUT_TXT.name}"',
-                f'-gOUTPUT_FILE="{OUTPUT_TXT.name}"',
-                "conv_activation_tb",
-                "-do", "run -all; quit -f",
-            ],
-            cwd=TEST_DIR,
-            check=True,
-        )
-
-        output_values = [int(value) for value in OUTPUT_TXT.read_text(encoding="ascii").split()]
-        expected_values = tile_width * tile_height * CHANNELS
-        if len(output_values) != expected_values:
-            raise ValueError(
-                f"Tile ({tile_left},{tile_top}) expected {expected_values} channel values, "
-                f"received {len(output_values)}"
+            if output_path.exists():
+                output_path.unlink()
+            print(
+                f"Running convolution testbench for {channel_name} channel "
+                f"tile ({tile_left},{tile_top}) size {tile_width}x{tile_height}..."
             )
+            tbc.compile_and_run(DESIGN_FILES, TB_FILE, TB_ENTITY, generics)
 
-        for y in range(core_top, core_bottom):
-            for x in range(core_left, core_right):
-                tile_pixel = (y - tile_top) * tile_width + (x - tile_left)
-                offset = tile_pixel * CHANNELS
-                rgb = output_values[offset:offset + CHANNELS]
-                output_image.putpixel(
-                    (x, y), tuple(max(0, min(255, value)) for value in rgb)
+            if not output_path.is_file():
+                raise RuntimeError(
+                    f"Convolution testbench did not produce output.txt for "
+                    f"{channel_name} tile ({tile_left},{tile_top})"
+                )
+            values = [
+                int(value)
+                for value in output_path.read_text(encoding="ascii").split()
+            ]
+            expected_count = tile_out_h * tile_out_w
+            if len(values) != expected_count:
+                raise ValueError(
+                    f"{channel_name} tile ({tile_left},{tile_top}) expected "
+                    f"{expected_count} outputs, received {len(values)}"
                 )
 
-try:
-    output_image.save(OUTPUT_PNG)
-    print(f"Saved result image to {OUTPUT_PNG}")
-except OSError as error:
-    output_image.save(OUTPUT_PNG_FALLBACK)
-    print(f"Could not replace {OUTPUT_PNG}: {error}")
-    print(f"Saved result image to {OUTPUT_PNG_FALLBACK} instead")
+            for y in range(core_top, core_bottom):
+                for x in range(core_left, core_right):
+                    tile_index = (y - tile_top) * tile_out_w + (x - tile_left)
+                    output_plane[y * out_w + x] = values[tile_index]
+
+    return output_plane, out_w, out_h
+
+
+def main():
+    img = tbc.load_image(PNG_INPUT)
+    width, height = img.size
+    print(f"Loaded PNG: {width}x{height}")
+    output_txt_path = Path(OUTPUT_TXT)
+    if output_txt_path.exists():
+        output_txt_path.unlink()
+
+    r, g, b = tbc.image_to_planes(img)
+
+    out_planes = {}
+    out_w = out_h = None
+    for idx, (name, plane) in enumerate([("R", r), ("G", g), ("B", b)]):
+        values, out_w, out_h = run_channel(width, height, plane, name)
+        out_planes[idx] = values
+
+    output_values = []
+    for pixel_index in range(out_w * out_h):
+        for channel_index in range(3):
+            output_values.append(out_planes[channel_index][pixel_index])
+    tbc.write_values(OUTPUT_TXT, output_values)
+
+    out_img = tbc.planes_to_image(out_planes, out_w, out_h)
+    out_img.save(OUTPUT_PNG)
+    print(f"Saved output image to {OUTPUT_PNG}")
+    print(f"Saved raw RGB output values to {OUTPUT_TXT}")
+
+
+if __name__ == "__main__":
+    main()

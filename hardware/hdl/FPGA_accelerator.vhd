@@ -489,11 +489,14 @@ begin
         elsif rising_edge(clk) then
             conv_read_phase_d1 <= conv_read_phase;
 
-            if current_state = CONV_OP then
+            if current_state = CONV_OP and conv_input_read_en = '1' then
                 case conv_read_phase is
                     when PHASE_DONE =>
-                        -- Start a new read cycle when the conv block is requesting
-                        if conv_input_read_en = '1' then
+                        -- Let the convolution block advance its address counters
+                        -- before issuing the next input read.
+                        if conv_data_ready = '0' and
+                           conv_read_phase_d1 /= PHASE_WEIGHT and
+                           conv_read_phase_d1 /= PHASE_BIAS then
                             conv_read_phase <= PHASE_INPUT;
                         end if;
                     when PHASE_INPUT =>

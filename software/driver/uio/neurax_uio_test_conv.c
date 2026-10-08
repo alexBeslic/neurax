@@ -49,7 +49,6 @@
 #define RAM_WEIGHT_BASE  10000u
 #define RAM_BIAS_BASE    13000u
 #define RAM_OUTPUT_BASE  13016u
-#define RAM_TOTAL_WORDS  1u
 
 /* Q8.8: 1.0 → 0x0100 */
 #define Q8_8_ONE        0x00000100u
@@ -521,7 +520,6 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     usleep_ms(1);
 
     uint32_t conv0 = ((CONV_KERNEL & 0xFF) << 24)
-                   | ((CONV_IN_CH  & 0xFF) << 16)
                    | ((CONV_PADDING & 0xFF) << 8)
                    | ((CONV_STRIDE & 0xFF) << 0);
     uint32_t conv1 = ((CONV_OUT_CH & 0xFF) << 8)
@@ -529,6 +527,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     ctx->neurax->reg_conv_config_0 = conv0;
     ctx->neurax->reg_conv_config_1 = conv1;
     ctx->neurax->reg_batch_size    = 1;  /* MUST be 1, 0 skips computation */
+    volatile uint32_t status;
 
     /* 3. Clear RX buffer; pre-arm s2m before the write so data can stream
      *    through the circular buffer pipeline as m2s fills it. */
@@ -540,9 +539,11 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     /* 4. Write full RAM image to FPGA (neurax_dma_write sends SOF first) */
     printf("[conv] Writing %"PRIu32" words...\n", n_words);
     ssize_t wr = neurax_dma_write(ctx, tx_data, n_bytes);
-    if (wr < 0) {
-        fprintf(stderr, "[conv] Write failed\n");
+    if (wr < 0 || (size_t)wr != n_bytes) {
+        fprintf(stderr, "[conv] Write failed or incomplete: %zd of %u bytes\n",
+                wr, n_bytes);
         msgdma_reset(ctx->s2m);
+        free(tx_data);
         return -1;
     }
     printf("[conv] Write OK: %zd bytes\n", wr);
@@ -557,6 +558,15 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     usleep_ms(1);
     ctx->neurax->reg_cmd = CMD_ENABLE | CMD_OP_CONV;
 
+    status = ctx->neurax->reg_status;
+    if (status & STATUS_DONE) {
+        fprintf(stderr,
+                "[conv] START was not accepted: DONE stayed set (STATUS=0x%08x)\n",
+                status);
+        free(tx_data);
+        return -1;
+    }
+
     /* 6. Poll for completion (STATUS_DONE). This MUST happen before triggering
      *    the RAM->HPS readback below: the data_interface read FSM and the
      *    accelerator's writes to RAM Port B are otherwise unsynchronized, so
@@ -564,7 +574,6 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
      *    the accelerator has written any/all of the output region, yielding
      *    stale or all-zero output words regardless of correct Q8.8 data. */
     uint64_t conv_deadline = now_us() + DMA_TIMEOUT_US;
-    volatile uint32_t status;
     do {
         status = ctx->neurax->reg_status;
         if (status & STATUS_DONE) break;
@@ -573,6 +582,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
 
     if (!(status & STATUS_DONE)) {
         fprintf(stderr, "[conv] Convolution TIMEOUT (STATUS=0x%08x)\n", status);
+        free(tx_data);
         return -1;
     }
     printf("[conv] Done. STATUS=0x%08x cycles=%u\n",
@@ -595,6 +605,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("[conv] Waiting for readback to complete...\n");
     if (poll_dma_complete(ctx->s2m, DMA_TIMEOUT_US) < 0) {
         fprintf(stderr, "[conv] Readback timed out\n");
+        free(tx_data);
         return -1;
     }
     printf("[conv] Readback OK\n");
@@ -618,11 +629,57 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         } while (now_us() < deadline);
         printf("[conv][diag] reg_data_sc settle-poll result=0x%08x (BUSY=%d DONE=%d)\n",
                sc, (sc >> 1) & 1, sc & 1);
+        if (sc & (1u << 1)) {
+            fprintf(stderr, "[conv] FPGA RAM read FSM did not finish\n");
+            free(tx_data);
+            return -1;
+        }
     }
 
     /* 8. Verify a few interior output values (expected 3x3 sum = 9.0) */
     uint32_t *rx = malloc(n_bytes);
+    if (!rx) {
+        perror("malloc rx");
+        free(tx_data);
+        return -1;
+    }
     memcpy(rx, ctx->rx_buf, n_bytes);
+
+    int ram_errors = 0;
+    const uint32_t input_words = CONV_INPUT_H * CONV_INPUT_W;
+    const uint32_t weight_words =
+        CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH;
+    for (uint32_t i = 0; i < input_words; i++) {
+        if (rx[RAM_INPUT_BASE + i] != (uint32_t)(uint16_t)val_one) {
+            if (ram_errors < 8)
+                fprintf(stderr,
+                        "[conv] RAM input mismatch at word %u: got 0x%08" PRIx32
+                        ", expected 0x%08" PRIx32 "\n",
+                        i, rx[RAM_INPUT_BASE + i],
+                        (uint32_t)(uint16_t)val_one);
+            ram_errors++;
+        }
+    }
+    for (uint32_t i = 0; i < weight_words; i++) {
+        if (rx[RAM_WEIGHT_BASE + i] != (uint32_t)(uint16_t)val_one) {
+            if (ram_errors < 8)
+                fprintf(stderr,
+                        "[conv] RAM weight mismatch at word %u: got 0x%08" PRIx32
+                        ", expected 0x%08" PRIx32 "\n",
+                        i, rx[RAM_WEIGHT_BASE + i],
+                        (uint32_t)(uint16_t)val_one);
+            ram_errors++;
+        }
+    }
+    if (ram_errors != 0) {
+        fprintf(stderr,
+                "[conv] %d input/weight RAM values are wrong; investigate m2s "
+                "DMA or RAM readback before convolution arithmetic\n",
+                ram_errors);
+    } else {
+        printf("[conv] RAM input and all %u weights verified after readback\n",
+               weight_words);
+    }
 
     float expected_val = 9.0f;
     int check_positions[][2] = { {10, 10}, {50, 50}, {90, 90}, {1, 1}, {97, 97} };
@@ -661,10 +718,14 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     
     FILE *pf = fopen("res.txt", "w");
 
-    for (size_t i = 0; i < n_words; i++)
-    {
-        fprintf(pf, "Read at %d: %d\n",i,rx[i]);
+    if (!pf) {
+        perror("fopen res.txt");
+        free(rx);
+        free(tx_data);
+        return -1;
     }
+    for (size_t i = 0; i < n_words; i++)
+        fprintf(pf, "Read at %zu: 0x%08" PRIx32 "\n", i, rx[i]);
     fclose(pf);
     
 
@@ -672,8 +733,9 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     free(tx_data);
     tx_data = NULL;
 
-    printf("\nResult             : %s\n", errors == 0 ? "PASS" : "FAIL");
-    return errors == 0 ? 0 : -1;
+    printf("\nResult             : %s\n",
+           errors == 0 && ram_errors == 0 ? "PASS" : "FAIL");
+    return errors == 0 && ram_errors == 0 ? 0 : -1;
 }
 
 /* ---------------------------------------------------------------------------
