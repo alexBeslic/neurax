@@ -282,6 +282,28 @@ static int msgdma_send_sof(struct neurax_uio_ctx *ctx)
     return -1;
 }
 
+static int msgdma_wait_descriptor_armed(volatile struct msgdma_reg *dma,
+                                        uint32_t timeout_us)
+{
+    uint64_t deadline = now_us() + timeout_us;
+    uint32_t status;
+    uint32_t fill;
+
+    do {
+        status = dma->csr_status;
+        fill = dma->csr_fill_lvl;
+        if ((status & CSR_ST_BUSY) || (fill >> 16) != 0)
+            return 0;
+        usleep_ms(1);
+    } while (now_us() < deadline);
+
+    fprintf(stderr,
+            "[DMA] descriptor was not accepted: CSR=0x%08x fill=0x%08x "
+            "resp=%u\n",
+            status, fill, dma->csr_resp_fill);
+    return -1;
+}
+
 /* ---------------------------------------------------------------------------
  * Write: copy up to DMA_BUF_SIZE bytes from 'src' to FPGA via mSGDMA0 (m2s).
  * Returns bytes transferred on success, negative on error.
@@ -412,23 +434,45 @@ ssize_t neurax_dma_read(struct neurax_uio_ctx *ctx, void *dst, size_t len)
     return xfer;
 }
 
-/* ---------------------------------------------------------------------------
- * poll_dma_complete — wait for an mSGDMA to leave BUSY state or timeout.
- * Resets the DMA and returns -1 on timeout.
- * ------------------------------------------------------------------------- */
-static int poll_dma_complete(volatile struct msgdma_reg *dma, uint32_t timeout_us)
+/* Wait until both the FPGA source FSM and the s2m DMA finish the readback. */
+static int poll_readback_complete(struct neurax_uio_ctx *ctx,
+                                 uint32_t timeout_us)
 {
     uint64_t deadline = now_us() + timeout_us;
-    uint32_t status;
+    uint32_t status = 0;
+    uint32_t data_status = 0;
+    bool busy_seen = false;
+
+    printf("[conv][diag] s2m armed: CSR=0x%08x fill=0x%08x resp=%u\n",
+           ctx->s2m->csr_status, ctx->s2m->csr_fill_lvl,
+           ctx->s2m->csr_resp_fill);
+
     do {
-        status = dma->csr_status;
-        if (!(status & CSR_ST_BUSY)) return 0;
+        status = ctx->s2m->csr_status;
+        data_status = ctx->neurax->reg_data_sc;
+        if ((status & CSR_ST_BUSY) || (data_status & (1u << 1)))
+            busy_seen = true;
+
+        if (status & (CSR_ST_STOPPED_ON_ERR | CSR_ST_STOPPED_EOP)) {
+            fprintf(stderr,
+                    "[DMA read] stopped: CSR=0x%08x fill=0x%08x resp=%u\n",
+                    status, ctx->s2m->csr_fill_lvl, ctx->s2m->csr_resp_fill);
+            return -1;
+        }
+
+        if (busy_seen && !(status & CSR_ST_BUSY) &&
+            !(data_status & (1u << 1)))
+            return 0;
+
         usleep_ms(1);
     } while (now_us() < deadline);
 
-    fprintf(stderr, "[DMA poll] timeout: CSR=0x%08x fill=0x%08x resp=%u\n",
-            status, dma->csr_fill_lvl, dma->csr_resp_fill);
-    msgdma_reset(dma);
+    fprintf(stderr,
+            "[DMA read] incomplete: CSR=0x%08x fill=0x%08x resp=%u "
+            "reg_data_sc=0x%08x (DMA_BUSY=%u FPGA_BUSY=%u)\n",
+            status, ctx->s2m->csr_fill_lvl, ctx->s2m->csr_resp_fill,
+            data_status, status & CSR_ST_BUSY,
+            (data_status >> 1) & 1u);
     return -1;
 }
 
@@ -470,7 +514,7 @@ static inline float q8_8_to_float(int16_t val)
  *
  * DMA plumbing is unchanged from the earlier RAM-integrity test: s2m is
  * pre-armed before neurax_dma_write() (which itself sends the channel=1 SOF
- * descriptor), then results are pulled back with poll_dma_complete().
+ * descriptor), then FPGA and DMA completion are checked together.
  *
  * Returns 0 on PASS, -1 on any error.
  * ------------------------------------------------------------------------- */
@@ -535,6 +579,13 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     __sync_synchronize();
     msgdma_reset(ctx->s2m);
     msgdma_push_descr(ctx->s2m, 0, (uint32_t)ctx->rx_phys, n_bytes, 0);
+    if (msgdma_wait_descriptor_armed(ctx->s2m, 100000u) < 0) {
+        fprintf(stderr, "[conv] s2m did not arm before convolution\n");
+        free(tx_data);
+        return -1;
+    }
+    printf("[conv][diag] s2m descriptor accepted: CSR=0x%08x fill=0x%08x\n",
+           ctx->s2m->csr_status, ctx->s2m->csr_fill_lvl);
 
     /* 4. Write full RAM image to FPGA (neurax_dma_write sends SOF first) */
     printf("[conv] Writing %"PRIu32" words...\n", n_words);
@@ -603,38 +654,12 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
 
     /* 7. Poll s2m: full RAM image (including output region) streams back */
     printf("[conv] Waiting for readback to complete...\n");
-    if (poll_dma_complete(ctx->s2m, DMA_TIMEOUT_US) < 0) {
-        fprintf(stderr, "[conv] Readback timed out\n");
+    if (poll_readback_complete(ctx, DMA_TIMEOUT_US) < 0) {
+        fprintf(stderr, "[conv] Readback did not complete on both FPGA and DMA\n");
         free(tx_data);
         return -1;
     }
     printf("[conv] Readback OK\n");
-    printf("[conv][diag] reg_data_sc right after s2m poll_dma_complete=0x%08x\n",
-           ctx->neurax->reg_data_sc);
-
-    usleep_ms(1000);
-
-    /* Diagnostic: independently confirm the neurax core's OWN read-FSM
-     * status agrees with the mSGDMA's completion (bit0=DONE, bit1=BUSY).
-     * If BUSY never clears here, the mSGDMA believed the transfer was
-     * complete (byte count satisfied) while the neurax read state machine
-     * disagrees -- a strong signal that the two are desynchronized. */
-    {
-        uint64_t deadline = now_us() + DMA_TIMEOUT_US;
-        uint32_t sc;
-        do {
-            sc = ctx->neurax->reg_data_sc;
-            if (!(sc & (1u << 1))) break;  /* BUSY clear */
-            usleep_ms(1);
-        } while (now_us() < deadline);
-        printf("[conv][diag] reg_data_sc settle-poll result=0x%08x (BUSY=%d DONE=%d)\n",
-               sc, (sc >> 1) & 1, sc & 1);
-        if (sc & (1u << 1)) {
-            fprintf(stderr, "[conv] FPGA RAM read FSM did not finish\n");
-            free(tx_data);
-            return -1;
-        }
-    }
 
     /* 8. Verify a few interior output values (expected 3x3 sum = 9.0) */
     uint32_t *rx = malloc(n_bytes);
