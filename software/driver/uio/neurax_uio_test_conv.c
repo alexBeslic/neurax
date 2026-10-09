@@ -53,6 +53,7 @@
 /* Q8.8: 1.0 → 0x0100 */
 #define Q8_8_ONE        0x00000100u
 #define Q8_8_ZERO       0x00000000u
+#define RAM_OUTPUT_SENTINEL 0x00005A5Au
 
 /* Full altsyncram integrity test constants (derived from msgdma_uio.h) */
 #define FPGA_RAM_WORDS    (FPGA_OUTPUT_SIZE / sizeof(uint32_t)) /* 23000 words */
@@ -643,6 +644,8 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         tx_data[RAM_WEIGHT_BASE + i] = (uint16_t)val_one;
 
     tx_data[RAM_BIAS_BASE] = (uint16_t)float_to_q8_8(0.0f);
+    for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++)
+        tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
 
     /* [diag] Overlay a unique, unambiguous ramp on the first 10 input words
      * (row 0, cols 0-9). These border pixels are NOT read by any of the
@@ -770,6 +773,16 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     memcpy(rx, ctx->rx_buf, n_bytes);
 
     int ram_errors = 0;
+    uint32_t untouched_outputs = 0;
+    for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++) {
+        if (rx[RAM_OUTPUT_BASE + i] == RAM_OUTPUT_SENTINEL)
+            untouched_outputs++;
+    }
+    printf("[conv] Output write diagnostic: %u/%u output words still contain "
+           "sentinel 0x%08x\n",
+           untouched_outputs, CONV_OUTPUT_H * CONV_OUTPUT_W,
+           RAM_OUTPUT_SENTINEL);
+
     const uint32_t input_words = CONV_INPUT_H * CONV_INPUT_W;
     const uint32_t weight_words =
         CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH;
