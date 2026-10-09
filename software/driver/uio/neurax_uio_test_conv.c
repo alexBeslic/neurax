@@ -761,10 +761,10 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     uint32_t conv_debug = ctx->neurax->reg_debug_cycles;
     uint32_t conv_debug_status = ctx->neurax->reg_debug_status;
     printf("[conv] Done. STATUS=0x%08x DEBUG_CYCLES=0x%08x "
-           "first_input=0x%04x first_weight=0x%04x "
-           "first_output_MSB=0x%02x\n",
+           "portb_first_weight_addr=0x%04x portb_first_weight_q=0x%04x "
+           "weight_capture=%u first_output_MSB=0x%02x\n",
            status, conv_debug, conv_debug >> 16, conv_debug & 0xFFFFu,
-           conv_debug_status & 0xFFu);
+           (conv_debug_status >> 7) & 1u, conv_debug_status & 0x7Fu);
 
     /* Qsys configures each mSGDMA with MAX_BYTE=4096. Keep every descriptor
      * within that limit, pairing each descriptor with a matching FPGA RAM
