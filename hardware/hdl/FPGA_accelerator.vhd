@@ -286,12 +286,16 @@ architecture behavioral of FPGA_accelerator is
 
     -- Convolution RAM read sequencer
     -- Conv needs input + weight + (optionally) bias per MAC iteration.
-    -- We time-multiplex the single read port across 3 phases.
-    type conv_read_phase_t is (PHASE_INPUT, PHASE_WEIGHT, PHASE_BIAS, PHASE_DONE);
-    signal conv_read_phase    : conv_read_phase_t;
-    signal conv_read_phase_d1 : conv_read_phase_t;
-    signal conv_data_ready    : std_logic;  -- pulses when all reads captured
-    signal conv_need_bias     : std_logic;
+    -- Each value has a read phase and a capture phase on the shared RAM port.
+    type conv_read_phase_t is (
+        PHASE_INPUT, PHASE_INPUT_CAPTURE,
+        PHASE_WEIGHT, PHASE_WEIGHT_CAPTURE,
+        PHASE_BIAS, PHASE_BIAS_CAPTURE,
+        PHASE_READY, PHASE_DONE
+    );
+    signal conv_read_phase  : conv_read_phase_t;
+    signal conv_data_ready  : std_logic;
+    signal conv_need_bias   : std_logic;
 
     -- Registered RAM read data per conv channel
     signal conv_input_data_reg  : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -475,74 +479,50 @@ begin
     act_start  <= '1' when current_state = IDLE and next_state = ACT_OP  else '0';
 
     -- =========================================================================
-    -- Convolution RAM read sequencer
-    -- Cycles through PHASE_INPUT -> PHASE_WEIGHT -> (PHASE_BIAS) -> PHASE_DONE
-    -- Each phase presents an address; data arrives 1 clk later (captured in d1).
+    -- Hold each RAM address through an explicit capture phase. The M10K read
+    -- data is registered, so advancing the address on the capture edge can
+    -- otherwise make the sampled value depend on the RAM implementation.
     -- =========================================================================
     conv_need_bias <= conv_bias_read_en;
+    conv_data_ready <= '1' when conv_read_phase = PHASE_READY else '0';
 
     process(clk, rst)
     begin
         if rst = '1' then
-            conv_read_phase    <= PHASE_DONE;
-            conv_read_phase_d1 <= PHASE_DONE;
+            conv_read_phase       <= PHASE_DONE;
+            conv_input_data_reg   <= (others => '0');
+            conv_weight_data_reg  <= (others => '0');
+            conv_bias_data_reg    <= (others => '0');
         elsif rising_edge(clk) then
-            conv_read_phase_d1 <= conv_read_phase;
-
-            if current_state = CONV_OP and conv_input_read_en = '1' then
+            if current_state /= CONV_OP or conv_input_read_en = '0' then
+                conv_read_phase <= PHASE_DONE;
+            else
                 case conv_read_phase is
                     when PHASE_DONE =>
-                        -- Let the convolution block advance its address counters
-                        -- before issuing the next input read.
-                        if conv_data_ready = '0' and
-                           conv_read_phase_d1 /= PHASE_WEIGHT and
-                           conv_read_phase_d1 /= PHASE_BIAS then
-                            conv_read_phase <= PHASE_INPUT;
-                        end if;
+                        conv_read_phase <= PHASE_INPUT;
                     when PHASE_INPUT =>
+                        conv_read_phase <= PHASE_INPUT_CAPTURE;
+                    when PHASE_INPUT_CAPTURE =>
+                        conv_input_data_reg <= ram_q_16;
                         conv_read_phase <= PHASE_WEIGHT;
                     when PHASE_WEIGHT =>
+                        conv_read_phase <= PHASE_WEIGHT_CAPTURE;
+                    when PHASE_WEIGHT_CAPTURE =>
+                        conv_weight_data_reg <= ram_q_16;
                         if conv_need_bias = '1' then
                             conv_read_phase <= PHASE_BIAS;
                         else
-                            conv_read_phase <= PHASE_DONE;
+                            conv_read_phase <= PHASE_READY;
                         end if;
                     when PHASE_BIAS =>
+                        conv_read_phase <= PHASE_BIAS_CAPTURE;
+                    when PHASE_BIAS_CAPTURE =>
+                        conv_bias_data_reg <= ram_q_16;
+                        conv_read_phase <= PHASE_READY;
+                    when PHASE_READY =>
                         conv_read_phase <= PHASE_DONE;
                 end case;
-            else
-                conv_read_phase    <= PHASE_DONE;
-                conv_read_phase_d1 <= PHASE_DONE;
             end if;
-        end if;
-    end process;
-
-    -- Capture returned RAM data into the correct register (delayed by 1 clk)
-    process(clk, rst)
-    begin
-        if rst = '1' then
-            conv_input_data_reg  <= (others => '0');
-            conv_weight_data_reg <= (others => '0');
-            conv_bias_data_reg   <= (others => '0');
-            conv_data_ready      <= '0';
-        elsif rising_edge(clk) then
-            conv_data_ready <= '0';
-
-            case conv_read_phase_d1 is
-                when PHASE_INPUT =>
-                    conv_input_data_reg <= ram_q_16;
-                when PHASE_WEIGHT =>
-                    conv_weight_data_reg <= ram_q_16;
-                    -- If no bias was needed, data is ready now
-                    if conv_read_phase = PHASE_DONE then
-                        conv_data_ready <= '1';
-                    end if;
-                when PHASE_BIAS =>
-                    conv_bias_data_reg <= ram_q_16;
-                    conv_data_ready <= '1';
-                when PHASE_DONE =>
-                    null;
-            end case;
         end if;
     end process;
 
@@ -641,13 +621,13 @@ begin
             when CONV_OP =>
                 -- Read address mux based on sequencer phase
                 case conv_read_phase is
-                    when PHASE_INPUT =>
+                    when PHASE_INPUT | PHASE_INPUT_CAPTURE =>
                         ram_rdaddress_o <= std_logic_vector(
                             unsigned(conv_input_addr) + to_unsigned(INPUT_BASE_ADDR, 16));
-                    when PHASE_WEIGHT =>
+                    when PHASE_WEIGHT | PHASE_WEIGHT_CAPTURE =>
                         ram_rdaddress_o <= std_logic_vector(
                             unsigned(conv_weight_addr) + to_unsigned(WEIGHT_BASE_ADDR, 16));
-                    when PHASE_BIAS =>
+                    when PHASE_BIAS | PHASE_BIAS_CAPTURE =>
                         ram_rdaddress_o <= std_logic_vector(
                             resize(unsigned(conv_bias_addr), 16) + to_unsigned(BIAS_BASE_ADDR, 16));
                     when others =>

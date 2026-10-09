@@ -138,6 +138,7 @@ begin
         lpm_type                      => "altsyncram",
         outdata_reg_a                 => "UNREGISTERED",
         outdata_reg_b                 => "UNREGISTERED",
+        address_reg_b                 => "CLOCK1",
         address_aclr_a                => "NONE",
         address_aclr_b                => "NONE",
         indata_aclr_a                 => "NONE",
