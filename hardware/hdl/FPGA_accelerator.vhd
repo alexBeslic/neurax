@@ -284,6 +284,13 @@ architecture behavioral of FPGA_accelerator is
     -- Sticky done flag: latched high when operation completes, cleared on new start
     signal done_latch : std_logic;
 
+    -- First convolution operands/result, exposed through existing debug regs.
+    signal conv_debug_operands_valid : std_logic;
+    signal conv_debug_output_valid   : std_logic;
+    signal conv_debug_input          : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal conv_debug_weight         : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal conv_debug_output         : std_logic_vector(DATA_WIDTH-1 downto 0);
+
     -- Convolution RAM read sequencer
     -- Conv needs input + weight + (optionally) bias per MAC iteration.
     -- Each value has a read phase and a capture phase on the shared RAM port.
@@ -442,6 +449,35 @@ begin
             -- Latch done when entering DONE_ST
             if next_state = DONE_ST and current_state /= DONE_ST then
                 done_latch <= '1';
+            end if;
+        end if;
+    end process;
+
+    process(clk, rst)
+    begin
+        if rst = '1' then
+            conv_debug_operands_valid <= '0';
+            conv_debug_output_valid   <= '0';
+            conv_debug_input          <= (others => '0');
+            conv_debug_weight         <= (others => '0');
+            conv_debug_output         <= (others => '0');
+        elsif rising_edge(clk) then
+            if current_state = IDLE and enable = '1' and start_operation = '1' then
+                conv_debug_operands_valid <= '0';
+                conv_debug_output_valid   <= '0';
+            else
+                if current_state = CONV_OP and conv_data_ready = '1' and
+                   conv_debug_operands_valid = '0' then
+                    conv_debug_input          <= conv_input_data_reg;
+                    conv_debug_weight         <= conv_weight_data_reg;
+                    conv_debug_operands_valid <= '1';
+                end if;
+
+                if current_state = CONV_OP and conv_output_write_en = '1' and
+                   conv_debug_output_valid = '0' then
+                    conv_debug_output       <= conv_output_data;
+                    conv_debug_output_valid <= '1';
+                end if;
             end if;
         end if;
     end process;
@@ -693,7 +729,13 @@ begin
     operation_busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
     current_operation <= selected_operation;
 
-    debug_cycles <= std_logic_vector(cycle_counter);
-    debug_status <= "000000" & selected_operation;
+    -- After completion, reuse the existing debug registers to expose the first
+    -- MAC operands and first output word without changing the register map.
+    debug_cycles <= conv_debug_input & conv_debug_weight
+                    when done_latch = '1' and conv_debug_operands_valid = '1'
+                    else std_logic_vector(cycle_counter);
+    debug_status <= conv_debug_output(15 downto 8)
+                    when done_latch = '1' and conv_debug_output_valid = '1'
+                    else "000000" & selected_operation;
 
 end behavioral;

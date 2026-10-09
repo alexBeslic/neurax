@@ -371,6 +371,10 @@ ssize_t neurax_dma_write(struct neurax_uio_ctx *ctx,
         offset += user_len;
     }
 
+    printf("[DMA write] complete: bytes=%zu CSR=0x%08x fill=0x%08x "
+           "resp=%u\n",
+           total, ctx->m2s->csr_status, ctx->m2s->csr_fill_lvl,
+           ctx->m2s->csr_resp_fill);
     return (ssize_t)total;
 }
 
@@ -537,6 +541,12 @@ static int readback_ram_chunk(struct neurax_uio_ctx *ctx,
         return -1;
     }
 
+    printf("[DMA read] chunk complete words %u..%u: first=0x%08x "
+           "last=0x%08x CSR=0x%08x FPGA=0x%08x\n",
+           start_word, start_word + word_count - 1,
+           ((volatile uint32_t *)ctx->rx_buf)[start_word],
+           ((volatile uint32_t *)ctx->rx_buf)[start_word + word_count - 1],
+           ctx->s2m->csr_status, ctx->neurax->reg_data_sc);
     return 0;
 }
 
@@ -577,6 +587,17 @@ static int save_ram_readback(const uint32_t *words,
     printf("[conv] RAM readback saved to res.txt "
            "(%u confirmed words)\n", confirmed_words);
     return 0;
+}
+
+static void print_ram_window(const char *name,
+                            const uint32_t *words,
+                            uint32_t start,
+                            uint32_t count)
+{
+    printf("[diag] %s:", name);
+    for (uint32_t i = 0; i < count; i++)
+        printf(" [%u]=0x%08" PRIx32, start + i, words[start + i]);
+    putchar('\n');
 }
 
 /* ---------------------------------------------------------------------------
@@ -677,6 +698,10 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     ctx->neurax->reg_conv_config_1 = conv1;
     ctx->neurax->reg_batch_size    = 1;  /* MUST be 1, 0 skips computation */
     volatile uint32_t status;
+    printf("[conv][diag] config: cmd=0x%08x conv0=0x%08x conv1=0x%08x "
+           "batch=%u\n",
+           ctx->neurax->reg_cmd, ctx->neurax->reg_conv_config_0,
+           ctx->neurax->reg_conv_config_1, ctx->neurax->reg_batch_size);
 
     /* 3. Clear the readback buffer. Output is read in bounded DMA chunks
      *    after convolution, matching the Qsys mSGDMA MAX_BYTE setting. */
@@ -733,8 +758,13 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         free(tx_data);
         return -1;
     }
-    printf("[conv] Done. STATUS=0x%08x cycles=%u\n",
-           status, ctx->neurax->reg_debug_cycles);
+    uint32_t conv_debug = ctx->neurax->reg_debug_cycles;
+    uint32_t conv_debug_status = ctx->neurax->reg_debug_status;
+    printf("[conv] Done. STATUS=0x%08x DEBUG_CYCLES=0x%08x "
+           "first_input=0x%04x first_weight=0x%04x "
+           "first_output_MSB=0x%02x\n",
+           status, conv_debug, conv_debug >> 16, conv_debug & 0xFFFFu,
+           conv_debug_status & 0xFFu);
 
     /* Qsys configures each mSGDMA with MAX_BYTE=4096. Keep every descriptor
      * within that limit, pairing each descriptor with a matching FPGA RAM
@@ -772,16 +802,45 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     }
     memcpy(rx, ctx->rx_buf, n_bytes);
 
+    print_ram_window("input[0..3]", rx, RAM_INPUT_BASE, 4);
+    print_ram_window("input[100..103]", rx, RAM_INPUT_BASE + 100, 4);
+    print_ram_window("weights[0..8]", rx, RAM_WEIGHT_BASE, 9);
+    print_ram_window("bias[0]", rx, RAM_BIAS_BASE, 1);
+    print_ram_window("output[0..3]", rx, RAM_OUTPUT_BASE, 4);
+    print_ram_window("output[98..101]", rx, RAM_OUTPUT_BASE + 98, 4);
+
     int ram_errors = 0;
+    int errors = 0;
     uint32_t untouched_outputs = 0;
+    uint32_t zero_outputs = 0;
+    uint32_t expected_outputs = 0;
+    uint32_t other_outputs = 0;
     for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++) {
-        if (rx[RAM_OUTPUT_BASE + i] == RAM_OUTPUT_SENTINEL)
+        uint32_t output = rx[RAM_OUTPUT_BASE + i];
+        if (output == RAM_OUTPUT_SENTINEL) {
             untouched_outputs++;
+        } else if (output == 0) {
+            zero_outputs++;
+        } else if (output == (i == 0 ? 0x00000800u : 0x00000900u)) {
+            expected_outputs++;
+        } else {
+            other_outputs++;
+        }
     }
     printf("[conv] Output write diagnostic: %u/%u output words still contain "
            "sentinel 0x%08x\n",
            untouched_outputs, CONV_OUTPUT_H * CONV_OUTPUT_W,
            RAM_OUTPUT_SENTINEL);
+    printf("[conv] Output values: expected=%u zero=%u other=%u "
+           "(expected[0]=0x00000800, expected[1..]=0x00000900)\n",
+           expected_outputs, zero_outputs, other_outputs);
+    if (expected_outputs != CONV_OUTPUT_H * CONV_OUTPUT_W)
+        errors++;
+    printf("[conv][diag] post-run regs: cmd=0x%08x status=0x%08x "
+           "data_sc=0x%08x data_read=0x%08x debug_status=0x%08x\n",
+           ctx->neurax->reg_cmd, ctx->neurax->reg_status,
+           ctx->neurax->reg_data_sc, ctx->neurax->reg_data_read,
+           conv_debug_status);
 
     const uint32_t input_words = CONV_INPUT_H * CONV_INPUT_W;
     const uint32_t weight_words =
@@ -821,8 +880,6 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     float expected_val = 9.0f;
     int check_positions[][2] = { {10, 10}, {50, 50}, {90, 90}, {1, 1}, {97, 97} };
     int num_checks = sizeof(check_positions) / sizeof(check_positions[0]);
-    int errors = 0;
-
     printf("[conv] Checking output values (expected %.1f for interior positions):\n",
            expected_val);
     for (int c = 0; c < num_checks; c++) {
