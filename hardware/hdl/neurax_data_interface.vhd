@@ -137,7 +137,7 @@ begin
         numwords_b                    => 2**g_ADDR_WIDTH,
         lpm_type                      => "altsyncram",
         outdata_reg_a                 => "UNREGISTERED",
-        outdata_reg_b                 => "UNREGISTERED",
+        outdata_reg_b                 => "CLOCK1",
         address_reg_b                 => "CLOCK1",
         address_aclr_a                => "NONE",
         address_aclr_b                => "NONE",
@@ -180,7 +180,10 @@ begin
     );
 
     -- =========================================================================
-    -- Port B: accelerator access (unchanged)
+    -- Port B: accelerator access.
+    -- Keep read and write path mutually exclusive in time: Port B addresses are
+    -- selected by the current request, but the RAM output is registered so that
+    -- q_b remains stable for the subsequent accelerator cycle.
     -- =========================================================================
     ram_b_q_o      <= port_b_q;
     port_b_address <= ram_b_wraddress_i when ram_b_wren_i = '1'
