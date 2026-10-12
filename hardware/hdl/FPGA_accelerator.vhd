@@ -296,9 +296,9 @@ architecture behavioral of FPGA_accelerator is
     -- Conv needs input + weight + (optionally) bias per MAC iteration.
     -- Each value has a read phase and a capture phase on the shared RAM port.
     type conv_read_phase_t is (
-        PHASE_INPUT, PHASE_INPUT_CAPTURE, PHASE_INPUT_SETTLE,
-        PHASE_WEIGHT, PHASE_WEIGHT_CAPTURE, PHASE_WEIGHT_SETTLE,
-        PHASE_BIAS, PHASE_BIAS_CAPTURE, PHASE_BIAS_SETTLE,
+        PHASE_INPUT, PHASE_INPUT_CAPTURE, PHASE_INPUT_SETTLE, PHASE_INPUT_SAMPLE,
+        PHASE_WEIGHT, PHASE_WEIGHT_CAPTURE, PHASE_WEIGHT_SETTLE, PHASE_WEIGHT_SAMPLE,
+        PHASE_BIAS, PHASE_BIAS_CAPTURE, PHASE_BIAS_SETTLE, PHASE_BIAS_SAMPLE,
         PHASE_READY, PHASE_DONE
     );
     signal conv_read_phase  : conv_read_phase_t;
@@ -468,7 +468,7 @@ begin
                 conv_debug_output_valid   <= '0';
             else
                 if current_state = CONV_OP and
-                   conv_read_phase = PHASE_WEIGHT_SETTLE and
+                   conv_read_phase = PHASE_WEIGHT_SAMPLE and
                    conv_debug_weight_valid = '0' then
                     conv_debug_weight_address <= std_logic_vector(
                         unsigned(conv_weight_addr) +
@@ -545,6 +545,8 @@ begin
                     when PHASE_INPUT_CAPTURE =>
                         conv_read_phase <= PHASE_INPUT_SETTLE;
                     when PHASE_INPUT_SETTLE =>
+                        conv_read_phase <= PHASE_INPUT_SAMPLE;
+                    when PHASE_INPUT_SAMPLE =>
                         conv_input_data_reg <= ram_q_16;
                         conv_read_phase <= PHASE_WEIGHT;
                     when PHASE_WEIGHT =>
@@ -552,6 +554,8 @@ begin
                     when PHASE_WEIGHT_CAPTURE =>
                         conv_read_phase <= PHASE_WEIGHT_SETTLE;
                     when PHASE_WEIGHT_SETTLE =>
+                        conv_read_phase <= PHASE_WEIGHT_SAMPLE;
+                    when PHASE_WEIGHT_SAMPLE =>
                         conv_weight_data_reg <= ram_q_16;
                         if conv_need_bias = '1' then
                             conv_read_phase <= PHASE_BIAS;
@@ -563,6 +567,8 @@ begin
                     when PHASE_BIAS_CAPTURE =>
                         conv_read_phase <= PHASE_BIAS_SETTLE;
                     when PHASE_BIAS_SETTLE =>
+                        conv_read_phase <= PHASE_BIAS_SAMPLE;
+                    when PHASE_BIAS_SAMPLE =>
                         conv_bias_data_reg <= ram_q_16;
                         conv_read_phase <= PHASE_READY;
                     when PHASE_READY =>
@@ -668,15 +674,15 @@ begin
                 -- Read address mux based on sequencer phase
                 case conv_read_phase is
                     when PHASE_INPUT | PHASE_INPUT_CAPTURE |
-                         PHASE_INPUT_SETTLE =>
+                         PHASE_INPUT_SETTLE | PHASE_INPUT_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
                             unsigned(conv_input_addr) + to_unsigned(INPUT_BASE_ADDR, 16));
                     when PHASE_WEIGHT | PHASE_WEIGHT_CAPTURE |
-                         PHASE_WEIGHT_SETTLE =>
+                         PHASE_WEIGHT_SETTLE | PHASE_WEIGHT_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
                             unsigned(conv_weight_addr) + to_unsigned(WEIGHT_BASE_ADDR, 16));
                     when PHASE_BIAS | PHASE_BIAS_CAPTURE |
-                         PHASE_BIAS_SETTLE =>
+                         PHASE_BIAS_SETTLE | PHASE_BIAS_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
                             resize(unsigned(conv_bias_addr), 16) + to_unsigned(BIAS_BASE_ADDR, 16));
                     when others =>
