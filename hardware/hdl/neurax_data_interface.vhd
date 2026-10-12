@@ -15,10 +15,11 @@
 --   are latched internally at that moment; subsequent changes on rd_start_addr_i
 --   or rd_length_i do not affect the running transfer.  The machine transitions:
 --
---     IDLE -> PREFETCH -> SEND -> FLUSH -> IDLE
+--     IDLE -> PREFETCH -> PREFETCH_SETTLE -> SEND -> FLUSH -> IDLE
 --
---   PREFETCH (1 cycle): registers rd_ptr on Port A so q_a = RAM[rd_ptr] is
---     available at the start of SEND.
+--   PREFETCH / PREFETCH_SETTLE: hold rd_ptr on Port A for two rising edges
+--     before SEND. This covers the physical M10K read latency and prevents
+--     the previous Port A q value from being emitted as the first packet word.
 --   SEND: asserts aso_valid_o and streams one word per successful handshake.
 --     Look-ahead addressing keeps the RAM output pipeline one step ahead,
 --     sustaining 1-word/cycle throughput under continuous ready.
@@ -112,7 +113,7 @@ architecture arch of neurax_data_interface is
     signal cmd_length     : unsigned(g_ADDR_WIDTH - 1 downto 0);
 
     -- Source read state machine
-    type rd_state_t is (IDLE, PREFETCH, SEND, FLUSH);
+    type rd_state_t is (IDLE, PREFETCH, PREFETCH_SETTLE, SEND, FLUSH);
     signal rd_state     : rd_state_t;
     signal rd_ptr       : unsigned(g_ADDR_WIDTH - 1 downto 0);
     signal rd_remaining : unsigned(g_ADDR_WIDTH - 1 downto 0);
@@ -285,9 +286,12 @@ begin
                     end if;
 
                 when PREFETCH =>
-                    -- port_a_address = rd_ptr is already on Port A combinatorially.
-                    -- The altsyncram registers that address on this rising edge;
-                    -- q_a = RAM[rd_ptr] is valid from the next cycle (SEND) onward.
+                    -- First edge registers the requested Port A address.
+                    rd_state <= PREFETCH_SETTLE;
+
+                when PREFETCH_SETTLE =>
+                    -- Keep rd_ptr selected for a full additional edge so the
+                    -- M10K q output is settled before the first SEND handshake.
                     rd_state <= SEND;
 
                 when SEND =>
