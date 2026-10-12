@@ -550,6 +550,61 @@ static int readback_ram_chunk(struct neurax_uio_ctx *ctx,
     return 0;
 }
 
+static int verify_ram_image(struct neurax_uio_ctx *ctx,
+                            const uint32_t *expected,
+                            uint32_t word_count,
+                            const char *label)
+{
+    const uint32_t words_per_chunk =
+        MSGDMA_MAX_TRANSFER_BYTES / sizeof(uint32_t);
+    volatile uint32_t *actual = (volatile uint32_t *)ctx->rx_buf;
+    uint32_t mismatches = 0;
+
+    memset(ctx->rx_buf, 0, (size_t)word_count * sizeof(uint32_t));
+    __sync_synchronize();
+    msgdma_reset(ctx->s2m);
+
+    for (uint32_t start_word = 0; start_word < word_count;
+         start_word += words_per_chunk) {
+        uint32_t chunk_words = word_count - start_word;
+        if (chunk_words > words_per_chunk)
+            chunk_words = words_per_chunk;
+
+        if (readback_ram_chunk(ctx, start_word, chunk_words) < 0) {
+            fprintf(stderr,
+                    "[%s] RAM readback failed for words %u..%u\n",
+                    label, start_word, start_word + chunk_words - 1);
+            return -1;
+        }
+    }
+
+    for (uint32_t i = 0; i < word_count; i++) {
+        if (actual[i] != expected[i]) {
+            if (mismatches < MAX_PRINT_ERRORS) {
+                fprintf(stderr,
+                        "[%s] mismatch RAM[%u]: got 0x%08" PRIx32
+                        ", expected 0x%08" PRIx32 "\n",
+                        label, i, actual[i], expected[i]);
+            }
+            mismatches++;
+        }
+    }
+
+    if (mismatches != 0) {
+        fprintf(stderr,
+                "[%s] FAILED: %" PRIu32 " of %" PRIu32
+                " RAM words differ%s\n",
+                label, mismatches, word_count,
+                mismatches > MAX_PRINT_ERRORS ? " (first 32 shown)" : "");
+        return -1;
+    }
+
+    printf("[%s] PASS: all %" PRIu32
+           " RAM words match the transmitted image\n",
+           label, word_count);
+    return 0;
+}
+
 static int save_ram_readback(const uint32_t *words,
                              uint32_t word_count,
                              uint32_t confirmed_words,
@@ -646,6 +701,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
 {
     const uint32_t n_words = FPGA_RAM_WORDS;   /* 23000 */
     const uint32_t n_bytes = FPGA_RAM_BYTES;   /* 92000 */
+    uint32_t *probe_data;
 
     printf("\n=== Convolution test (%dx%d input, %dx%d kernel) ===\n",
            CONV_INPUT_H, CONV_INPUT_W, CONV_KERNEL, CONV_KERNEL);
@@ -698,20 +754,45 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     ctx->neurax->reg_conv_config_1 = conv1;
     ctx->neurax->reg_batch_size    = 1;  /* MUST be 1, 0 skips computation */
     volatile uint32_t status;
+    ssize_t wr;
     printf("[conv][diag] config: cmd=0x%08x conv0=0x%08x conv1=0x%08x "
            "batch=%u\n",
            ctx->neurax->reg_cmd, ctx->neurax->reg_conv_config_0,
            ctx->neurax->reg_conv_config_1, ctx->neurax->reg_batch_size);
 
-    /* 3. Clear the readback buffer. Output is read in bounded DMA chunks
-     *    after convolution, matching the Qsys mSGDMA MAX_BYTE setting. */
-    memset(ctx->rx_buf, 0, n_bytes);
-    __sync_synchronize();
-    msgdma_reset(ctx->s2m);
+    /* 3. Exercise the full m2s -> RAM -> s2m path with a distinct word at
+     *    every address. This catches dropped/shifted words even inside the
+     *    otherwise-uniform input, weight, and zero-filled regions. */
+    probe_data = malloc(n_bytes);
+    if (!probe_data) {
+        perror("malloc probe_data");
+        free(tx_data);
+        return -1;
+    }
+    for (uint32_t i = 0; i < n_words; i++)
+        probe_data[i] = 0xA5000000u | i;
 
-    /* 4. Write full RAM image to FPGA (neurax_dma_write sends SOF first) */
+    printf("[conv][preflight] Writing address-coded RAM pattern...\n");
+    wr = neurax_dma_write(ctx, probe_data, n_bytes);
+    if (wr < 0 || (size_t)wr != n_bytes) {
+        fprintf(stderr,
+                "[conv][preflight] Pattern DMA write failed: %zd of %u bytes\n",
+                wr, n_bytes);
+        free(probe_data);
+        free(tx_data);
+        return -1;
+    }
+    if (verify_ram_image(ctx, probe_data, n_words,
+                         "conv preflight address pattern") < 0) {
+        free(probe_data);
+        free(tx_data);
+        return -1;
+    }
+    free(probe_data);
+
+    /* 4. Write the real convolution image and verify it before START. */
     printf("[conv] Writing %"PRIu32" words...\n", n_words);
-    ssize_t wr = neurax_dma_write(ctx, tx_data, n_bytes);
+    wr = neurax_dma_write(ctx, tx_data, n_bytes);
     if (wr < 0 || (size_t)wr != n_bytes) {
         fprintf(stderr, "[conv] Write failed or incomplete: %zd of %u bytes\n",
                 wr, n_bytes);
@@ -721,9 +802,15 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     }
     printf("[conv] Write OK: %zd bytes\n", wr);
 
+    if (verify_ram_image(ctx, tx_data, n_words,
+                         "conv pre-start image") < 0) {
+        free(tx_data);
+        return -1;
+    }
+
     usleep_ms(1000);
 
-    /* 5. Start the convolution. START is edge-detected — clear it again
+    /* 6. Start the convolution. START is edge-detected — clear it again
      *    after a short delay so it doesn't retrigger (see neurax_start()). */
     printf("[conv] Starting convolution...\n");
     ctx->neurax->reg_cmd = CMD_ENABLE | CMD_OP_CONV | CMD_START;

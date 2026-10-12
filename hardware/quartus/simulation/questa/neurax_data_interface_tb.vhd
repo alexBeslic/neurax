@@ -6,7 +6,9 @@
 -- read/write, a full-speed source readback (checking sop/eop placement and
 -- data integrity), backpressure handling (aso_ready_i held low mid-stream),
 -- and that the sink is blocked (asi_ready_o = '0') while a readback is
--- active. Accumulates a failure count and exits with it as the simulation
+-- active. After filling RAM through Port A, probes Port B at key low, high,
+-- and convolution-layout addresses to check its read latency and data path.
+-- Accumulates a failure count and exits with it as the simulation
 -- status code (std.env.stop(error_count)), matching the convention used by
 -- neurax_register_block_tb.vhd.
 --
@@ -36,6 +38,17 @@ entity neurax_data_interface_tb is
 end entity neurax_data_interface_tb;
 
 architecture sim of neurax_data_interface_tb is
+
+    type natural_array_t is array (natural range <>) of natural;
+    constant PORTB_PROBE_ADDRS : natural_array_t(0 to 12) := (
+        242, 243, 3249, 3250, 9999, 10000, 10001,
+        12999, 13000, 13016, 22619, 22620, 22999
+    );
+    constant SOURCE_PROBE_ADDRS : natural_array_t(0 to 19) := (
+        0, 241, 242, 243, 3248, 3249, 3250, 9998, 9999, 10000,
+        10001, 12998, 12999, 13000, 13015, 13016, 22618, 22619,
+        22620, 22999
+    );
 
     type beat_t is record
         data : std_logic_vector(g_DATA_WIDTH-1 downto 0);
@@ -168,11 +181,24 @@ begin
         -- Direct accelerator Port B read; result is available on ram_b_q
         -- after this procedure returns (2-cycle margin for RAM read latency)
         procedure portb_read(addr : natural) is
+            variable expected_addr : std_logic_vector(g_ADDR_WIDTH-1 downto 0);
         begin
-            ram_b_rdaddress <= std_logic_vector(to_unsigned(addr, g_ADDR_WIDTH));
-            wait until rising_edge(clk);
+            expected_addr := std_logic_vector(to_unsigned(addr, g_ADDR_WIDTH));
+            ram_b_rdaddress <= expected_addr;
             wait until rising_edge(clk);
             wait for 1 ns;
+            check(ram_b_wren = '0',
+                  "portb read address " & integer'image(addr) & ": wren must be 0");
+            check(ram_b_rdaddress = expected_addr,
+                  "portb read address " & integer'image(addr) & ": request address changed");
+            report "PORTB TRACE addr=" & integer'image(addr) &
+                   " wren=" & std_logic'image(ram_b_wren) &
+                   " q_after_1=" & integer'image(to_integer(unsigned(ram_b_q)));
+            wait until rising_edge(clk);
+            wait for 1 ns;
+            report "PORTB TRACE addr=" & integer'image(addr) &
+                   " wren=" & std_logic'image(ram_b_wren) &
+                   " q_after_2=" & integer'image(to_integer(unsigned(ram_b_q)));
         end procedure;
 
         -- Poll a single-bit std_logic signal until it equals 'want', up to
@@ -223,6 +249,35 @@ begin
                 exit when n >= MAX_WAIT_CYCLES;
             end loop;
             check(n < MAX_WAIT_CYCLES, "collect_until_eop: timed out waiting for aso_eop_o");
+        end procedure;
+
+        procedure check_source_probe(start_addr : natural) is
+            constant probe_count : natural := 3;
+            variable expected_addr : natural;
+        begin
+            aso_ready <= '1';
+            start_readback(start_addr, probe_count);
+            collect_until_eop;
+            check(captured_count = probe_count,
+                  "Port A source probe at " & integer'image(start_addr) &
+                  ": expected 3 beats, got " & integer'image(captured_count));
+            if captured_count = probe_count then
+                for i in 0 to probe_count - 1 loop
+                    expected_addr := start_addr + i;
+                    report "PORTA TRACE addr=" & integer'image(expected_addr) &
+                           " data=" &
+                           integer'image(to_integer(unsigned(captured(i).data)));
+                    check(unsigned(captured(i).data) = 100 + expected_addr,
+                          "Port A source probe: RAM[" &
+                          integer'image(expected_addr) & "] expected " &
+                          integer'image(100 + expected_addr) & ", got " &
+                          integer'image(to_integer(unsigned(captured(i).data))));
+                end loop;
+            end if;
+            wait_for_bit(rd_done, '1',
+                         "Port A source probe: rd_done_o should pulse");
+            wait_for_bit(rd_busy, '0',
+                         "Port A source probe: rd_busy_o should return to 0");
         end procedure;
 
     begin
@@ -358,6 +413,23 @@ begin
                        integer'image(100 + i);
             end if;
             sink_write(std_logic_vector(to_unsigned(100 + i, g_DATA_WIDTH)));
+        end loop;
+
+        -- Inspect Port A's actual source/readback path at the RAM regions
+        -- implicated by the latest board dump before the full-stream check.
+        for i in SOURCE_PROBE_ADDRS'range loop
+            check_source_probe(SOURCE_PROBE_ADDRS(i));
+        end loop;
+
+        -- Read back through Port B after Port A has filled the whole RAM.
+        -- These probes include the latest board-dump transition addresses and
+        -- the convolution weight/output region boundaries.
+        for i in PORTB_PROBE_ADDRS'range loop
+            portb_read(PORTB_PROBE_ADDRS(i));
+            check(unsigned(ram_b_q) = 100 + PORTB_PROBE_ADDRS(i),
+                  "Port B probe: RAM[" & integer'image(PORTB_PROBE_ADDRS(i)) &
+                  "] expected " & integer'image(100 + PORTB_PROBE_ADDRS(i)) &
+                  ", got " & integer'image(to_integer(unsigned(ram_b_q))));
         end loop;
 
         -- rd_length_i is 15 bits, so the largest single transfer is 32767
