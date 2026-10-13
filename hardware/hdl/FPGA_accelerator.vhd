@@ -748,12 +748,12 @@ begin
     operation_busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
     current_operation <= selected_operation;
 
-    -- After completion, expose the first Port B weight address/data pair and
-    -- first output word without changing the register map.
+    -- After completion, expose the first Port B weight address/data pair,
+    -- first output MSB, and an RTL revision tag without changing the register map.
     debug_cycles <= conv_debug_weight_address & conv_debug_weight
                     when done_latch = '1'
                     else std_logic_vector(cycle_counter);
-    debug_status <= conv_debug_weight_valid & conv_debug_output(14 downto 8)
+    debug_status <= conv_debug_weight_valid & conv_debug_output(14) & "101101"
                     when done_latch = '1' and conv_debug_output_valid = '1'
                     else "000000" & selected_operation;
 

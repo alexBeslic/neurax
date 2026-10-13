@@ -108,6 +108,7 @@ begin
         variable input_line    : line;
         variable input_value   : integer;
         variable status_value  : std_logic_vector(31 downto 0);
+        variable debug_value   : std_logic_vector(31 downto 0);
         variable data_command  : std_logic_vector(31 downto 0);
         file output_f          : text;
         variable output_line   : line;
@@ -217,6 +218,12 @@ begin
         check(operation_done, "timed out waiting for convolution to finish");
 
         if operation_done then
+            avs_read_register(14, debug_value);
+            check(debug_value(7) = '1',
+                  "debug status should report first-weight capture");
+            check(debug_value(5 downto 0) = "101101",
+                  "debug status RTL tag does not match sampled-Port-B fix");
+
             -- Avalon-MM DATA_READ: address in [14:0], transfer length in [30:16].
             data_command := std_logic_vector(
                 shift_left(to_unsigned(OUTPUT_COUNT, 32), 16) or
