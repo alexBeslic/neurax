@@ -70,8 +70,10 @@ architecture behavioral of convolution_block is
     signal output_width : integer range 0 to MAX_WIDTH;
     
     -- Accumulator za konvoluciju
-    signal conv_accumulator : signed(31 downto 0);
-    signal mult_result : signed(31 downto 0);
+    -- 32x32-bit products are 64 bits. Up to 5x5x16=400 products may be
+    -- accumulated, so 73 signed bits preserve the full supported sum.
+    signal conv_accumulator : signed(72 downto 0);
+    signal mult_result : signed(63 downto 0);
     
     -- Pipeline registri
     signal input_reg : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -93,6 +95,17 @@ architecture behavioral of convolution_block is
     function calculate_input_pos(out_pos, stride, k_pos, padding : integer) return integer is
     begin
         return out_pos * stride + k_pos - padding;
+    end function;
+
+    function saturate_q32(value : signed) return std_logic_vector is
+    begin
+        if value > to_signed(2147483647, value'length) then
+            return x"7FFFFFFF";
+        elsif value < to_signed(-2147483647 - 1, value'length) then
+            return x"80000000";
+        else
+            return std_logic_vector(value(31 downto 0));
+        end if;
     end function;
 
 begin
@@ -162,7 +175,7 @@ begin
                         -- Accumulate: add previous mult result to accumulator
                         -- (1-cycle pipeline: we accumulate the result from the
                         --  previous cycle's multiply)
-                        conv_accumulator <= conv_accumulator + mult_result;
+                        conv_accumulator <= conv_accumulator + resize(mult_result, conv_accumulator'length);
                         
                         -- Advance kernel counters (kw -> kh -> in_ch)
                         if kw_cnt < config.kernel_size - 1 then
@@ -292,12 +305,9 @@ begin
     -- Output data: accumulator result (with final multiply added) + bias
     -- The accumulator contains the sum of all but the last multiply.
     -- We add the last mult_result and bias in the output.
-    output_data <= std_logic_vector(
-        resize(
-            shift_right(conv_accumulator + mult_result, FRAC_WIDTH) + 
-            resize(signed(bias_reg), 32),
-            DATA_WIDTH
-        )
+    output_data <= saturate_q32(
+        shift_right(conv_accumulator + resize(mult_result, conv_accumulator'length), FRAC_WIDTH) +
+        resize(signed(bias_reg), conv_accumulator'length)
     );
     
     output_valid <= '1' when current_state = WRITE_OUTPUT else '0';

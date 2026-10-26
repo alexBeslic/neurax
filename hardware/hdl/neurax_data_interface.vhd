@@ -83,7 +83,12 @@ entity neurax_data_interface is
         ram_b_q_o         : out std_logic_vector(g_DATA_WIDTH - 1 downto 0);
         ram_b_wraddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
         ram_b_data_i      : in  std_logic_vector(g_DATA_WIDTH - 1 downto 0);
-        ram_b_wren_i      : in  std_logic
+        ram_b_wren_i      : in  std_logic;
+
+        ------ Port B diagnostic trace (software-readable) ------
+        diag_trace_control_i : in  std_logic_vector(31 downto 0);
+        diag_trace_phase_i   : in  std_logic_vector(3 downto 0);
+        diag_trace_data_o    : out std_logic_vector(31 downto 0)
     );
 end neurax_data_interface;
 
@@ -98,6 +103,25 @@ architecture arch of neurax_data_interface is
     -- Port B signals (accelerator)
     signal port_b_address : std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
     signal port_b_q       : std_logic_vector(g_DATA_WIDTH - 1 downto 0);
+    signal port_b_ram_data : std_logic_vector(g_DATA_WIDTH - 1 downto 0);
+    signal port_b_ram_wren : std_logic;
+    signal port_b_diag_write : std_logic;
+    signal diag_trace_read_address : std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
+
+    -- Eight-cycle snapshot around the first read of weight word 0 (0x2710).
+    -- Three 32-bit words per sample: {phase, requested address},
+    -- {write-enable, muxed Port B address}, and accelerator-facing q.
+    type diag_trace_mem_t is array (0 to 23) of std_logic_vector(31 downto 0);
+    signal diag_trace_mem       : diag_trace_mem_t;
+    signal diag_trace_count     : natural range 0 to 8;
+    signal diag_trace_active    : std_logic;
+    signal diag_trace_triggered : std_logic;
+
+    -- Keep the physical Port B path visible to SignalTap during on-board
+    -- weight-read diagnosis (address mux, write enable, and M10K output).
+    attribute keep : boolean;
+    attribute keep of port_b_address : signal is true;
+    attribute keep of port_b_q       : signal is true;
 
     -- Sink write pointer (wraps naturally at 2**g_ADDR_WIDTH)
     signal wr_ptr : unsigned(g_ADDR_WIDTH - 1 downto 0);
@@ -164,8 +188,8 @@ begin
         wren_a         => port_a_wren,
         q_a            => port_a_q,
         address_b      => port_b_address,
-        data_b         => ram_b_data_i,
-        wren_b         => ram_b_wren_i,
+        data_b         => port_b_ram_data,
+        wren_b         => port_b_ram_wren,
         q_b            => port_b_q,
         aclr0          => '0',
         aclr1          => '0',
@@ -181,13 +205,89 @@ begin
 
     -- =========================================================================
     -- Port B: accelerator access.
-    -- Keep read and write path mutually exclusive in time: Port B addresses are
-    -- selected by the current request, but the RAM output is registered so that
-    -- q_b remains stable for the subsequent accelerator cycle.
+    -- Keep read and write path mutually exclusive in time. Register both the
+    -- Port B address and q_b on CLOCK1, as required for a legal Cyclone V
+    -- altsyncram Port B clock configuration.
     -- =========================================================================
+    port_b_diag_write <= diag_trace_control_i(30) and diag_trace_control_i(14);
+    port_b_ram_wren <= '1' when port_b_diag_write = '1' else ram_b_wren_i;
+    port_b_ram_data <= std_logic_vector(to_unsigned(16#12345678#, g_DATA_WIDTH))
+                       when port_b_diag_write = '1' else ram_b_data_i;
+
     ram_b_q_o      <= port_b_q;
     port_b_address <= ram_b_wraddress_i when ram_b_wren_i = '1'
+                      else diag_trace_read_address when diag_trace_control_i(30) = '1'
                       else ram_b_rdaddress_i;
+    diag_trace_read_address <= diag_trace_control_i(29 downto 15)
+                               when diag_trace_control_i(30) = '1'
+                               else ram_b_rdaddress_i;
+
+    -- Software selects words 0..23 through REG_TEMP_2 and reads the selected
+    -- word through REG_TEMP_3. Selector 31 returns capture status.
+    process(diag_trace_control_i, diag_trace_mem, diag_trace_count,
+            diag_trace_active, diag_trace_triggered)
+        variable trace_index : natural range 0 to 31;
+        variable trace_status : std_logic_vector(31 downto 0);
+    begin
+        trace_index := to_integer(unsigned(diag_trace_control_i(4 downto 0)));
+        if trace_index < 24 then
+            diag_trace_data_o <= diag_trace_mem(trace_index);
+        elsif trace_index = 31 then
+            trace_status := (others => '0');
+            trace_status(0) := diag_trace_triggered;
+            trace_status(1) := diag_trace_active;
+            trace_status(7 downto 2) := std_logic_vector(to_unsigned(diag_trace_count, 6));
+            diag_trace_data_o <= trace_status;
+        else
+            diag_trace_data_o <= (others => '0');
+        end if;
+    end process;
+
+    -- A one-cycle write of bit 31 in REG_TEMP_2 clears/re-arms the capture.
+    -- Capture the first 8 cycles beginning with the first requested read of
+    -- word 10000, regardless of whether the M10K returns the expected value.
+    process(clk_i, rst_i)
+        variable sample_index : natural range 0 to 7;
+    begin
+        if rst_i = '1' then
+            diag_trace_mem       <= (others => (others => '0'));
+            diag_trace_count     <= 0;
+            diag_trace_active    <= '0';
+            diag_trace_triggered <= '0';
+        elsif rising_edge(clk_i) then
+            if diag_trace_control_i(31) = '1' then
+                diag_trace_mem       <= (others => (others => '0'));
+                diag_trace_count     <= 0;
+                diag_trace_active    <= '0';
+                diag_trace_triggered <= '0';
+            elsif diag_trace_active = '1' then
+                sample_index := diag_trace_count;
+                diag_trace_mem(sample_index * 3) <=
+                    x"000" & diag_trace_phase_i & '0' & diag_trace_read_address;
+                diag_trace_mem(sample_index * 3 + 1) <=
+                    x"0000" & port_b_ram_wren & port_b_address;
+                diag_trace_mem(sample_index * 3 + 2) <= port_b_q;
+                if diag_trace_count = 7 then
+                    diag_trace_count  <= 8;
+                    diag_trace_active <= '0';
+                else
+                    diag_trace_count <= diag_trace_count + 1;
+                end if;
+            elsif diag_trace_triggered = '0' and port_b_ram_wren = '0' and
+                (diag_trace_control_i(30) = '1' or
+                 unsigned(ram_b_rdaddress_i) = to_unsigned(16#2710#, g_ADDR_WIDTH)) then
+                sample_index := 0;
+                diag_trace_mem(0) <=
+                  x"000" & diag_trace_phase_i & '0' & diag_trace_read_address;
+                diag_trace_mem(1) <=
+                    x"0000" & port_b_ram_wren & port_b_address;
+                diag_trace_mem(2) <= port_b_q;
+                diag_trace_count     <= 1;
+                diag_trace_active    <= '1';
+                diag_trace_triggered <= '1';
+            end if;
+        end if;
+    end process;
 
     -- =========================================================================
     -- Sink path

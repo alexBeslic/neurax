@@ -15,8 +15,8 @@ package neurax_register_pkg is
   constant c_REG_BATCH_SIZE : unsigned(3 downto 0) := "1000"; -- Address 8: Batch size register
   constant c_REG_DATA_SC : unsigned(3 downto 0) := "1001"; -- Address 9: Data status/config register
   constant c_REG_DATA_READ : unsigned(3 downto 0) := "1010"; -- Address 10: Data start/length register
-  constant c_REG_TEMP_2 : unsigned(3 downto 0) := "1011"; -- Address 11: Temporary register 2
-  constant c_REG_TEMP_3 : unsigned(3 downto 0) := "1100"; -- Address 12: Temporary register 3
+  constant c_REG_TEMP_2 : unsigned(3 downto 0) := "1011"; -- Address 11: Port B trace control/index/forced address
+  constant c_REG_TEMP_3 : unsigned(3 downto 0) := "1100"; -- Address 12: Port B trace data (read-only)
   constant c_REG_DEBUG_CYCLES : unsigned(3 downto 0) := "1101"; -- Address 13: Read-only register
   constant c_REG_DEBUG_STATUS : unsigned(3 downto 0) := "1110"; -- Address 14: Read-only register
   constant c_REG_READ_ONLY : unsigned(3 downto 0) := "1111"; -- Address 15: Read-only register

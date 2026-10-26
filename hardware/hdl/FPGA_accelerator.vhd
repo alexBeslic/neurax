@@ -9,7 +9,7 @@ use IEEE.NUMERIC_STD.ALL;
 -- Globalni paket za tipove i konstante
 package accel_types is
     -- Opšti parametri
-    constant DATA_WIDTH    : integer := 16;
+    constant DATA_WIDTH    : integer := 32;
     constant FRAC_WIDTH    : integer := 8;
     constant INT_WIDTH     : integer := DATA_WIDTH - FRAC_WIDTH;
 
@@ -72,14 +72,14 @@ entity FPGA_accelerator is
         INPUT_HEIGHT        : integer := 8;
         INPUT_WIDTH         : integer := 8;
         MAX_CHANNELS        : integer := 4;
-        PARALLEL_UNITS      : integer := 4;
+        PARALLEL_UNITS      : integer := 1;
         -- RAM layout base addresses (in 32-bit words)
         -- HPS streams data into these regions before starting an operation.
         -- Input:   0 .. WEIGHT_BASE-1
         -- Weights: WEIGHT_BASE .. BIAS_BASE-1
         -- Bias:    BIAS_BASE .. OUTPUT_BASE-1
         -- Output:  OUTPUT_BASE .. end
-        -- (One Q8.8 value per 32-bit word, in lower 16 bits)
+        -- (One signed Q24.8 value per 32-bit RAM word)
         INPUT_BASE_ADDR     : integer := 0;
         WEIGHT_BASE_ADDR    : integer := 10000;
         BIAS_BASE_ADDR      : integer := 13000;
@@ -126,7 +126,8 @@ entity FPGA_accelerator is
 
         -- Debug/monitoring
         debug_cycles : out std_logic_vector(31 downto 0);
-        debug_status : out std_logic_vector(7 downto 0)
+        debug_status : out std_logic_vector(7 downto 0);
+        debug_read_phase_o : out std_logic_vector(3 downto 0)
     );
 end FPGA_accelerator;
 
@@ -169,7 +170,7 @@ architecture behavioral of FPGA_accelerator is
         generic (
             INPUT_HEIGHT      : integer := 32;
             INPUT_WIDTH       : integer := 32;
-            PARALLEL_CHANNELS : integer := 4
+            PARALLEL_CHANNELS : integer := 1
         );
         port (
             clk              : in  std_logic;
@@ -197,7 +198,7 @@ architecture behavioral of FPGA_accelerator is
     component activation_block
         generic (
             PIPELINE_STAGES : integer := 3;
-            PARALLEL_UNITS  : integer := 4
+            PARALLEL_UNITS  : integer := 1
         );
         port (
             clk              : in  std_logic;
@@ -305,6 +306,11 @@ architecture behavioral of FPGA_accelerator is
     signal conv_data_ready  : std_logic;
     signal conv_need_bias   : std_logic;
 
+    -- Preserve the sequencer state so SignalTap can correlate RAM address/data
+    -- with the exact read phase on hardware.
+    attribute keep : boolean;
+    attribute keep of conv_read_phase : signal is true;
+
     -- Registered RAM read data per conv channel
     signal conv_input_data_reg  : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal conv_weight_data_reg : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -314,12 +320,8 @@ architecture behavioral of FPGA_accelerator is
     signal pool_read_pending : std_logic;
     signal act_read_pending  : std_logic;
 
-    -- 16-bit extract from 32-bit RAM word
-    signal ram_q_16 : std_logic_vector(DATA_WIDTH-1 downto 0);
-
+    -- Pooling and activation process one full-width RAM word per cycle.
 begin
-
-    ram_q_16 <= ram_q_i(DATA_WIDTH-1 downto 0);
 
     -- =========================================================================
     -- Configuration record setup
@@ -473,7 +475,7 @@ begin
                     conv_debug_weight_address <= std_logic_vector(
                         unsigned(conv_weight_addr) +
                         to_unsigned(WEIGHT_BASE_ADDR, 16));
-                    conv_debug_weight <= ram_q_16;
+                    conv_debug_weight <= ram_q_i;
                     conv_debug_weight_valid <= '1';
                 end if;
 
@@ -525,6 +527,8 @@ begin
     -- =========================================================================
     conv_need_bias <= conv_bias_read_en;
     conv_data_ready <= '1' when conv_read_phase = PHASE_READY else '0';
+    debug_read_phase_o <= std_logic_vector(to_unsigned(
+        conv_read_phase_t'pos(conv_read_phase), debug_read_phase_o'length));
 
     process(clk, rst)
     begin
@@ -547,7 +551,7 @@ begin
                     when PHASE_INPUT_SETTLE =>
                         conv_read_phase <= PHASE_INPUT_SAMPLE;
                     when PHASE_INPUT_SAMPLE =>
-                        conv_input_data_reg <= ram_q_16;
+                        conv_input_data_reg <= ram_q_i;
                         conv_read_phase <= PHASE_WEIGHT;
                     when PHASE_WEIGHT =>
                         conv_read_phase <= PHASE_WEIGHT_CAPTURE;
@@ -556,7 +560,7 @@ begin
                     when PHASE_WEIGHT_SETTLE =>
                         conv_read_phase <= PHASE_WEIGHT_SAMPLE;
                     when PHASE_WEIGHT_SAMPLE =>
-                        conv_weight_data_reg <= ram_q_16;
+                        conv_weight_data_reg <= ram_q_i;
                         if conv_need_bias = '1' then
                             conv_read_phase <= PHASE_BIAS;
                         else
@@ -569,7 +573,7 @@ begin
                     when PHASE_BIAS_SETTLE =>
                         conv_read_phase <= PHASE_BIAS_SAMPLE;
                     when PHASE_BIAS_SAMPLE =>
-                        conv_bias_data_reg <= ram_q_16;
+                        conv_bias_data_reg <= ram_q_i;
                         conv_read_phase <= PHASE_READY;
                     when PHASE_READY =>
                         conv_read_phase <= PHASE_DONE;
@@ -607,13 +611,7 @@ begin
 
             if pool_read_pending = '1' then
                 pool_input_valid <= '1';
-                pool_input_data(0) <= ram_q_i(DATA_WIDTH-1 downto 0);
-                if PARALLEL_UNITS > 1 then
-                    pool_input_data(1) <= ram_q_i(2*DATA_WIDTH-1 downto DATA_WIDTH);
-                end if;
-                for i in 2 to PARALLEL_UNITS-1 loop
-                    pool_input_data(i) <= (others => '0');
-                end loop;
+                pool_input_data(0) <= ram_q_i;
             end if;
         end if;
     end process;
@@ -639,13 +637,7 @@ begin
 
             if act_read_pending = '1' then
                 act_input_valid <= '1';
-                act_input_data(0) <= ram_q_i(DATA_WIDTH-1 downto 0);
-                if PARALLEL_UNITS > 1 then
-                    act_input_data(1) <= ram_q_i(2*DATA_WIDTH-1 downto DATA_WIDTH);
-                end if;
-                for i in 2 to PARALLEL_UNITS-1 loop
-                    act_input_data(i) <= (others => '0');
-                end loop;
+                act_input_data(0) <= ram_q_i;
             end if;
         end if;
     end process;
@@ -694,8 +686,7 @@ begin
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
                         unsigned(conv_output_addr) + to_unsigned(OUTPUT_BASE_ADDR, 16));
-                    ram_data_o(DATA_WIDTH-1 downto 0)  <= conv_output_data;
-                    ram_data_o(31 downto DATA_WIDTH)    <= (others => '0');
+                    ram_data_o <= conv_output_data;
                 end if;
 
             -- =============================================================
@@ -709,10 +700,7 @@ begin
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
                         resize(unsigned(pool_output_addr), 16) + to_unsigned(OUTPUT_BASE_ADDR, 16));
-                    ram_data_o(DATA_WIDTH-1 downto 0) <= pool_output_data(0);
-                    if PARALLEL_UNITS > 1 then
-                        ram_data_o(2*DATA_WIDTH-1 downto DATA_WIDTH) <= pool_output_data(1);
-                    end if;
+                    ram_data_o <= pool_output_data(0);
                 end if;
 
             -- =============================================================
@@ -726,10 +714,7 @@ begin
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
                         unsigned(act_output_addr) + to_unsigned(OUTPUT_BASE_ADDR, 16));
-                    ram_data_o(DATA_WIDTH-1 downto 0) <= act_output_data(0);
-                    if PARALLEL_UNITS > 1 then
-                        ram_data_o(2*DATA_WIDTH-1 downto DATA_WIDTH) <= act_output_data(1);
-                    end if;
+                    ram_data_o <= act_output_data(0);
                 end if;
 
             -- =============================================================
@@ -748,12 +733,12 @@ begin
     operation_busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
     current_operation <= selected_operation;
 
-    -- After completion, expose the first Port B weight address/data pair,
+    -- After completion, expose the full 32-bit first Port B weight word,
     -- first output MSB, and an RTL revision tag without changing the register map.
-    debug_cycles <= conv_debug_weight_address & conv_debug_weight
+    debug_cycles <= conv_debug_weight
                     when done_latch = '1'
                     else std_logic_vector(cycle_counter);
-    debug_status <= conv_debug_weight_valid & conv_debug_output(14) & "101101"
+    debug_status <= conv_debug_weight_valid & conv_debug_output(31) & "110001"
                     when done_latch = '1' and conv_debug_output_valid = '1'
                     else "000000" & selected_operation;
 

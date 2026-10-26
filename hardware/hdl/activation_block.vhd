@@ -80,9 +80,13 @@ architecture behavioral of activation_block is
     function to_fixed(real_val : real) return std_logic_vector is
         variable int_val : integer;
     begin
-        int_val := integer(real_val * real(2**FRAC_WIDTH));
-        if int_val > 2**(DATA_WIDTH-1)-1 then int_val := 2**(DATA_WIDTH-1)-1; end if;
-        if int_val < -2**(DATA_WIDTH-1) then int_val := -2**(DATA_WIDTH-1); end if;
+        if real_val * real(2**FRAC_WIDTH) > 2147483647.0 then
+            int_val := 2147483647;
+        elsif real_val * real(2**FRAC_WIDTH) < -2147483648.0 then
+            int_val := -2147483647 - 1;
+        else
+            int_val := integer(real_val * real(2**FRAC_WIDTH));
+        end if;
         return std_logic_vector(to_signed(int_val, DATA_WIDTH));
     end function;
     
@@ -104,7 +108,7 @@ architecture behavioral of activation_block is
     
     function apply_leaky_relu(input_val, alpha_val : std_logic_vector) return std_logic_vector is
         variable result : std_logic_vector(DATA_WIDTH-1 downto 0);
-        variable mult_result : signed(31 downto 0);
+        variable mult_result : signed(63 downto 0);
     begin
         if signed(input_val) > 0 then
             result := input_val;
@@ -117,13 +121,9 @@ architecture behavioral of activation_block is
     
     function lut_lookup(lut_mem : lut_array_t; input_val : std_logic_vector) return std_logic_vector is
         variable addr : integer range 0 to 255;
-        variable normalized : integer;
     begin
-        -- Normalizuj input u opseg [0, 255]
-        normalized := to_integer(signed(input_val)) + 2**(DATA_WIDTH-1);
-        addr := normalized / (2**(DATA_WIDTH-8));
-        if addr > 255 then addr := 255; end if;
-        if addr < 0 then addr := 0; end if;
+        -- The most-significant byte maps the signed 32-bit range to [0,255].
+        addr := to_integer(unsigned(input_val(DATA_WIDTH-1 downto DATA_WIDTH-8)));
         return lut_mem(addr);
     end function;
     -- ---------------------------------------------------------------------------
@@ -299,7 +299,7 @@ begin
         variable in_val        : std_logic_vector(DATA_WIDTH-1 downto 0);
         variable out_val       : std_logic_vector(DATA_WIDTH-1 downto 0);
         variable act_sel       : activation_type_t;
-        variable mult_result   : signed(31 downto 0);
+        variable mult_result   : signed(63 downto 0);
         variable elu_result    : signed(DATA_WIDTH-1 downto 0);
         variable exp_val_vec   : std_logic_vector(DATA_WIDTH-1 downto 0);
         variable i_var         : integer;

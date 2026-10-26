@@ -20,7 +20,7 @@ entity neurax is
         g_PIXEL_WIDTH     : natural := 24;
         g_FB_WIDTH        : natural := 100;
         g_FB_HEIGHT       : natural := 100;
-        PARALLEL_UNITS    : integer := 4
+        PARALLEL_UNITS    : integer := 1
     );
 
     port (
@@ -114,7 +114,9 @@ architecture arch of neurax is
         neurax_data_busy_i           : in std_logic;
         neurax_data_done_i           : in std_logic;
         neurax_debug_cycle_i         : in  std_logic_vector(g_WIDTH-1 downto 0);
-        neurax_debug_status_i        : in  std_logic_vector(7 downto 0)
+        neurax_debug_status_i        : in  std_logic_vector(7 downto 0);
+        neurax_trace_control_o       : out std_logic_vector(31 downto 0);
+        neurax_trace_data_i          : in  std_logic_vector(31 downto 0)
     );
     end component;
 
@@ -147,7 +149,10 @@ architecture arch of neurax is
         ram_b_q_o         : out std_logic_vector(g_DATA_WIDTH - 1 downto 0);
         ram_b_wraddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
         ram_b_data_i      : in  std_logic_vector(g_DATA_WIDTH - 1 downto 0);
-        ram_b_wren_i      : in  std_logic
+        ram_b_wren_i      : in  std_logic;
+        diag_trace_control_i : in  std_logic_vector(31 downto 0);
+        diag_trace_phase_i   : in  std_logic_vector(3 downto 0);
+        diag_trace_data_o    : out std_logic_vector(31 downto 0)
     );
     end component;
 
@@ -156,7 +161,7 @@ architecture arch of neurax is
         INPUT_HEIGHT     : integer := 8;
         INPUT_WIDTH      : integer := 8;
         MAX_CHANNELS     : integer := 4;
-        PARALLEL_UNITS   : integer := 4;
+        PARALLEL_UNITS   : integer := 1;
         INPUT_BASE_ADDR  : integer := 0;
         WEIGHT_BASE_ADDR : integer := 10000;
         BIAS_BASE_ADDR   : integer := 13000;
@@ -190,7 +195,8 @@ architecture arch of neurax is
         operation_busy       : out std_logic;
         current_operation    : out std_logic_vector(1 downto 0);
         debug_cycles         : out std_logic_vector(31 downto 0);
-        debug_status         : out std_logic_vector(7 downto 0)
+        debug_status         : out std_logic_vector(7 downto 0);
+        debug_read_phase_o   : out std_logic_vector(3 downto 0)
     );
     end component;
 
@@ -244,6 +250,9 @@ architecture arch of neurax is
     -- Debug
     signal neurax_debug_cycle  : std_logic_vector(31 downto 0);
     signal neurax_debug_status : std_logic_vector(7 downto 0);
+    signal neurax_trace_control : std_logic_vector(31 downto 0);
+    signal neurax_trace_data    : std_logic_vector(31 downto 0);
+    signal accel_debug_read_phase : std_logic_vector(3 downto 0);
 
     -- =========================================================================
     -- RAM Port B signals: accelerator <-> data_interface
@@ -322,7 +331,9 @@ begin
         neurax_data_done_i       => neurax_data_done,
 
         neurax_debug_cycle_i  => neurax_debug_cycle,
-        neurax_debug_status_i => neurax_debug_status
+        neurax_debug_status_i => neurax_debug_status,
+        neurax_trace_control_o => neurax_trace_control,
+        neurax_trace_data_i    => neurax_trace_data
     );
 
     -- Output valid mirrors operation done (results are in RAM and ready to stream)
@@ -371,7 +382,10 @@ begin
         ram_b_q_o         => accel_ram_q,
         ram_b_wraddress_i => accel_ram_wraddress(g_DATA_ADDR_WIDTH-1 downto 0),
         ram_b_data_i      => accel_ram_data,
-        ram_b_wren_i      => accel_ram_wren
+        ram_b_wren_i      => accel_ram_wren,
+        diag_trace_control_i => neurax_trace_control,
+        diag_trace_phase_i   => accel_debug_read_phase,
+        diag_trace_data_o    => neurax_trace_data
     );
 
     -- =========================================================================
@@ -383,7 +397,7 @@ begin
         INPUT_HEIGHT     => g_FB_HEIGHT,
         INPUT_WIDTH      => g_FB_WIDTH,
         MAX_CHANNELS     => 4,
-        PARALLEL_UNITS   => 4,
+        PARALLEL_UNITS   => PARALLEL_UNITS,
         INPUT_BASE_ADDR  => 0,       -- Input data starts at word 0
         WEIGHT_BASE_ADDR => 10000,   -- Weights start at word 10000
         BIAS_BASE_ADDR   => 13000,   -- Bias starts at word 13000
@@ -433,7 +447,8 @@ begin
 
         -- Debug
         debug_cycles => neurax_debug_cycle,
-        debug_status => neurax_debug_status
+        debug_status => neurax_debug_status,
+        debug_read_phase_o => accel_debug_read_phase
     );
 
 end arch;
