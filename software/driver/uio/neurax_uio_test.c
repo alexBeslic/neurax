@@ -48,7 +48,7 @@
 #define STATUS_DONE             (1u << 4)
 #define STATUS_BUSY             (1u << 5)
 
-/* RAM word layout (one 32-bit word per Q8.8 sample).
+/* RAM word layout (one signed Q24.8 value per 32-bit word).
  * Must match FPGA generics g_FB_HEIGHT/g_FB_WIDTH and FPGA_accelerator offsets. */
 #define RAM_INPUT_BASE   0u
 #define RAM_WEIGHT_BASE  10000u
@@ -56,9 +56,9 @@
 #define RAM_OUTPUT_BASE  13016u
 #define RAM_TOTAL_WORDS  23000u
 
-/* Q8.8: 1.0 → 0x0100 */
-#define Q8_8_ONE        0x00000100u
-#define Q8_8_ZERO       0x00000000u
+/* Signed Q24.8: 1.0 → 0x00000100 */
+#define Q24_8_ONE       0x00000100u
+#define Q24_8_ZERO      0x00000000u
 
 /* ---------------------------------------------------------------------------
  * Internal state
@@ -497,10 +497,10 @@ int main(void)
 
     /* --- Build full 23000-word RAM image ---------------------------------- *
      * Layout matches FPGA generics (see neurax_test.c):
-     *   [0      .. 9999 ] input:   100×100 pixels, Q8.8 value 1.0
-     *   [10000  .. 10008] weights: 3×3 kernel, Q8.8 value 1.0 (all-ones)
+    *   [0      .. 9999 ] input:   100×100 pixels, signed Q24.8 value 1.0
+    *   [10000  .. 10008] weights: 3×3 kernel, signed Q24.8 value 1.0 (all-ones)
      *   [10009  .. 12999] unused weight area (zero)
-     *   [13000         ] bias:    Q8.8 value 0.0
+    *   [13000         ] bias:    signed Q24.8 value 0.0
      *   [13001  .. 13015] unused bias area (zero)
      *   [13016  .. 23000] output:  written by accelerator
      * ----------------------------------------------------------------------- */
@@ -509,16 +509,16 @@ int main(void)
     uint32_t *ram_buf = calloc(RAM_TOTAL_WORDS, sizeof(uint32_t));
     if (!ram_buf) { perror("calloc ram_buf"); goto done; }
 
-    /* Input: 100×100 = 10000 words, each = 1.0 in Q8.8 */
+    /* Input: 100×100 = 10000 words, each = 1.0 in signed Q24.8 */
     for (uint32_t i = RAM_INPUT_BASE; i < RAM_INPUT_BASE + 10000u; i++)
-        ram_buf[i] = Q8_8_ONE;
+        ram_buf[i] = Q24_8_ONE;
 
-    /* Weights: 3×3×1×1 = 9 words, each = 1.0 in Q8.8 */
+    /* Weights: 3×3×1×1 = 9 words, each = 1.0 in signed Q24.8 */
     for (uint32_t i = RAM_WEIGHT_BASE; i < RAM_WEIGHT_BASE + 9u; i++)
-        ram_buf[i] = Q8_8_ONE;
+        ram_buf[i] = Q24_8_ONE;
 
     /* Bias: 1 word for 1 output channel = 0.0 */
-    ram_buf[RAM_BIAS_BASE] = Q8_8_ZERO;
+    ram_buf[RAM_BIAS_BASE] = Q24_8_ZERO;
 
     /* =========================================================================
      * DIAGNOSTIC TEST A: pre-arm s2m BEFORE write.
@@ -560,7 +560,7 @@ int main(void)
             printf("[TEST A] RESULT: CSR=0x%08x %s\n", ctx.s2m->csr_status,
                    (st & CSR_ST_BUSY) ? "*** TIMEOUT (streaming broken) ***"
                                       : "DONE (streaming OK!)");
-            printf("[TEST A] rx_buf[0..7] (expect 0x%08x = Q8_8_ONE for word[0]):\n", Q8_8_ONE);
+            printf("[TEST A] rx_buf[0..7] (expect 0x%08x = Q24_8_ONE for word[0]):\n", Q24_8_ONE);
             for (int i = 0; i < 8; i++)
                 printf("  [%d] 0x%08x\n", i, rxw[i]);
         }
@@ -634,7 +634,7 @@ int main(void)
     /* --- Start Neurax convolution ----------------------------------------- *
      * 3×3 kernel, stride=1, padding=0, 1 input channel, 1 output channel.
      * Expected output (no bias): each interior pixel = sum of 3×3 ones = 9.0
-     * in Q8.8 → 0x00000900.  Edge pixels depend on padding mode (none here).
+    * in signed Q24.8 → 0x00000900.  Edge pixels depend on padding mode (none here).
      * ----------------------------------------------------------------------- */
     if (accelerator_start_conv(&ctx, 3, 1, 0, 1, 1) < 0) {
         fprintf(stderr, "Accelerator start failed\n");
@@ -658,13 +658,13 @@ int main(void)
     }
     printf("Read OK: %zu bytes\n\n", ram_bytes);
 
-    /* --- Dump first 8 output words (expected ~0x00000900 = 9.0 in Q8.8) -- */
+    /* --- Dump first 8 output words (expected ~0x00000900 = 9.0 in signed Q24.8) -- */
     printf("Output words [%u..%u] (expected 9.0 = 0x00000900 for interior pixels):\n",
            RAM_OUTPUT_BASE, RAM_OUTPUT_BASE + 7u);
     for (uint32_t i = 0; i < 8u; i++) {
         uint32_t w = result[RAM_OUTPUT_BASE + i];
         int16_t q = (int16_t)(w & 0xFFFF);
-        printf("  [%u] 0x%08x  (Q8.8 = %d → %.4f)\n",
+        printf("  [%u] 0x%08x  (Q24.8 = %d → %.4f)\n",
                RAM_OUTPUT_BASE + i, w, q, (float)q / 256.0f);
     }
 

@@ -144,7 +144,7 @@ void neurax_config_activation(neurax_bsp_t *bsp, const neurax_activation_config_
     neurax_reg_write(bsp, REG_ACTIVATION_CONFIG, act);
 
     /* REG_ACTIVATION_ALPHA */
-    neurax_reg_write(bsp, REG_ACTIVATION_ALPHA, (uint32_t)(uint16_t)cfg->alpha);
+    neurax_reg_write(bsp, REG_ACTIVATION_ALPHA, (uint32_t)cfg->alpha);
 }
 
 void neurax_set_batch_size(neurax_bsp_t *bsp, int batch_size) {

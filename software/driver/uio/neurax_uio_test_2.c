@@ -43,7 +43,7 @@
 #define STATUS_DONE             (1u << 4)
 #define STATUS_BUSY             (1u << 5)
 
-/* RAM word layout (one 32-bit word per Q8.8 sample).
+/* RAM word layout (one signed Q24.8 value per 32-bit word).
  * Must match FPGA generics g_FB_HEIGHT/g_FB_WIDTH and FPGA_accelerator offsets. */
 #define RAM_INPUT_BASE   0u
 #define RAM_WEIGHT_BASE  10000u
@@ -51,9 +51,9 @@
 #define RAM_OUTPUT_BASE  13016u
 #define RAM_TOTAL_WORDS  1u
 
-/* Q8.8: 1.0 → 0x0100 */
-#define Q8_8_ONE        0x00000100u
-#define Q8_8_ZERO       0x00000000u
+/* Signed Q24.8: 1.0 → 0x00000100 */
+#define Q24_8_ONE       0x00000100u
+#define Q24_8_ZERO      0x00000000u
 
 /* Full altsyncram integrity test constants (derived from msgdma_uio.h) */
 #define FPGA_RAM_WORDS    (FPGA_OUTPUT_SIZE / sizeof(uint32_t)) /* 23000 words */

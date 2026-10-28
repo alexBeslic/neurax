@@ -31,7 +31,7 @@
 /*
  * Hardware dimensions (must match FPGA generics g_FB_HEIGHT/g_FB_WIDTH):
  *   INPUT_HEIGHT = 100, INPUT_WIDTH = 100
- * RAM layout (FPGA_accelerator generics, one Q8.8 per 32-bit word):
+ * RAM layout (FPGA_accelerator generics, one signed Q24.8 value per 32-bit word):
  *   INPUT_BASE_ADDR  = 0      (input data: 100*100 = 10000 words)
  *   WEIGHT_BASE_ADDR = 10000  (weights: k*k*in_ch*out_ch words)
  *   BIAS_BASE_ADDR   = 13000  (biases: out_ch words)
@@ -50,7 +50,7 @@
 #define TEST_OUTPUT_H   98
 #define TEST_OUTPUT_W   98
 
-/* RAM word addresses (one Q8.8 value per 32-bit word) */
+/* RAM word addresses (one signed Q24.8 value per 32-bit word) */
 #define RAM_INPUT_BASE   0
 #define RAM_WEIGHT_BASE  10000
 #define RAM_BIAS_BASE    13000
@@ -151,25 +151,25 @@ static void test_convolution(neurax_bsp_t *bsp) {
         return;
     }
 
-    /* ---- Prepare input data: 100x100, all 1.0 in Q8.8 ---- */
-    int16_t val_one = float_to_q8_8(1.0f);
+    /* ---- Prepare input data: 100x100, all 1.0 in signed Q24.8 ---- */
+    int32_t val_one = float_to_q24_8(1.0f);
     int total_input = HW_INPUT_H * HW_INPUT_W;
     for (int i = 0; i < total_input; i++) {
-        ram_buf[RAM_INPUT_BASE + i] = (uint32_t)(uint16_t)val_one;
+        ram_buf[RAM_INPUT_BASE + i] = (uint32_t)val_one;
     }
     printf("  Input: %dx%d uniform 1.0 (%d elements)\n",
            HW_INPUT_H, HW_INPUT_W, total_input);
 
-    /* ---- Prepare weights: 3x3, all 1.0 in Q8.8 ---- */
+    /* ---- Prepare weights: 3x3, all 1.0 in signed Q24.8 ---- */
     int total_weights = TEST_KERNEL * TEST_KERNEL * TEST_IN_CH * TEST_OUT_CH;
     for (int i = 0; i < total_weights; i++) {
-        ram_buf[RAM_WEIGHT_BASE + i] = (uint32_t)(uint16_t)val_one;
+        ram_buf[RAM_WEIGHT_BASE + i] = (uint32_t)val_one;
     }
     printf("  Weights: %dx%d all-ones kernel (%d elements)\n",
            TEST_KERNEL, TEST_KERNEL, total_weights);
 
     /* ---- Prepare bias: 0.0 ---- */
-    ram_buf[RAM_BIAS_BASE] = (uint32_t)(uint16_t)float_to_q8_8(0.0f);
+    ram_buf[RAM_BIAS_BASE] = (uint32_t)float_to_q24_8(0.0f);
     printf("  Bias: 0.0\n");
 
     /* ---- Configure accelerator BEFORE DMA write so ST Sink is ready ---- */
@@ -345,11 +345,11 @@ static void test_convolution(neurax_bsp_t *bsp) {
         int out_idx = oh * TEST_OUTPUT_W + ow;
 
         uint32_t word = output_buf[RAM_OUTPUT_BASE + out_idx];
-        int16_t val = (int16_t)(word & 0xFFFF);
+         int32_t val = (int32_t)word;
 
-        float fval = q8_8_to_float(val);
-        printf("    output[%d][%d] (idx=%d) = %.4f (raw=0x%04X, expected=%.1f)\n",
-               oh, ow, out_idx, fval, (uint16_t)val, expected_val);
+         float fval = q24_8_to_float(val);
+         printf("    output[%d][%d] (idx=%d) = %.4f (raw=0x%08X, expected=%.1f)\n",
+             oh, ow, out_idx, fval, word, expected_val);
 
         if (fval < expected_val - 0.5f || fval > expected_val + 0.5f)
             output_ok = 0;

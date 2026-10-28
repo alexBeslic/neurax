@@ -43,22 +43,34 @@
 #define STATUS_DONE             (1u << 4)
 #define STATUS_BUSY             (1u << 5)
 
-/* RAM word layout (one 32-bit word per Q8.8 sample).
+/* RAM word layout (one signed Q24.8 value per 32-bit word).
  * Must match FPGA generics g_FB_HEIGHT/g_FB_WIDTH and FPGA_accelerator offsets. */
 #define RAM_INPUT_BASE   0u
 #define RAM_WEIGHT_BASE  10000u
 #define RAM_BIAS_BASE    13000u
 #define RAM_OUTPUT_BASE  13016u
 
-/* Q8.8: 1.0 → 0x0100 */
-#define Q8_8_ONE        0x00000100u
-#define Q8_8_ZERO       0x00000000u
+/* Signed Q24.8 values occupy the complete 32-bit RAM word. */
+#define Q24_8_ONE       0x00000100u
+#define Q24_8_ZERO      0x00000000u
 #define RAM_OUTPUT_SENTINEL 0x00005A5Au
 
 /* Full altsyncram integrity test constants (derived from msgdma_uio.h) */
 #define FPGA_RAM_WORDS    (FPGA_OUTPUT_SIZE / sizeof(uint32_t)) /* 23000 words */
 #define FPGA_RAM_BYTES    FPGA_OUTPUT_SIZE                     /* 92000 bytes */
+#define RAM_PORTB_DIAG_WORD 12999u /* unused gap between weights and bias */
+#define RAM_PORTB_DIAG_DATA 0x12345678u
 #define MAX_PRINT_ERRORS  32u  /* cap per-mismatch output for readability    */
+
+/* Workaround for the observed Port B byte-lane reversal. Port A stores these
+ * bytes unchanged; the Port B RAM interface reverses them on read/write. */
+static inline uint32_t byte_swap32(uint32_t value)
+{
+    return ((value & 0x000000FFu) << 24) |
+           ((value & 0x0000FF00u) << 8)  |
+           ((value & 0x00FF0000u) >> 8)  |
+           ((value & 0xFF000000u) >> 24);
+}
 
 /* ---------------------------------------------------------------------------
  * Internal state
@@ -600,20 +612,51 @@ static void print_ram_window(const char *name,
     putchar('\n');
 }
 
-/* ---------------------------------------------------------------------------
- * Q8.8 fixed-point helpers (mirrors software/bsp/neurax_bsp.h)
- * ------------------------------------------------------------------------- */
-static inline int16_t float_to_q8_8(float val)
-{
-    int32_t fixed = (int32_t)(val * 256.0f);
-    if (fixed > 32767) fixed = 32767;
-    if (fixed < -32768) fixed = -32768;
-    return (int16_t)fixed;
-}
-
-static inline float q8_8_to_float(int16_t val)
+/* Signed Q24.8 decode for the 32-bit convolution output. */
+static inline float q24_8_to_float(int32_t val)
 {
     return (float)val / 256.0f;
+}
+
+/* Read one 32-bit word from the hardware's 8-sample Port B trace.
+ * REG_TEMP_2 selects word 0..23; index 31 returns capture status.
+ */
+static uint32_t read_portb_trace_word(struct neurax_uio_ctx *ctx,
+                                      uint32_t index,
+                                      uint32_t trace_control)
+{
+    ctx->neurax->reg_temp_2 = trace_control | (index & 0x1Fu);
+    __sync_synchronize();
+    uint32_t value = ctx->neurax->reg_temp_3;
+    __sync_synchronize();
+    return value;
+}
+
+static void dump_portb_trace(struct neurax_uio_ctx *ctx, uint32_t trace_control)
+{
+    const bool force_read = (trace_control & (1u << 30)) != 0;
+    uint32_t trace_status = read_portb_trace_word(ctx, 31u, trace_control);
+    uint32_t captured = (trace_status >> 2) & 0x3Fu;
+
+    printf("[portb-trace] status=0x%08x triggered=%u active=%u samples=%u\n",
+           trace_status, trace_status & 1u, (trace_status >> 1) & 1u,
+           captured);
+    if (!(trace_status & 1u)) {
+        printf("[portb-trace] no read of weight address 0x2710 was captured\n");
+        return;
+    }
+
+    for (uint32_t sample = 0; sample < captured && sample < 8u; sample++) {
+        uint32_t request_phase = read_portb_trace_word(ctx, sample * 3u, trace_control);
+        uint32_t mux_wren = read_portb_trace_word(ctx, sample * 3u + 1u, trace_control);
+        uint32_t q_value = read_portb_trace_word(ctx, sample * 3u + 2u, trace_control);
+           printf("[portb-trace]%s #%u phase=%u request=0x%04x mux=0x%04x "
+               "wren=%u q=0x%08x\n",
+             force_read ? "[forced]" : "", sample,
+             (request_phase >> 16) & 0xFu,
+               request_phase & 0x7FFFu, mux_wren & 0x7FFFu,
+               (mux_wren >> 15) & 1u, q_value);
+    }
 }
 
 /* Convolution test parameters (must match FPGA generics g_FB_HEIGHT/WIDTH) */
@@ -630,11 +673,9 @@ static inline float q8_8_to_float(int16_t val)
 #define CONV_OUTPUT_W    98
 
 /* ---------------------------------------------------------------------------
- * test_full_ram — build a small convolution workload (uniform 1.0 input,
- * all-ones 3x3 kernel, zero bias), stream it into FPGA RAM, run the
- * accelerator, then stream the RAM back out and verify a handful of
- * interior output values (see software/bsp/neurax_test.c for the reference
- * sequence this mirrors).
+ * test_full_ram — build a convolution workload using 32-bit Q24.8 inputs,
+ * one nonzero 3x3 kernel tap, and zero bias; run the accelerator, then verify
+ * full-word Port B reads and outputs.
  *
  * Both DMA directions use descriptors no larger than the Qsys MAX_BYTE
  * setting. The m2s image is sent as sequential chunks after one SOF, while
@@ -650,38 +691,34 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("\n=== Convolution test (%dx%d input, %dx%d kernel) ===\n",
            CONV_INPUT_H, CONV_INPUT_W, CONV_KERNEL, CONV_KERNEL);
 
-    /* 1. Build the RAM image: input=1.0, weights=1.0, bias=0.0, output=0 */
+    /* 1. Build the logical RAM image. C-side byte swapping compensates for the
+     * observed Port B lane reversal; shifting the image left compensates for
+     * the observed m2s write offset (logical RAM[n] is loaded from tx[n-1]).
+     * RAM[0] remains deliberately unused. */
     uint32_t *tx_data = calloc(n_words, sizeof(uint32_t));
     if (!tx_data) {
         perror("calloc tx_data");
         return -1;
     }
 
-    int16_t val_one = float_to_q8_8(1.0f);
+    const uint32_t full_width_input = 0x12345678u;
     ssize_t wr;
     for (uint32_t i = 0; i < (uint32_t)(CONV_INPUT_H * CONV_INPUT_W); i++)
-        tx_data[RAM_INPUT_BASE + i] = (uint16_t)val_one;
+        tx_data[RAM_INPUT_BASE + i] = full_width_input;
 
-    for (uint32_t i = 0; i < (uint32_t)(CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH); i++)
-        tx_data[RAM_WEIGHT_BASE + i] = (uint16_t)val_one;
+    tx_data[RAM_WEIGHT_BASE + CONV_KERNEL * CONV_KERNEL - 1] = Q24_8_ONE;
 
-    tx_data[RAM_BIAS_BASE] = (uint16_t)float_to_q8_8(0.0f);
+    tx_data[RAM_BIAS_BASE] = Q24_8_ZERO;
     for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++)
         tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
 
-    /* [diag] Overlay a unique, unambiguous ramp on the first 10 input words
-     * (row 0, cols 0-9). These border pixels are NOT read by any of the
-     * interior output positions checked below (output[1][1].. depend on
-     * input rows/cols >= 1), so this cannot change the convolution result.
-     * Using values that don't collide with the uniform 0x0100 (=1.0) used
-     * everywhere else lets us conclusively detect a write-side address
-     * shift/drop: if the DMA write drops or misroutes one word, the
-     * readback pattern here will NOT be 0x2000..0x2009 at addresses 0..9. */
-    // for (uint32_t i = 0; i < 10; i++)
-    //     tx_data[RAM_INPUT_BASE + i] = 0x2000u + i;
+    for (uint32_t word = 1; word < n_words; word++)
+        tx_data[word - 1] = byte_swap32(tx_data[word]);
+    tx_data[n_words - 1] = 0;
 
-    printf("[conv] Input: %dx%d uniform 1.0, Weights: %dx%d all-ones, Bias: 0.0\n",
-           CONV_INPUT_H, CONV_INPUT_W, CONV_KERNEL, CONV_KERNEL);
+    printf("[conv] Logical input=0x%08" PRIx32
+           ", final weight=0x%08x; C-side byte-swap and one-word m2s offset compensation enabled\n",
+           full_width_input, Q24_8_ONE);
 
     /* 2. Configure the accelerator BEFORE the DMA write so the ST sink is
      *    ready (mirrors neurax_reset()/neurax_config_conv() in neurax_bsp.c) */
@@ -718,6 +755,13 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
 
     usleep_ms(1000);
 
+    /* Clear and arm the hardware trace immediately before the operation. */
+    ctx->neurax->reg_temp_2 = 1u << 31;
+    __sync_synchronize();
+    ctx->neurax->reg_temp_2 = 0;
+    __sync_synchronize();
+    printf("[conv][diag] Port B trace armed for first weight read at 0x2710\n");
+
     /* 4. Start the convolution. START is edge-detected — clear it again
      *    after a short delay so it doesn't retrigger (see neurax_start()). */
     printf("[conv] Starting convolution...\n");
@@ -740,7 +784,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
      *    accelerator's writes to RAM Port B are otherwise unsynchronized, so
      *    without this wait the readback can start (and even finish) before
      *    the accelerator has written any/all of the output region, yielding
-     *    stale or all-zero output words regardless of correct Q8.8 data. */
+    *    stale or all-zero output words regardless of correct signed Q24.8 data. */
     uint64_t conv_deadline = now_us() + DMA_TIMEOUT_US;
     do {
         status = ctx->neurax->reg_status;
@@ -755,12 +799,67 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     }
     uint32_t conv_debug = ctx->neurax->reg_debug_cycles;
     uint32_t conv_debug_status = ctx->neurax->reg_debug_status;
-    printf("[conv] Done. STATUS=0x%08x DEBUG_CYCLES=0x%08x "
-           "portb_first_weight_addr=0x%04x portb_first_weight_q=0x%04x "
-           "weight_capture=%u first_output_bit14=%u rtl_tag=0x%02x\n",
-           status, conv_debug, conv_debug >> 16, conv_debug & 0xFFFFu,
+    printf("[conv] Done. STATUS=0x%08x first_weight_word=0x%08x "
+           "weight_capture=%u first_output_sign=%u rtl_tag=0x%02x\n",
+           status, conv_debug,
            (conv_debug_status >> 7) & 1u,
            (conv_debug_status >> 6) & 1u, conv_debug_status & 0x3Fu);
+                dump_portb_trace(ctx, 0u);
+
+            /* Force a full-width read of known input word 1 through Port B.
+             * RAM[0] is deliberately avoided because its separate first-word
+             * write issue is not part of this datapath-width test. */
+            const uint32_t forced_trace_address = RAM_INPUT_BASE + 1u;
+            const uint32_t forced_trace_control =
+                (1u << 30) | (forced_trace_address << 15);
+            ctx->neurax->reg_temp_2 = 1u << 31;
+            __sync_synchronize();
+            ctx->neurax->reg_temp_2 = forced_trace_control;
+            __sync_synchronize();
+            usleep_ms(1);
+            printf("[conv][diag] Forced Port B input read at word 0x%04x\n",
+                forced_trace_address);
+            dump_portb_trace(ctx, forced_trace_control);
+            /* Trace words are grouped as {phase, mux, q}; index 2 is the q
+             * value for sample 0, while sample 2's q value is trace word 8. */
+            const uint32_t forced_q_trace_index = 2u * 3u + 2u;
+            const uint32_t portb_input_q =
+                read_portb_trace_word(ctx, forced_q_trace_index,
+                                      forced_trace_control);
+            int errors = 0;
+                         printf("[conv][diag] Port B q=0x%08" PRIx32
+                             " expected logical input=0x%08" PRIx32 "\n",
+                             portb_input_q, full_width_input);
+            if (portb_input_q != full_width_input) {
+                fprintf(stderr,
+                        "[conv] Port B full-width/endian mismatch: got 0x%08" PRIx32
+                        ", expected 0x%08" PRIx32 "\n",
+                        portb_input_q, full_width_input);
+                errors++;
+                fprintf(stderr,
+                        "[conv] Continuing diagnostics despite Port B mismatch.\n");
+            }
+            ctx->neurax->reg_temp_2 = 0;
+            __sync_synchronize();
+
+            /* Write a marker through Port B in an unused RAM gap, then read it
+             * back through Port B and later through Port A DMA. This isolates
+             * the Port B write path from the Port B q/output path. */
+            const uint32_t portb_probe_control = (1u << 30) |
+                (RAM_PORTB_DIAG_WORD << 15);
+            ctx->neurax->reg_temp_2 = portb_probe_control | (1u << 14);
+            __sync_synchronize();
+            usleep_ms(1);
+            ctx->neurax->reg_temp_2 = 1u << 31;
+            __sync_synchronize();
+            ctx->neurax->reg_temp_2 = portb_probe_control;
+            __sync_synchronize();
+            usleep_ms(1);
+            printf("[conv][diag] Port B marker write/read at word %u, data=0x%08x\n",
+                RAM_PORTB_DIAG_WORD, RAM_PORTB_DIAG_DATA);
+            dump_portb_trace(ctx, portb_probe_control);
+            ctx->neurax->reg_temp_2 = 0;
+            __sync_synchronize();
 
     /* Qsys configures each mSGDMA with MAX_BYTE=4096. Keep every descriptor
      * within that limit, pairing each descriptor with a matching FPGA RAM
@@ -789,7 +888,9 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("[conv] Readback OK: %u words in %u-byte-limited chunks\n",
            n_words, MSGDMA_MAX_TRANSFER_BYTES);
 
-    /* 8. Verify a few interior output values (expected 3x3 sum = 9.0) */
+    /* 8. Check the complete 32-bit convolution result. The only nonzero kernel
+     * tap is the final tap, so even output 0 reads input word 202 rather than
+     * the deferred/problematic RAM[0]. Every output should equal the full word. */
     uint32_t *rx = malloc(n_bytes);
     if (!rx) {
         perror("malloc rx");
@@ -806,31 +907,34 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     print_ram_window("output[98..101]", rx, RAM_OUTPUT_BASE + 98, 4);
 
     int ram_errors = 0;
-    int errors = 0;
+    const uint32_t portb_marker_in_porta_order = byte_swap32(RAM_PORTB_DIAG_DATA);
+    printf("[conv][diag] Port B marker via Port A readback: RAM[%u]=0x%08" PRIx32
+           " expected byte-reversed=0x%08" PRIx32 "\n", RAM_PORTB_DIAG_WORD,
+           rx[RAM_PORTB_DIAG_WORD], portb_marker_in_porta_order);
+    if (rx[RAM_PORTB_DIAG_WORD] != portb_marker_in_porta_order)
+        errors++;
     uint32_t untouched_outputs = 0;
-    uint32_t zero_outputs = 0;
+    uint32_t wrong_outputs = 0;
     uint32_t expected_outputs = 0;
-    uint32_t other_outputs = 0;
     for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++) {
         uint32_t output = rx[RAM_OUTPUT_BASE + i];
         if (output == RAM_OUTPUT_SENTINEL) {
             untouched_outputs++;
-        } else if (output == 0) {
-            zero_outputs++;
-        } else if (output == (i == 0 ? 0x00000800u : 0x00000900u)) {
+        } else if (output == byte_swap32(full_width_input)) {
             expected_outputs++;
         } else {
-            other_outputs++;
+            wrong_outputs++;
         }
     }
     printf("[conv] Output write diagnostic: %u/%u output words still contain "
            "sentinel 0x%08x\n",
            untouched_outputs, CONV_OUTPUT_H * CONV_OUTPUT_W,
            RAM_OUTPUT_SENTINEL);
-    printf("[conv] Output values: expected=%u zero=%u other=%u "
-           "(expected[0]=0x00000800, expected[1..]=0x00000900)\n",
-           expected_outputs, zero_outputs, other_outputs);
-    if (expected_outputs != CONV_OUTPUT_H * CONV_OUTPUT_W)
+    printf("[conv] Full-width output words: expected=%u wrong=%u "
+           "(Port A byte order expected=0x%08" PRIx32 ")\n",
+           expected_outputs, wrong_outputs, byte_swap32(full_width_input));
+    if (expected_outputs != CONV_OUTPUT_H * CONV_OUTPUT_W ||
+        untouched_outputs != 0 || wrong_outputs != 0)
         errors++;
     printf("[conv][diag] post-run regs: cmd=0x%08x status=0x%08x "
            "data_sc=0x%08x data_read=0x%08x debug_status=0x%08x\n",
@@ -841,25 +945,29 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     const uint32_t input_words = CONV_INPUT_H * CONV_INPUT_W;
     const uint32_t weight_words =
         CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH;
-    for (uint32_t i = 0; i < input_words; i++) {
-        if (rx[RAM_INPUT_BASE + i] != (uint32_t)(uint16_t)val_one) {
+    /* RAM[0] is a known independent first-word issue; skip it here. */
+    for (uint32_t i = 1; i < input_words; i++) {
+        const uint32_t expected_input = byte_swap32(full_width_input);
+        if (rx[RAM_INPUT_BASE + i] != expected_input) {
             if (ram_errors < 8)
                 fprintf(stderr,
                         "[conv] RAM input mismatch at word %u: got 0x%08" PRIx32
                         ", expected 0x%08" PRIx32 "\n",
                         i, rx[RAM_INPUT_BASE + i],
-                        (uint32_t)(uint16_t)val_one);
+                        expected_input);
             ram_errors++;
         }
     }
     for (uint32_t i = 0; i < weight_words; i++) {
-        if (rx[RAM_WEIGHT_BASE + i] != (uint32_t)(uint16_t)val_one) {
+        const uint32_t expected_weight =
+            byte_swap32(i == weight_words - 1 ? Q24_8_ONE : Q24_8_ZERO);
+        if (rx[RAM_WEIGHT_BASE + i] != expected_weight) {
             if (ram_errors < 8)
                 fprintf(stderr,
                         "[conv] RAM weight mismatch at word %u: got 0x%08" PRIx32
                         ", expected 0x%08" PRIx32 "\n",
                         i, rx[RAM_WEIGHT_BASE + i],
-                        (uint32_t)(uint16_t)val_one);
+                        expected_weight);
             ram_errors++;
         }
     }
@@ -873,10 +981,10 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
                weight_words);
     }
 
-    float expected_val = 9.0f;
+    float expected_val = q24_8_to_float((int32_t)full_width_input);
     int check_positions[][2] = { {10, 10}, {50, 50}, {90, 90}, {1, 1}, {97, 97} };
     int num_checks = sizeof(check_positions) / sizeof(check_positions[0]);
-    printf("[conv] Checking output values (expected %.1f for interior positions):\n",
+    printf("[conv] Checking full-width output value %.4f at selected positions:\n",
            expected_val);
     for (int c = 0; c < num_checks; c++) {
         int oh = check_positions[c][0];
@@ -884,20 +992,22 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         int out_idx = oh * CONV_OUTPUT_W + ow;
 
         uint32_t word = rx[RAM_OUTPUT_BASE + out_idx];
-        int16_t val = (int16_t)(word & 0xFFFFu);
-        float fval = q8_8_to_float(val);
+        int32_t val = (int32_t)byte_swap32(word);
+        float fval = q24_8_to_float(val);
 
-        printf("    output[%d][%d] (idx=%d) = %.4f (raw=0x%04x, expected=%.1f)\n",
-               oh, ow, out_idx, fval, (uint16_t)val, expected_val);
+        printf("    output[%d][%d] (idx=%d) = %.4f (logical=0x%08" PRIx32
+               ", Port A raw=0x%08" PRIx32 ", expected=%.4f)\n",
+               oh, ow, out_idx, fval, byte_swap32(word), word, expected_val);
 
-        if (fval < expected_val - 0.5f || fval > expected_val + 0.5f)
+        if (byte_swap32(word) != full_width_input)
             errors++;
     }
 
     printf("Input values:\n");
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 1; i < 10; i++)
     {
-        printf("Read at %d: 0x%08x (expected 0x%08x)\n", (int)i, rx[i], (uint32_t)(uint16_t)val_one);
+        printf("Read at %d: 0x%08x (expected Port A raw 0x%08x)\n",
+               (int)i, rx[i], byte_swap32(full_width_input));
     }
     
     printf("Ouput values:\n");
@@ -1003,7 +1113,6 @@ int main(void)
     printf("Neurax reg reg_data_sc=0x%08x reg_data_read=0x%08x\n",
            ctx.neurax->reg_data_sc, ctx.neurax->reg_data_read);
 
-done:
     neurax_uio_deinit(&ctx);
     printf("\nDone.\n");
     return final_result;

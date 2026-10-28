@@ -110,27 +110,22 @@ extern "C" {
 #define NEURAX_MAGIC_ID         0xCAB00D1E
 
 /* =========================================================================
- * Data Format: Q8.8 Fixed Point
+ * Data Format: signed 32-bit Q24.8 fixed point (one value per RAM word)
  * ========================================================================= */
 #define FRAC_BITS       8
-#define DATA_WIDTH      16
+#define DATA_WIDTH      32
 
-/** Convert float to Q8.8 fixed point (16-bit) */
-static inline int16_t float_to_q8_8(float val) {
-    int32_t fixed = (int32_t)(val * (1 << FRAC_BITS));
-    if (fixed > 32767) fixed = 32767;
-    if (fixed < -32768) fixed = -32768;
-    return (int16_t)fixed;
+/** Convert float to signed Q24.8, saturating to the int32_t range. */
+static inline int32_t float_to_q24_8(float val) {
+    double scaled = (double)val * (double)(1u << FRAC_BITS);
+    if (scaled > 2147483647.0) return INT32_MAX;
+    if (scaled < -2147483648.0) return INT32_MIN;
+    return (int32_t)scaled;
 }
 
-/** Convert Q8.8 fixed point to float */
-static inline float q8_8_to_float(int16_t val) {
+/** Convert signed Q24.8 fixed point to float. */
+static inline float q24_8_to_float(int32_t val) {
     return (float)val / (float)(1 << FRAC_BITS);
-}
-
-/** Pack two Q8.8 values into one 32-bit word (low=val0, high=val1) */
-static inline uint32_t pack_q8_8_pair(int16_t val0, int16_t val1) {
-    return ((uint32_t)(uint16_t)val1 << 16) | (uint32_t)(uint16_t)val0;
 }
 
 /* =========================================================================
@@ -155,7 +150,7 @@ typedef struct {
 typedef struct {
     int activation_type;    /* ACT_RELU, ACT_SIGMOID, etc. */
     int tensor_size;        /* 1..4096 */
-    int16_t alpha;          /* Q8.8, for Leaky ReLU / ELU */
+    int32_t alpha;          /* signed Q24.8, for Leaky ReLU / ELU */
 } neurax_activation_config_t;
 
 /* =========================================================================

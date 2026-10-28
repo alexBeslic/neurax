@@ -3,7 +3,7 @@
 # Targets:
 #   all        build kernel module AND userspace test
 #   module     build neurax_uio.ko (cross-compiled for ARM)
-#   userspace  build neurax_uio_test (cross-compiled for ARM Linux)
+#   userspace  build neurax_uio_test_conv (cross-compiled for ARM Linux)
 #   install    copy outputs to NFS root for deployment
 #   clean
 #
@@ -30,9 +30,9 @@ module:
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) \
 		-C $(KERNEL_SRC) M=$(PWD) modules
 
-userspace: neurax_uio_test
+userspace: neurax_uio_test_conv
 
-neurax_uio_test: neurax_uio_test_conv.c msgdma_uio.h
+neurax_uio_test_conv: neurax_uio_test_conv.c msgdma_uio.h
 	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_conv.c 
 
 UIO_KO := $(KERNEL_SRC)/drivers/uio/uio.ko
@@ -40,9 +40,9 @@ UIO_KO := $(KERNEL_SRC)/drivers/uio/uio.ko
 install: module userspace
 	cp $(UIO_KO)        $(NFS_ROOT)/
 	cp neurax_uio.ko    $(NFS_ROOT)/
-	cp neurax_uio_test  $(NFS_ROOT)/
+	cp neurax_uio_test_conv  $(NFS_ROOT)/
 
 clean:
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) \
 		-C $(KERNEL_SRC) M=$(PWD) clean
-	rm -f neurax_uio_test
+	rm -f neurax_uio_test_conv
