@@ -226,14 +226,11 @@ static void test_convolution(neurax_bsp_t *bsp) {
         timeout--;
     }
 
-    uint32_t cycles = neurax_reg_read(bsp, REG_DEBUG_CYCLES);
     uint32_t final_status = neurax_reg_read(bsp, REG_STATUS);
     printf("  Final STATUS = 0x%08X (busy=%d, done=%d)\n",
            final_status,
            (final_status >> 5) & 1,
            (final_status >> 4) & 1);
-    printf("  Cycle count = %u\n", cycles);
-
     if (timeout <= 0) {
         FAIL("Convolution TIMEOUT (5s)");
         tests_failed++;

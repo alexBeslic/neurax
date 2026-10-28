@@ -34,11 +34,7 @@ entity activation_block is
         output_valid : out std_logic;
         output_data : out data_array_t(0 to PARALLEL_UNITS-1);
         output_addr : out std_logic_vector(15 downto 0);
-        output_write_en : out std_logic;
-        
-        -- Debug/status
-        current_element : out std_logic_vector(15 downto 0);
-        processing_cycles : out std_logic_vector(31 downto 0)
+        output_write_en : out std_logic
     );
 end activation_block;
 
@@ -62,7 +58,6 @@ architecture behavioral of activation_block is
     
     -- Counters
     signal element_counter : integer range 0 to MAX_TENSOR_SIZE := 0;
-    signal cycle_counter : unsigned(31 downto 0);
     signal lut_init_counter : integer range 0 to 256;
     
     -- LUT memories za aproksimacije
@@ -145,7 +140,6 @@ begin
         if rst = '1' then
             current_state <= IDLE;
             element_counter <= 0;
-            cycle_counter <= (others => '0');
             lut_init_counter <= 0;
             lut_initialized <= '0';
             
@@ -160,7 +154,6 @@ begin
             
         elsif rising_edge(clk) then
             current_state <= next_state;
-            cycle_counter <= cycle_counter + 1;
             
             case current_state is
                 when IDLE =>
@@ -397,10 +390,6 @@ begin
     busy <= processing_active;
     done <= '1' when current_state = DONE_ST else '0';
     
-    -- Debug outputs
-    current_element <= std_logic_vector(to_unsigned(element_counter, 16));
-    processing_cycles <= std_logic_vector(cycle_counter);
-
     output_valid <= output_valid_driver;
 
 end behavioral;

@@ -68,10 +68,6 @@ architecture sim of pooling_tb is
     signal output_addr     : std_logic_vector(17 downto 0);
     signal output_write_en : std_logic;
 
-    signal current_position  : std_logic_vector(31 downto 0);
-    signal processing_cycles : std_logic_vector(31 downto 0);
-    signal pool_window_count : std_logic_vector(15 downto 0);
-
     constant INPUT_ELEMENTS  : integer := INPUT_HEIGHT * INPUT_WIDTH * CHANNELS;
     constant OUTPUT_ELEMENTS : integer := OUTPUT_HEIGHT * OUTPUT_WIDTH * CHANNELS;
 
@@ -170,10 +166,7 @@ begin
             output_valid      => output_valid,
             output_data       => output_data,
             output_addr       => output_addr,
-            output_write_en   => output_write_en,
-            current_position  => current_position,
-            processing_cycles => processing_cycles,
-            pool_window_count => pool_window_count
+            output_write_en   => output_write_en
         );
 
     -- Reset then pulse start once

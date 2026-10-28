@@ -36,12 +36,7 @@ entity pooling_block is
         output_valid : out std_logic;
         output_data : out data_array_1d(0 to PARALLEL_CHANNELS-1);
         output_addr : out std_logic_vector(17 downto 0);
-        output_write_en : out std_logic;
-        
-        -- Debug/monitoring
-        current_position : out std_logic_vector(31 downto 0);
-        processing_cycles : out std_logic_vector(31 downto 0);
-        pool_window_count : out std_logic_vector(15 downto 0)
+        output_write_en : out std_logic
     );
 end pooling_block;
 
@@ -81,8 +76,6 @@ architecture behavioral of pooling_block is
     -- Control signali
     signal pool_operation_active : std_logic;
     signal window_complete : std_logic;
-    signal cycle_counter : unsigned(31 downto 0);
-    signal window_counter : unsigned(15 downto 0);
     signal output_valid_driver : std_logic;
     
     -- Helper funkcije
@@ -139,8 +132,6 @@ begin
             out_w_cnt <= 0;
             pool_h_cnt <= 0;
             pool_w_cnt <= 0;
-            cycle_counter <= (others => '0');
-            window_counter <= (others => '0');
             
             -- Reset pool accumulators
             for i in 0 to PARALLEL_CHANNELS-1 loop
@@ -162,7 +153,6 @@ begin
             
         elsif rising_edge(clk) then
             current_state <= next_state;
-            cycle_counter <= cycle_counter + 1;
             
             case current_state is
                 when IDLE =>
@@ -172,7 +162,6 @@ begin
                     out_w_cnt <= 0;
                     pool_h_cnt <= 0;
                     pool_w_cnt <= 0;
-                    window_counter <= (others => '0');
                     
                     for i in 0 to PARALLEL_CHANNELS-1 loop
                         pool_accumulators(i).value <= (others => '0');
@@ -190,8 +179,6 @@ begin
                     
                 when POOL_COMPUTE =>
                     if input_valid = '1' and pool_operation_active = '1' then
-                        window_counter <= window_counter + 1;
-                        
                         -- Load data into window buffer
                         for c in 0 to PARALLEL_CHANNELS-1 loop
                             window_buffer(pool_h_cnt, pool_w_cnt)(c) <= input_data(c);
@@ -397,13 +384,4 @@ begin
     busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
     done <= '1' when current_state = DONE_ST else '0';
     
-    -- Debug outputs
-    current_position <= std_logic_vector(to_unsigned(batch_cnt, 8)) &
-                       std_logic_vector(to_unsigned(out_h_cnt, 8)) &
-                       std_logic_vector(to_unsigned(out_w_cnt, 8)) &
-                       std_logic_vector(to_unsigned(channel_cnt, 8));
-    
-    processing_cycles <= std_logic_vector(cycle_counter);
-    pool_window_count <= std_logic_vector(window_counter);
-
 end behavioral;

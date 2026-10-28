@@ -122,12 +122,7 @@ entity FPGA_accelerator is
         -- Status signals
         operation_done    : out std_logic;
         operation_busy    : out std_logic;
-        current_operation : out std_logic_vector(1 downto 0);
-
-        -- Debug/monitoring
-        debug_cycles : out std_logic_vector(31 downto 0);
-        debug_status : out std_logic_vector(7 downto 0);
-        debug_read_phase_o : out std_logic_vector(3 downto 0)
+        current_operation : out std_logic_vector(1 downto 0)
     );
 end FPGA_accelerator;
 
@@ -188,10 +183,7 @@ architecture behavioral of FPGA_accelerator is
             output_valid     : out std_logic;
             output_data      : out data_array_1d(0 to PARALLEL_CHANNELS-1);
             output_addr      : out std_logic_vector(17 downto 0);
-            output_write_en  : out std_logic;
-            current_position : out std_logic_vector(31 downto 0);
-            processing_cycles: out std_logic_vector(31 downto 0);
-            pool_window_count: out std_logic_vector(15 downto 0)
+            output_write_en  : out std_logic
         );
     end component;
 
@@ -217,9 +209,7 @@ architecture behavioral of FPGA_accelerator is
             output_valid     : out std_logic;
             output_data      : out data_array_t(0 to PARALLEL_UNITS-1);
             output_addr      : out std_logic_vector(15 downto 0);
-            output_write_en  : out std_logic;
-            current_element  : out std_logic_vector(15 downto 0);
-            processing_cycles: out std_logic_vector(31 downto 0)
+            output_write_en  : out std_logic
         );
     end component;
 
@@ -259,9 +249,6 @@ architecture behavioral of FPGA_accelerator is
     signal pool_output_addr   : std_logic_vector(17 downto 0);
     signal pool_input_read_en : std_logic;
     signal pool_output_write_en : std_logic;
-    signal pool_current_position : std_logic_vector(31 downto 0);
-    signal pool_cycles        : std_logic_vector(31 downto 0);
-    signal pool_window_count  : std_logic_vector(15 downto 0);
 
     -- Activation block wires
     signal act_input_valid    : std_logic;
@@ -272,26 +259,15 @@ architecture behavioral of FPGA_accelerator is
     signal act_output_addr    : std_logic_vector(15 downto 0);
     signal act_input_read_en  : std_logic;
     signal act_output_write_en: std_logic;
-    signal act_current_element: std_logic_vector(15 downto 0);
-    signal act_cycles         : std_logic_vector(31 downto 0);
 
     -- Top-level state machine
     type top_state_t is (IDLE, CONV_OP, POOL_OP, ACT_OP, DONE_ST);
     signal current_state, next_state : top_state_t;
 
     signal selected_operation : std_logic_vector(1 downto 0);
-    signal cycle_counter      : unsigned(31 downto 0);
 
     -- Sticky done flag: latched high when operation completes, cleared on new start
     signal done_latch : std_logic;
-
-    -- First Port B weight read address/data and output, exposed through
-    -- existing debug regs.
-    signal conv_debug_weight_valid   : std_logic;
-    signal conv_debug_weight_address : std_logic_vector(15 downto 0);
-    signal conv_debug_output_valid   : std_logic;
-    signal conv_debug_weight         : std_logic_vector(DATA_WIDTH-1 downto 0);
-    signal conv_debug_output         : std_logic_vector(DATA_WIDTH-1 downto 0);
 
     -- Convolution RAM read sequencer
     -- Conv needs input + weight + (optionally) bias per MAC iteration.
@@ -305,11 +281,6 @@ architecture behavioral of FPGA_accelerator is
     signal conv_read_phase  : conv_read_phase_t;
     signal conv_data_ready  : std_logic;
     signal conv_need_bias   : std_logic;
-
-    -- Preserve the sequencer state so SignalTap can correlate RAM address/data
-    -- with the exact read phase on hardware.
-    attribute keep : boolean;
-    attribute keep of conv_read_phase : signal is true;
 
     -- Registered RAM read data per conv channel
     signal conv_input_data_reg  : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -393,10 +364,7 @@ begin
             output_valid     => pool_output_valid,
             output_data      => pool_output_data,
             output_addr      => pool_output_addr,
-            output_write_en  => pool_output_write_en,
-            current_position => pool_current_position,
-            processing_cycles=> pool_cycles,
-            pool_window_count=> pool_window_count
+            output_write_en  => pool_output_write_en
         );
 
     act_inst: activation_block
@@ -421,9 +389,7 @@ begin
             output_valid     => act_output_valid,
             output_data      => act_output_data,
             output_addr      => act_output_addr,
-            output_write_en  => act_output_write_en,
-            current_element  => act_current_element,
-            processing_cycles=> act_cycles
+            output_write_en  => act_output_write_en
         );
 
     -- =========================================================================
@@ -434,56 +400,18 @@ begin
         if rst = '1' then
             current_state      <= IDLE;
             selected_operation <= "00";
-            cycle_counter      <= (others => '0');
             done_latch         <= '0';
         elsif rising_edge(clk) then
             current_state <= next_state;
 
-            if current_state /= IDLE and current_state /= DONE_ST then
-                cycle_counter <= cycle_counter + 1;
-            end if;
-
             if current_state = IDLE and enable = '1' and start_operation = '1' then
                 selected_operation <= operation_select;
-                cycle_counter      <= (others => '0');
                 done_latch         <= '0';  -- Clear done on new operation start
             end if;
 
             -- Latch done when entering DONE_ST
             if next_state = DONE_ST and current_state /= DONE_ST then
                 done_latch <= '1';
-            end if;
-        end if;
-    end process;
-
-    process(clk, rst)
-    begin
-        if rst = '1' then
-            conv_debug_weight_valid   <= '0';
-            conv_debug_weight_address <= (others => '0');
-            conv_debug_output_valid   <= '0';
-            conv_debug_weight         <= (others => '0');
-            conv_debug_output         <= (others => '0');
-        elsif rising_edge(clk) then
-            if current_state = IDLE and enable = '1' and start_operation = '1' then
-                conv_debug_weight_valid <= '0';
-                conv_debug_output_valid   <= '0';
-            else
-                if current_state = CONV_OP and
-                   conv_read_phase = PHASE_WEIGHT_SAMPLE and
-                   conv_debug_weight_valid = '0' then
-                    conv_debug_weight_address <= std_logic_vector(
-                        unsigned(conv_weight_addr) +
-                        to_unsigned(WEIGHT_BASE_ADDR, 16));
-                    conv_debug_weight <= ram_q_i;
-                    conv_debug_weight_valid <= '1';
-                end if;
-
-                if current_state = CONV_OP and conv_output_write_en = '1' and
-                   conv_debug_output_valid = '0' then
-                    conv_debug_output       <= conv_output_data;
-                    conv_debug_output_valid <= '1';
-                end if;
             end if;
         end if;
     end process;
@@ -527,8 +455,6 @@ begin
     -- =========================================================================
     conv_need_bias <= conv_bias_read_en;
     conv_data_ready <= '1' when conv_read_phase = PHASE_READY else '0';
-    debug_read_phase_o <= std_logic_vector(to_unsigned(
-        conv_read_phase_t'pos(conv_read_phase), debug_read_phase_o'length));
 
     process(clk, rst)
     begin
@@ -724,7 +650,7 @@ begin
     end process;
 
     -- =========================================================================
-    -- Status & Debug
+    -- Status outputs
     -- =========================================================================
     -- Use sticky done_latch so software can observe it (the raw conv_done/
     -- pool_done/act_done signals are only 1-clock pulses)
@@ -732,14 +658,5 @@ begin
 
     operation_busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
     current_operation <= selected_operation;
-
-    -- After completion, expose the full 32-bit first Port B weight word,
-    -- first output MSB, and an RTL revision tag without changing the register map.
-    debug_cycles <= conv_debug_weight
-                    when done_latch = '1'
-                    else std_logic_vector(cycle_counter);
-    debug_status <= conv_debug_weight_valid & conv_debug_output(31) & "110001"
-                    when done_latch = '1' and conv_debug_output_valid = '1'
-                    else "000000" & selected_operation;
 
 end behavioral;

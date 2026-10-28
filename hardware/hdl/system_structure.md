@@ -106,7 +106,7 @@ Complete hierarchy of VHD modules with brief descriptions, inputs/outputs, and m
 ### `neurax_accel_types_pkg.vhd`
 **Purpose:** Global package defining data types and constants  
 **Defines:**  
-- DATA_WIDTH (16-bit), fixed-point format (Q8.8)  
+- DATA_WIDTH (32-bit), signed fixed-point format (Q24.8)  
 - max dimensions, channel counts, kernel sizes  
 - Custom types: `conv_config_t`, `pooling_config_t`, `activation_type_t`  
 - Array types for multi-dimensional data  
@@ -238,7 +238,7 @@ neurax_register_pkg.vhd (package, imported by register block)
 
 ## Key Generics
 
-- **DATA_WIDTH:** 16 bits (fixed-point Q8.8)  
+- **DATA_WIDTH:** 32 bits (signed fixed-point Q24.8)  
 - **FRAC_WIDTH:** 8 bits (fractional part)  
 - **MAX_BATCH_SIZE:** 4  
 - **MAX_KERNEL_SIZE:** 5  

@@ -174,7 +174,7 @@ int neurax_is_done(neurax_bsp_t *bsp) {
     return (neurax_reg_read(bsp, REG_STATUS) & STATUS_DONE) ? 1 : 0;
 }
 
-uint32_t neurax_wait_done(neurax_bsp_t *bsp) {
+int neurax_wait_done(neurax_bsp_t *bsp) {
     int timeout = 1000000; /* ~1 second at 1µs poll rate */
     while (!neurax_is_done(bsp) && timeout > 0) {
         usleep(1);
@@ -182,6 +182,7 @@ uint32_t neurax_wait_done(neurax_bsp_t *bsp) {
     }
     if (timeout <= 0) {
         fprintf(stderr, "neurax_wait_done: TIMEOUT\n");
+        return -1;
     }
-    return neurax_reg_read(bsp, REG_DEBUG_CYCLES);
+    return 0;
 }

@@ -112,11 +112,7 @@ architecture arch of neurax is
         neurax_data_start_addr_o     : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
         neurax_data_length_o         : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
         neurax_data_busy_i           : in std_logic;
-        neurax_data_done_i           : in std_logic;
-        neurax_debug_cycle_i         : in  std_logic_vector(g_WIDTH-1 downto 0);
-        neurax_debug_status_i        : in  std_logic_vector(7 downto 0);
-        neurax_trace_control_o       : out std_logic_vector(31 downto 0);
-        neurax_trace_data_i          : in  std_logic_vector(31 downto 0)
+        neurax_data_done_i           : in std_logic
     );
     end component;
 
@@ -149,10 +145,7 @@ architecture arch of neurax is
         ram_b_q_o         : out std_logic_vector(g_DATA_WIDTH - 1 downto 0);
         ram_b_wraddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
         ram_b_data_i      : in  std_logic_vector(g_DATA_WIDTH - 1 downto 0);
-        ram_b_wren_i      : in  std_logic;
-        diag_trace_control_i : in  std_logic_vector(31 downto 0);
-        diag_trace_phase_i   : in  std_logic_vector(3 downto 0);
-        diag_trace_data_o    : out std_logic_vector(31 downto 0)
+        ram_b_wren_i      : in  std_logic
     );
     end component;
 
@@ -193,10 +186,7 @@ architecture arch of neurax is
         ram_wren_o           : out std_logic;
         operation_done       : out std_logic;
         operation_busy       : out std_logic;
-        current_operation    : out std_logic_vector(1 downto 0);
-        debug_cycles         : out std_logic_vector(31 downto 0);
-        debug_status         : out std_logic_vector(7 downto 0);
-        debug_read_phase_o   : out std_logic_vector(3 downto 0)
+        current_operation    : out std_logic_vector(1 downto 0)
     );
     end component;
 
@@ -246,13 +236,6 @@ architecture arch of neurax is
     signal neurax_data_length       : std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
     signal neurax_data_busy         : std_logic;
     signal neurax_data_done         : std_logic;
-
-    -- Debug
-    signal neurax_debug_cycle  : std_logic_vector(31 downto 0);
-    signal neurax_debug_status : std_logic_vector(7 downto 0);
-    signal neurax_trace_control : std_logic_vector(31 downto 0);
-    signal neurax_trace_data    : std_logic_vector(31 downto 0);
-    signal accel_debug_read_phase : std_logic_vector(3 downto 0);
 
     -- =========================================================================
     -- RAM Port B signals: accelerator <-> data_interface
@@ -328,12 +311,7 @@ begin
         neurax_data_start_addr_o => neurax_data_start_addr,
         neurax_data_length_o     => neurax_data_length,
         neurax_data_busy_i       => neurax_data_busy,
-        neurax_data_done_i       => neurax_data_done,
-
-        neurax_debug_cycle_i  => neurax_debug_cycle,
-        neurax_debug_status_i => neurax_debug_status,
-        neurax_trace_control_o => neurax_trace_control,
-        neurax_trace_data_i    => neurax_trace_data
+        neurax_data_done_i       => neurax_data_done
     );
 
     -- Output valid mirrors operation done (results are in RAM and ready to stream)
@@ -382,10 +360,7 @@ begin
         ram_b_q_o         => accel_ram_q,
         ram_b_wraddress_i => accel_ram_wraddress(g_DATA_ADDR_WIDTH-1 downto 0),
         ram_b_data_i      => accel_ram_data,
-        ram_b_wren_i      => accel_ram_wren,
-        diag_trace_control_i => neurax_trace_control,
-        diag_trace_phase_i   => accel_debug_read_phase,
-        diag_trace_data_o    => neurax_trace_data
+        ram_b_wren_i      => accel_ram_wren
     );
 
     -- =========================================================================
@@ -443,12 +418,7 @@ begin
         -- Status
         operation_done    => neurax_operation_done,
         operation_busy    => neurax_operation_busy,
-        current_operation => neurax_current_operation,
-
-        -- Debug
-        debug_cycles => neurax_debug_cycle,
-        debug_status => neurax_debug_status,
-        debug_read_phase_o => accel_debug_read_phase
+        current_operation => neurax_current_operation
     );
 
 end arch;

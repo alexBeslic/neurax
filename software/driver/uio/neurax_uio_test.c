@@ -39,7 +39,6 @@
 #define REG_CONV_CONFIG_0       3
 #define REG_CONV_CONFIG_1       4
 #define REG_BATCH_SIZE          8
-#define REG_DEBUG_CYCLES       13
 
 #define CMD_ENABLE              (1u << 0)
 #define CMD_OP_CONV             (0u << 1)   /* OP_SELECT = 0 → convolution */
@@ -463,8 +462,7 @@ static int accelerator_start_conv(struct neurax_uio_ctx *ctx,
     while (now_us() < deadline) {
         uint32_t st = ctx->neurax[REG_STATUS];
         if (st & STATUS_DONE) {
-            printf("[accel] done  STATUS=0x%08x cycles=%u\n",
-                   st, ctx->neurax[REG_DEBUG_CYCLES]);
+                 printf("[accel] done  STATUS=0x%08x\n", st);
             return 0;
         }
         usleep_ms(1);

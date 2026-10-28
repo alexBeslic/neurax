@@ -74,9 +74,6 @@ architecture sim of activation_tb is
     signal output_addr     : std_logic_vector(15 downto 0);
     signal output_write_en : std_logic;
 
-    signal current_element   : std_logic_vector(15 downto 0);
-    signal processing_cycles : std_logic_vector(31 downto 0);
-
     signal input_mem  : data_array_1d(0 to TOTAL_ELEMENTS-1);
     signal output_mem : data_array_1d(0 to TOTAL_ELEMENTS-1);
 
@@ -171,9 +168,7 @@ begin
             output_valid      => output_valid,
             output_data       => output_data,
             output_addr       => output_addr,
-            output_write_en   => output_write_en,
-            current_element   => current_element,
-            processing_cycles => processing_cycles
+            output_write_en   => output_write_en
         );
 
     -- Reset once, then re-pulse start for each chunk

@@ -72,11 +72,6 @@ package neurax_register_pkg is
   subtype t_DATA_READ_START_ADDR is natural range 14 downto 0; -- Bits [14:0] in data read start address register
   subtype t_DATA_READ_LENGTH is natural range 30 downto 16; -- Bits [30:16] in data read length register
 
-  -- Debug registers
-  subtype t_DEBUG_STATUS is natural range 7 downto 0; -- Bits [7:0] in debug status register
-
-
-  
   -- READ-ONLY register values
   constant c_MAGIC_NUMBER : std_logic_vector(31 downto 0) := x"CAB00D1E"; -- Magic number caboodle in hex
   

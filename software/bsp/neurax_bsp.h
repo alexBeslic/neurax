@@ -53,10 +53,10 @@ extern "C" {
 #define REG_BATCH_SIZE          8   /* 0x20 */
 #define REG_TEMP_0              9   /* 0x24 */
 #define REG_TEMP_1             10   /* 0x28 */
-#define REG_TEMP_2             11   /* 0x2C */
-#define REG_TEMP_3             12   /* 0x30 */
-#define REG_DEBUG_CYCLES       13   /* 0x34 */
-#define REG_DEBUG_STATUS       14   /* 0x38 */
+#define REG_RESERVED_11        11   /* 0x2C */
+#define REG_RESERVED_12        12   /* 0x30 */
+#define REG_RESERVED_13        13   /* 0x34 */
+#define REG_RESERVED_14        14   /* 0x38 */
 #define REG_READ_ONLY          15   /* 0x3C */
 
 /* =========================================================================
@@ -214,8 +214,8 @@ int neurax_is_busy(neurax_bsp_t *bsp);
 /** Check if operation is done */
 int neurax_is_done(neurax_bsp_t *bsp);
 
-/** Poll-wait until operation completes. Returns cycle count. */
-uint32_t neurax_wait_done(neurax_bsp_t *bsp);
+/** Poll-wait until operation completes. Returns 0 on success, -1 on timeout. */
+int neurax_wait_done(neurax_bsp_t *bsp);
 
 #ifdef __cplusplus
 }

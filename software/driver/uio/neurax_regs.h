@@ -17,10 +17,10 @@ typedef struct {
     volatile uint32_t reg_batch_size; /**< Batch size register */
     volatile uint32_t reg_data_sc; /**< Data status/config register */
     volatile uint32_t reg_data_read; /**< Data start/length register */
-    volatile uint32_t reg_temp_2; /**< Port B trace control/index (address 11) */
-    const volatile uint32_t reg_temp_3; /**< Selected Port B trace word (address 12) */
-    const volatile uint32_t reg_debug_cycles; /**< Debug cycles register */
-    const volatile uint32_t reg_debug_status; /**< Debug status register */
+    volatile uint32_t reg_reserved_11; /**< Reserved register */
+    volatile uint32_t reg_reserved_12; /**< Reserved register */
+    volatile uint32_t reg_reserved_13; /**< Reserved register */
+    volatile uint32_t reg_reserved_14; /**< Reserved register */
     const volatile uint32_t reg_read_only; /**< Magic number 0xCAB00D1E*/
 } neurax_reg_t;
 
