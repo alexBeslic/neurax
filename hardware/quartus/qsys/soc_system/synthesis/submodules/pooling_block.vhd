@@ -2,8 +2,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use IEEE.STD_LOGIC_SIGNED.ALL;
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -67,7 +65,7 @@ architecture behavioral of pooling_block is
     
     -- Pooling accumulatori za paralelne kanale
     type pool_accumulator_t is record
-        value : signed(31 downto 0);
+        value : signed(DATA_WIDTH+6-1 downto 0);
         count : integer range 0 to MAX_POOL_SIZE*MAX_POOL_SIZE;
         initialized : std_logic;
     end record;
@@ -85,6 +83,7 @@ architecture behavioral of pooling_block is
     signal window_complete : std_logic;
     signal cycle_counter : unsigned(31 downto 0);
     signal window_counter : unsigned(15 downto 0);
+    signal output_valid_driver : std_logic;
     
     -- Helper funkcije
     function calculate_output_dim(input_dim, pool_size, stride : integer) return integer is
@@ -108,6 +107,19 @@ architecture behavioral of pooling_block is
         else
             return b;
         end if;
+    end function;
+
+    function saturate_data(value : signed) return std_logic_vector is
+        constant MAX_DATA : signed(value'length-1 downto 0) := to_signed(2147483647, value'length);
+        constant MIN_DATA : signed(value'length-1 downto 0) :=
+            shift_left(to_signed(-1, value'length), DATA_WIDTH-1);
+    begin
+        if value > MAX_DATA then
+            return x"7FFFFFFF";
+        elsif value < MIN_DATA then
+            return x"80000000";
+        end if;
+        return std_logic_vector(resize(value, DATA_WIDTH));
     end function;
 
 begin
@@ -190,29 +202,29 @@ begin
                             case config.pool_type is
                                 when MAX_POOL =>
                                     if pool_accumulators(c).initialized = '0' then
-                                        pool_accumulators(c).value <= resize(signed(input_data(c)), 32);
+                                        pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
                                         pool_accumulators(c).initialized <= '1';
                                     else
-                                        if signed(input_data(c)) > pool_accumulators(c).value(DATA_WIDTH-1 downto 0) then
-                                            pool_accumulators(c).value <= resize(signed(input_data(c)), 32);
+                                        if resize(signed(input_data(c)), DATA_WIDTH+6) > pool_accumulators(c).value then
+                                            pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
                                         end if;
                                     end if;
                                     
                                 when MIN_POOL =>
                                     if pool_accumulators(c).initialized = '0' then
-                                        pool_accumulators(c).value <= resize(signed(input_data(c)), 32);
+                                        pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
                                         pool_accumulators(c).initialized <= '1';
                                     else
-                                        if signed(input_data(c)) < pool_accumulators(c).value(DATA_WIDTH-1 downto 0) then
-                                            pool_accumulators(c).value <= resize(signed(input_data(c)), 32);
+                                        if resize(signed(input_data(c)), DATA_WIDTH+6) < pool_accumulators(c).value then
+                                            pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
                                         end if;
                                     end if;
                                     
                                 when AVERAGE_POOL | SUM_POOL =>
-                                    pool_accumulators(c).value <= pool_accumulators(c).value + resize(signed(input_data(c)), 32);
+                                    pool_accumulators(c).value <= pool_accumulators(c).value + resize(signed(input_data(c)), DATA_WIDTH+6);
                                     
                                 when others =>
-                                    pool_accumulators(c).value <= resize(signed(input_data(c)), 32);
+                                    pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
                             end case;
                             
                             pool_accumulators(c).count <= pool_accumulators(c).count + 1;
@@ -229,12 +241,12 @@ begin
                             pool_w_cnt <= 0;
                             pool_h_cnt <= 0;
                             
-                            -- Finalize pooling results
+                            -- The output is formed combinationally from the accumulator
+                            -- and this final input sample; clear state for the next window.
                             for c in 0 to PARALLEL_CHANNELS-1 loop
-                                if config.pool_type = AVERAGE_POOL and pool_accumulators(c).count > 0 then
-                                    pool_accumulators(c).value <= 
-                                        pool_accumulators(c).value / pool_accumulators(c).count;
-                                end if;
+                                pool_accumulators(c).value <= (others => '0');
+                                pool_accumulators(c).count <= 0;
+                                pool_accumulators(c).initialized <= '0';
                             end loop;
                             
                             -- Move to next output position
@@ -328,24 +340,43 @@ begin
         output_addr <= std_logic_vector(to_unsigned(out_addr, 18));
     end process;
     
-    -- Output data generation
-    output_data_gen: process(clk)
+    -- Present the complete result, including the sample currently completing the window.
+    output_data_gen: process(current_state, window_complete, input_valid,
+                             input_data, pool_accumulators, config)
+        variable result_value : signed(DATA_WIDTH+6-1 downto 0);
+        variable input_value  : signed(DATA_WIDTH-1 downto 0);
+        variable total_value  : signed(DATA_WIDTH+6-1 downto 0);
     begin
-        if rising_edge(clk) then
-            if current_state = WRITE_OUTPUT or 
-               (current_state = POOL_COMPUTE and 
-                pool_h_cnt = config.pool_size - 1 and 
-                pool_w_cnt = config.pool_size - 1) then
-                
-                for c in 0 to PARALLEL_CHANNELS-1 loop
-                    output_data(c) <= std_logic_vector(pool_accumulators(c).value(DATA_WIDTH-1 downto 0));
-                end loop;
-            else
-                for c in 0 to PARALLEL_CHANNELS-1 loop
-                    output_data(c) <= (others => '0');
-                end loop;
+        for c in 0 to PARALLEL_CHANNELS-1 loop
+            output_data(c) <= (others => '0');
+            if current_state = POOL_COMPUTE and window_complete = '1' and input_valid = '1' then
+                input_value := signed(input_data(c));
+                case config.pool_type is
+                    when MAX_POOL =>
+                        if pool_accumulators(c).initialized = '0' or
+                           resize(input_value, DATA_WIDTH+6) > pool_accumulators(c).value then
+                            result_value := resize(input_value, DATA_WIDTH+6);
+                        else
+                            result_value := pool_accumulators(c).value;
+                        end if;
+                    when MIN_POOL =>
+                        if pool_accumulators(c).initialized = '0' or
+                           resize(input_value, DATA_WIDTH+6) < pool_accumulators(c).value then
+                            result_value := resize(input_value, DATA_WIDTH+6);
+                        else
+                            result_value := pool_accumulators(c).value;
+                        end if;
+                    when SUM_POOL =>
+                        result_value := pool_accumulators(c).value + resize(input_value, DATA_WIDTH+6);
+                    when AVERAGE_POOL =>
+                        total_value := pool_accumulators(c).value + resize(input_value, DATA_WIDTH+6);
+                        result_value := total_value / to_signed(pool_accumulators(c).count + 1, DATA_WIDTH+6);
+                    when others =>
+                        result_value := resize(input_value, DATA_WIDTH+6);
+                end case;
+                    output_data(c) <= saturate_data(result_value);
             end if;
-        end if;
+        end loop;
     end process;
     
     -- Control signals
@@ -355,12 +386,12 @@ begin
     
     input_read_en <= pool_operation_active;
     
-    output_valid <= '1' when current_state = WRITE_OUTPUT or 
-                            (current_state = POOL_COMPUTE and window_complete = '1') else '0';
+    output_valid_driver <= '1' when current_state = POOL_COMPUTE and
+                            window_complete = '1' and input_valid = '1' else '0';
     
-    output_write_en <= '1' when current_state = WRITE_OUTPUT or 
-                            (current_state = POOL_COMPUTE and window_complete = '1') else '0';
-    
+    output_write_en <= output_valid_driver;
+    output_valid <= output_valid_driver;
+
     -- Status signals
     ready <= '1' when current_state = IDLE else '0';
     busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';

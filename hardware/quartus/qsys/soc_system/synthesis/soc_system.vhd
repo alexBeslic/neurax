@@ -222,7 +222,7 @@ architecture rtl of soc_system is
 			g_PIXEL_WIDTH     : natural := 24;
 			g_FB_WIDTH        : natural := 100;
 			g_FB_HEIGHT       : natural := 100;
-			PARALLEL_UNITS    : integer := 4
+			PARALLEL_UNITS    : integer := 1
 		);
 		port (
 			g_rst_i               : in  std_logic                     := 'X';             -- reset

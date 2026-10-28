@@ -8,7 +8,7 @@
    <name preferredWidth="204" />
   </columns>
  </systemtable>
- <library expandedCategories="Library,Project" />
+ <library expandedCategories="Project/Neurax,Project,Library" />
  <window width="1578" height="1066" x="291" y="-34" />
  <generation
    synthesis="VHDL"

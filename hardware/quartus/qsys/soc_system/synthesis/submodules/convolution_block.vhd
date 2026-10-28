@@ -46,8 +46,7 @@ entity convolution_block is
         output_valid : out std_logic;
         output_data : out std_logic_vector(DATA_WIDTH-1 downto 0);
         output_addr : out std_logic_vector(15 downto 0);
-        output_write_en : out std_logic;
-        kernel_done_o : out std_logic
+        output_write_en : out std_logic
     );
 end convolution_block;
 
@@ -71,8 +70,10 @@ architecture behavioral of convolution_block is
     signal output_width : integer range 0 to MAX_WIDTH;
     
     -- Accumulator za konvoluciju
-    signal conv_accumulator : signed(31 downto 0);
-    signal mult_result : signed(31 downto 0);
+    -- 32x32-bit products are 64 bits. Up to 5x5x16=400 products may be
+    -- accumulated, so 73 signed bits preserve the full supported sum.
+    signal conv_accumulator : signed(72 downto 0);
+    signal mult_result : signed(63 downto 0);
     
     -- Pipeline registri
     signal input_reg : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -83,6 +84,7 @@ architecture behavioral of convolution_block is
     signal last_output : std_logic;  -- '1' when current output is the very last one
     -- Track whether the kernel window for current output position is complete
     signal kernel_done : std_logic;
+    signal input_in_bounds : std_logic;
     
     -- Helper funkcije
     function calculate_output_dim(input_dim, kernel_size, padding, stride : integer) return integer is
@@ -95,11 +97,29 @@ architecture behavioral of convolution_block is
         return out_pos * stride + k_pos - padding;
     end function;
 
+    function saturate_q32(value : signed) return std_logic_vector is
+    begin
+        if value > to_signed(2147483647, value'length) then
+            return x"7FFFFFFF";
+        elsif value < to_signed(-2147483647 - 1, value'length) then
+            return x"80000000";
+        else
+            return std_logic_vector(value(31 downto 0));
+        end if;
+    end function;
+
 begin
     
     -- Izračunaj output dimenzije
     output_height <= calculate_output_dim(INPUT_HEIGHT, config.kernel_size, config.padding, config.stride);
     output_width <= calculate_output_dim(INPUT_WIDTH, config.kernel_size, config.padding, config.stride);
+
+    input_in_bounds <= '1' when
+        calculate_input_pos(out_h_cnt, config.stride, kh_cnt, config.padding) >= 0 and
+        calculate_input_pos(out_h_cnt, config.stride, kh_cnt, config.padding) < INPUT_HEIGHT and
+        calculate_input_pos(out_w_cnt, config.stride, kw_cnt, config.padding) >= 0 and
+        calculate_input_pos(out_w_cnt, config.stride, kw_cnt, config.padding) < INPUT_WIDTH
+        else '0';
 
     -- Detect when kernel iteration for current output position is at its last element
     kernel_done <= '1' when kh_cnt = config.kernel_size - 1 and
@@ -147,11 +167,15 @@ begin
                     -- Multiply-accumulate operacija
                     if input_valid = '1' and weight_valid = '1' then
                         -- Compute multiply (registered for timing)
-                        mult_result <= signed(input_data) * signed(weight_data);
+                        if input_in_bounds = '1' then
+                            mult_result <= signed(input_data) * signed(weight_data);
+                        else
+                            mult_result <= (others => '0');
+                        end if;
                         -- Accumulate: add previous mult result to accumulator
                         -- (1-cycle pipeline: we accumulate the result from the
                         --  previous cycle's multiply)
-                        conv_accumulator <= conv_accumulator + mult_result;
+                        conv_accumulator <= conv_accumulator + resize(mult_result, conv_accumulator'length);
                         
                         -- Advance kernel counters (kw -> kh -> in_ch)
                         if kw_cnt < config.kernel_size - 1 then
@@ -277,23 +301,13 @@ begin
                              in_ch_cnt = 0 and kh_cnt = 0 and kw_cnt = 0 else '0';
     
     output_write_en <= '1' when current_state = WRITE_OUTPUT else '0';
-
-    -- Exposes the registered kh/kw/in_ch "last tap of kernel window" condition to
-    -- the top-level accelerator so its RAM read sequencer can avoid dispatching a
-    -- redundant speculative fetch right after the window's final tap (that phantom
-    -- fetch would otherwise collide with the WRITE_OUTPUT RAM write on the shared
-    -- single Avalon-MM address bus and corrupt the next position's first tap).
-    kernel_done_o <= kernel_done;
     
     -- Output data: accumulator result (with final multiply added) + bias
     -- The accumulator contains the sum of all but the last multiply.
     -- We add the last mult_result and bias in the output.
-    output_data <= std_logic_vector(
-        resize(
-            shift_right(conv_accumulator + mult_result, FRAC_WIDTH) + 
-            resize(signed(bias_reg), 32),
-            DATA_WIDTH
-        )
+    output_data <= saturate_q32(
+        shift_right(conv_accumulator + resize(mult_result, conv_accumulator'length), FRAC_WIDTH) +
+        resize(signed(bias_reg), conv_accumulator'length)
     );
     
     output_valid <= '1' when current_state = WRITE_OUTPUT else '0';

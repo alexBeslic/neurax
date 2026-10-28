@@ -26,21 +26,6 @@
 --     before returning to IDLE.  Occurs only after the last word is accepted so
 --     it does not reduce transfer throughput.
 --
--- SEND watchdog:
---   The SEND -> FLUSH transition depends entirely on aso_ready_i eventually
---   pulsing rd_remaining down to zero.  If the downstream Avalon-ST sink (the
---   mSGDMA s2m controller) ever stops asserting ready one handshake short of
---   cmd_length -- e.g. because its own word count was satisfied by a spurious
---   extra handshake elsewhere in the pipeline, or because it was reset out from
---   under an in-progress transfer (the two mSGDMAs and the neurax core sit in
---   different reset domains) -- this FSM would otherwise hang in SEND forever:
---   rd_busy_o stays asserted and the IDLE-only rd_start_i check is never
---   reached again, so no further transfer can ever be started without a full
---   core reset.  rd_timeout_cnt guards against this: it counts idle (no
---   handshake) cycles while in SEND and forces the machine back to IDLE if
---   g_SEND_TIMEOUT_CYCLES elapses without a handshake, guaranteeing rd_busy_o
---   always eventually deasserts.
---
 -- Avalon-MM register integration:
 --   rd_start_i      maps to CONTROL.START  (write-1-to-start)
 --   rd_start_addr_i maps to READ_START_ADDRESS register
@@ -57,7 +42,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
 
 library altera_mf;
 use altera_mf.altera_mf_components.all;
@@ -65,12 +49,7 @@ use altera_mf.altera_mf_components.all;
 entity neurax_data_interface is
     generic (
         g_DATA_WIDTH : natural := 32;
-        g_ADDR_WIDTH : natural := 15;   -- 15 bits => 32768-word RAM (covers 23000 words)
-        -- Max consecutive cycles the SEND state will wait for a single
-        -- aso_ready_i handshake before giving up and forcing the FSM back to
-        -- IDLE.  Default ~ 20 ms @ 50 MHz -- far above the ~0.66 ms a full
-        -- 32768-word transfer takes at 1 word/cycle.
-        g_SEND_TIMEOUT_CYCLES : natural := 104857600
+        g_ADDR_WIDTH : natural := 15    -- 15 bits => 32768-word RAM (covers 23000 words)
     );
     port (
         clk_i : in  std_logic;
@@ -104,7 +83,12 @@ entity neurax_data_interface is
         ram_b_q_o         : out std_logic_vector(g_DATA_WIDTH - 1 downto 0);
         ram_b_wraddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
         ram_b_data_i      : in  std_logic_vector(g_DATA_WIDTH - 1 downto 0);
-        ram_b_wren_i      : in  std_logic
+        ram_b_wren_i      : in  std_logic;
+
+        ------ Port B diagnostic trace (software-readable) ------
+        diag_trace_control_i : in  std_logic_vector(31 downto 0);
+        diag_trace_phase_i   : in  std_logic_vector(3 downto 0);
+        diag_trace_data_o    : out std_logic_vector(31 downto 0)
     );
 end neurax_data_interface;
 
@@ -119,6 +103,25 @@ architecture arch of neurax_data_interface is
     -- Port B signals (accelerator)
     signal port_b_address : std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
     signal port_b_q       : std_logic_vector(g_DATA_WIDTH - 1 downto 0);
+    signal port_b_ram_data : std_logic_vector(g_DATA_WIDTH - 1 downto 0);
+    signal port_b_ram_wren : std_logic;
+    signal port_b_diag_write : std_logic;
+    signal diag_trace_read_address : std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
+
+    -- Eight-cycle snapshot around the first read of weight word 0 (0x2710).
+    -- Three 32-bit words per sample: {phase, requested address},
+    -- {write-enable, muxed Port B address}, and accelerator-facing q.
+    type diag_trace_mem_t is array (0 to 23) of std_logic_vector(31 downto 0);
+    signal diag_trace_mem       : diag_trace_mem_t;
+    signal diag_trace_count     : natural range 0 to 8;
+    signal diag_trace_active    : std_logic;
+    signal diag_trace_triggered : std_logic;
+
+    -- Keep the physical Port B path visible to SignalTap during on-board
+    -- weight-read diagnosis (address mux, write enable, and M10K output).
+    attribute keep : boolean;
+    attribute keep of port_b_address : signal is true;
+    attribute keep of port_b_q       : signal is true;
 
     -- Sink write pointer (wraps naturally at 2**g_ADDR_WIDTH)
     signal wr_ptr : unsigned(g_ADDR_WIDTH - 1 downto 0);
@@ -139,11 +142,6 @@ architecture arch of neurax_data_interface is
     signal rd_remaining : unsigned(g_ADDR_WIDTH - 1 downto 0);
     signal rd_first     : std_logic;   -- '1' on the first word of a packet (SOP)
 
-    -- SEND watchdog: counts consecutive cycles without an aso_ready_i
-    -- handshake; cleared on every handshake and on (re)entry to SEND.
-    constant c_TIMEOUT_WIDTH : natural := integer(ceil(log2(real(g_SEND_TIMEOUT_CYCLES + 1))));
-    signal rd_timeout_cnt : unsigned(c_TIMEOUT_WIDTH - 1 downto 0);
-
 begin
 
     -- =========================================================================
@@ -163,7 +161,8 @@ begin
         numwords_b                    => 2**g_ADDR_WIDTH,
         lpm_type                      => "altsyncram",
         outdata_reg_a                 => "UNREGISTERED",
-        outdata_reg_b                 => "UNREGISTERED",
+        outdata_reg_b                 => "CLOCK1",
+        address_reg_b                 => "CLOCK1",
         address_aclr_a                => "NONE",
         address_aclr_b                => "NONE",
         indata_aclr_a                 => "NONE",
@@ -189,8 +188,8 @@ begin
         wren_a         => port_a_wren,
         q_a            => port_a_q,
         address_b      => port_b_address,
-        data_b         => ram_b_data_i,
-        wren_b         => ram_b_wren_i,
+        data_b         => port_b_ram_data,
+        wren_b         => port_b_ram_wren,
         q_b            => port_b_q,
         aclr0          => '0',
         aclr1          => '0',
@@ -205,11 +204,90 @@ begin
     );
 
     -- =========================================================================
-    -- Port B: accelerator access (unchanged)
+    -- Port B: accelerator access.
+    -- Keep read and write path mutually exclusive in time. Register both the
+    -- Port B address and q_b on CLOCK1, as required for a legal Cyclone V
+    -- altsyncram Port B clock configuration.
     -- =========================================================================
+    port_b_diag_write <= diag_trace_control_i(30) and diag_trace_control_i(14);
+    port_b_ram_wren <= '1' when port_b_diag_write = '1' else ram_b_wren_i;
+    port_b_ram_data <= std_logic_vector(to_unsigned(16#12345678#, g_DATA_WIDTH))
+                       when port_b_diag_write = '1' else ram_b_data_i;
+
     ram_b_q_o      <= port_b_q;
     port_b_address <= ram_b_wraddress_i when ram_b_wren_i = '1'
+                      else diag_trace_read_address when diag_trace_control_i(30) = '1'
                       else ram_b_rdaddress_i;
+    diag_trace_read_address <= diag_trace_control_i(29 downto 15)
+                               when diag_trace_control_i(30) = '1'
+                               else ram_b_rdaddress_i;
+
+    -- Software selects words 0..23 through REG_TEMP_2 and reads the selected
+    -- word through REG_TEMP_3. Selector 31 returns capture status.
+    process(diag_trace_control_i, diag_trace_mem, diag_trace_count,
+            diag_trace_active, diag_trace_triggered)
+        variable trace_index : natural range 0 to 31;
+        variable trace_status : std_logic_vector(31 downto 0);
+    begin
+        trace_index := to_integer(unsigned(diag_trace_control_i(4 downto 0)));
+        if trace_index < 24 then
+            diag_trace_data_o <= diag_trace_mem(trace_index);
+        elsif trace_index = 31 then
+            trace_status := (others => '0');
+            trace_status(0) := diag_trace_triggered;
+            trace_status(1) := diag_trace_active;
+            trace_status(7 downto 2) := std_logic_vector(to_unsigned(diag_trace_count, 6));
+            diag_trace_data_o <= trace_status;
+        else
+            diag_trace_data_o <= (others => '0');
+        end if;
+    end process;
+
+    -- A one-cycle write of bit 31 in REG_TEMP_2 clears/re-arms the capture.
+    -- Capture the first 8 cycles beginning with the first requested read of
+    -- word 10000, regardless of whether the M10K returns the expected value.
+    process(clk_i, rst_i)
+        variable sample_index : natural range 0 to 7;
+    begin
+        if rst_i = '1' then
+            diag_trace_mem       <= (others => (others => '0'));
+            diag_trace_count     <= 0;
+            diag_trace_active    <= '0';
+            diag_trace_triggered <= '0';
+        elsif rising_edge(clk_i) then
+            if diag_trace_control_i(31) = '1' then
+                diag_trace_mem       <= (others => (others => '0'));
+                diag_trace_count     <= 0;
+                diag_trace_active    <= '0';
+                diag_trace_triggered <= '0';
+            elsif diag_trace_active = '1' then
+                sample_index := diag_trace_count;
+                diag_trace_mem(sample_index * 3) <=
+                    x"000" & diag_trace_phase_i & '0' & diag_trace_read_address;
+                diag_trace_mem(sample_index * 3 + 1) <=
+                    x"0000" & port_b_ram_wren & port_b_address;
+                diag_trace_mem(sample_index * 3 + 2) <= port_b_q;
+                if diag_trace_count = 7 then
+                    diag_trace_count  <= 8;
+                    diag_trace_active <= '0';
+                else
+                    diag_trace_count <= diag_trace_count + 1;
+                end if;
+            elsif diag_trace_triggered = '0' and port_b_ram_wren = '0' and
+                (diag_trace_control_i(30) = '1' or
+                 unsigned(ram_b_rdaddress_i) = to_unsigned(16#2710#, g_ADDR_WIDTH)) then
+                sample_index := 0;
+                diag_trace_mem(0) <=
+                  x"000" & diag_trace_phase_i & '0' & diag_trace_read_address;
+                diag_trace_mem(1) <=
+                    x"0000" & port_b_ram_wren & port_b_address;
+                diag_trace_mem(2) <= port_b_q;
+                diag_trace_count     <= 1;
+                diag_trace_active    <= '1';
+                diag_trace_triggered <= '1';
+            end if;
+        end if;
+    end process;
 
     -- =========================================================================
     -- Sink path
@@ -218,17 +296,6 @@ begin
     --   Port A address collisions without any software ordering requirement.
     --   A channel-1 packet marker is treated as a reset marker for the write
     --   pointer; it is not stored into RAM as payload data.
-    --
-    --   NOTE: the SOF/wr_ptr-reset marker must NOT require asi_valid_i = '1'.
-    --   The Qsys channel adapter between DMA_neurax_read and this sink
-    --   (avalon_st_adapter_001) forces its output valid to '0' whenever the
-    --   incoming channel number is > 0, so a channel=1 SOF descriptor is always
-    --   seen here with asi_valid_i = '0'.  Gating the reset on valid as well as
-    --   channel means it can never fire in real hardware: wr_ptr never resets
-    --   between write sessions, so every write silently lands at whatever
-    --   offset wr_ptr was left at, and the readback keeps showing the PREVIOUS
-    --   run's data instead of the new pattern (reproduced across multiple runs
-    --   in error.txt: run N's readback always matches run N-1's pattern).
     -- =========================================================================
     sink_ready    <= '1' when rd_state = IDLE else '0';
     asi_ready_o   <= sink_ready;
@@ -286,16 +353,12 @@ begin
             rd_ptr         <= (others => '0');
             rd_remaining   <= (others => '0');
             rd_first       <= '1';
-            rd_timeout_cnt <= (others => '0');
 
         elsif rising_edge(clk_i) then
 
             -- ---- Sink: channel=1 resets the write pointer, channel=0 advances it
             -- on every accepted handshake.  The marker word is not stored into RAM.
-            -- Deliberately does NOT gate on asi_valid_i: the Qsys channel adapter
-            -- forces valid to '0' for any channel > 0, so a valid check here would
-            -- make the SOF reset unreachable (see comment above sink_ready).
-            if sink_ready = '1' and asi_channel_i = '1' then
+            if asi_valid_i = '1' and sink_ready = '1' and asi_channel_i = '1' then
                 wr_ptr <= (others => '0');
             elsif port_a_wren = '1' then
                 wr_ptr <= wr_ptr + 1;
@@ -325,14 +388,12 @@ begin
                     -- port_a_address = rd_ptr is already on Port A combinatorially.
                     -- The altsyncram registers that address on this rising edge;
                     -- q_a = RAM[rd_ptr] is valid from the next cycle (SEND) onward.
-                    rd_timeout_cnt <= (others => '0');
-                    rd_state       <= SEND;
+                    rd_state <= SEND;
 
                 when SEND =>
                     -- Advance only on a successful Avalon-ST handshake.
                     if aso_ready_i = '1' then
-                        rd_first       <= '0';
-                        rd_timeout_cnt <= (others => '0');
+                        rd_first <= '0';
                         if rd_remaining = 1 then
                             -- Last word accepted.  Move to FLUSH to assert rd_done_o
                             -- and cleanly deassert aso_valid_o before returning to IDLE.
@@ -344,17 +405,6 @@ begin
                             -- (combinatorial mux, priority 2), so RAM[rd_ptr+1] is
                             -- registered now and available at the next SEND cycle.
                         end if;
-                    elsif rd_timeout_cnt = to_unsigned(g_SEND_TIMEOUT_CYCLES - 1, rd_timeout_cnt'length) then
-                        -- Watchdog expired: the downstream sink has stopped
-                        -- acknowledging words (word-count desync, DMA reset out
-                        -- from under us, etc.).  Abandon this transfer and force
-                        -- the machine back to IDLE so rd_busy_o deasserts and a
-                        -- future rd_start_i can be accepted again.  No rd_done_o
-                        -- pulse is issued since the transfer did not complete.
-                        rd_timeout_cnt <= (others => '0');
-                        rd_state       <= IDLE;
-                    else
-                        rd_timeout_cnt <= rd_timeout_cnt + 1;
                     end if;
 
                 when FLUSH =>

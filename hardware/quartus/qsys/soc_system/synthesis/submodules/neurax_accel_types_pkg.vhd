@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 package neurax_accel_types_pkg is
     -- Opšti parametri
-    constant DATA_WIDTH    : integer := 16;
+    constant DATA_WIDTH    : integer := 32;
     constant FRAC_WIDTH    : integer := 8;
     constant INT_WIDTH     : integer := DATA_WIDTH - FRAC_WIDTH;
 

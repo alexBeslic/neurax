@@ -76,7 +76,9 @@ entity neurax_register_block is
         neurax_data_done_i           : in std_logic;
         -- Debug/monitoring
         neurax_debug_cycle_i  : in std_logic_vector(g_WIDTH-1 downto 0);
-        neurax_debug_status_i       : in std_logic_vector(7 downto 0)
+        neurax_debug_status_i       : in std_logic_vector(7 downto 0);
+        neurax_trace_control_o      : out std_logic_vector(31 downto 0);
+        neurax_trace_data_i         : in  std_logic_vector(31 downto 0)
     );
 
 end neurax_register_block;
@@ -161,26 +163,14 @@ begin
                 if unsigned(avs_address_i) < 2**g_ADDR_WIDTH and 
                    unsigned(avs_address_i) /= c_REG_READ_ONLY and
                    unsigned(avs_address_i) /= c_REG_STATUS and
+                   unsigned(avs_address_i) /= c_REG_TEMP_3 and
                    unsigned(avs_address_i) /= c_REG_DEBUG_CYCLES and
                    unsigned(avs_address_i) /= c_REG_DEBUG_STATUS then
                     -- Valid address range
                     for i in 0 to (g_WIDTH/8 - 1) loop
                         if avs_byteenable_i(i) = '1' then
-                            -- Write only the enabled bytes.  REG_DATA_SC byte 0
-                            -- holds the hardware-owned DONE/BUSY mirror bits
-                            -- (driven every cycle from neurax_data_done_i /
-                            -- neurax_data_busy_i above); exclude them here so a
-                            -- software write (e.g. writing the whole word to set
-                            -- only the START bit) cannot momentarily clobber the
-                            -- real FSM status with a stale value.
-                            for b in i*8 to i*8 + 7 loop
-                                if unsigned(avs_address_i) = c_REG_DATA_SC and
-                                   (b = c_DATA_SC_DONE or b = c_DATA_SC_BUSY) then
-                                    null;  -- preserve hardware-owned status bit
-                                else
-                                    ram(to_integer(unsigned(avs_address_i)))(b) <= avs_writedata_i(b);
-                                end if;
-                            end loop;
+                            -- Write only the enabled bytes
+                            ram(to_integer(unsigned(avs_address_i)))(i*8 + 7 downto i*8) <= avs_writedata_i(i*8 + 7 downto i*8);
                         end if;
                     end loop;
                 end if;
@@ -197,8 +187,13 @@ begin
         elsif rising_edge(clk_i) then
             if avs_chipselect_i = '1' and avs_read_i = '1' then
                 if unsigned(avs_address_i) < 2**g_ADDR_WIDTH then
-                    -- Valid address range
-                    avs_readdata_o <= ram(to_integer(unsigned(avs_address_i)));
+                    -- Address 12 is the selected Port B trace word; all other
+                    -- addresses retain the normal register-file behavior.
+                    if unsigned(avs_address_i) = c_REG_TEMP_3 then
+                        avs_readdata_o <= neurax_trace_data_i;
+                    else
+                        avs_readdata_o <= ram(to_integer(unsigned(avs_address_i)));
+                    end if;
                     read_data_valid <= '1';
                 else
                     -- Address out of range
@@ -254,5 +249,6 @@ begin
     neurax_data_start_o <= ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_START);
     neurax_data_start_addr_o <= ram(to_integer(c_REG_DATA_READ))(t_DATA_READ_START_ADDR);
     neurax_data_length_o <= ram(to_integer(c_REG_DATA_READ))(t_DATA_READ_LENGTH);
+    neurax_trace_control_o <= ram(to_integer(c_REG_TEMP_2));
 
 end arch;

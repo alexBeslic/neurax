@@ -74,7 +74,7 @@ begin
             g_DATA_ADDR_WIDTH=> 15,
             g_FB_WIDTH       => INPUT_WIDTH,
             g_FB_HEIGHT      => INPUT_HEIGHT,
-            PARALLEL_UNITS   => 4
+            PARALLEL_UNITS   => 1
         )
         port map (
             g_clk_i => clk,
@@ -109,6 +109,11 @@ begin
         variable input_value   : integer;
         variable status_value  : std_logic_vector(31 downto 0);
         variable debug_value   : std_logic_vector(31 downto 0);
+        variable trace_status  : std_logic_vector(31 downto 0);
+        variable trace_word    : std_logic_vector(31 downto 0);
+        variable trace_addr    : std_logic_vector(31 downto 0);
+        variable trace_mux     : std_logic_vector(31 downto 0);
+        variable forced_trace_control : std_logic_vector(31 downto 0);
         variable data_command  : std_logic_vector(31 downto 0);
         file output_f          : text;
         variable output_line   : line;
@@ -154,6 +159,7 @@ begin
 
         procedure sink_send(value : std_logic_vector(31 downto 0); channel : std_logic := '0') is
         begin
+            -- Keep the complete 32-bit RAM word unchanged across the sink.
             asi_data    <= value;
             asi_channel <= channel;
             asi_valid   <= '1';
@@ -204,6 +210,8 @@ begin
         avs_write_register(3, x"03000101");
         avs_write_register(4, x"00000101");
         avs_write_register(8, x"00000001");
+        avs_write_register(11, x"80000000"); -- clear/re-arm Port B trace
+        avs_write_register(11, x"00000000");
         avs_write_register(0, x"00000001"); -- enable accelerator
         avs_write_register(0, x"00000009"); -- enable + start convolution
         avs_write_register(0, x"00000001"); -- clear the start pulse
@@ -221,8 +229,90 @@ begin
             avs_read_register(14, debug_value);
             check(debug_value(7) = '1',
                   "debug status should report first-weight capture");
-            check(debug_value(5 downto 0) = "101101",
-                  "debug status RTL tag does not match sampled-Port-B fix");
+            check(debug_value(5 downto 0) = "110001",
+                "debug status RTL tag does not match the 32-bit convolution build");
+
+            -- Read the software-visible 8-cycle Port B capture.
+            avs_write_register(11, x"0000001F"); -- select trace status word 31
+            avs_read_register(12, trace_status);
+            check(trace_status(0) = '1',
+                "Port B trace did not trigger on weight address 0x2710");
+            check(unsigned(trace_status(7 downto 2)) = 8,
+                "Port B trace did not capture all 8 samples");
+
+            avs_write_register(11, x"00000000"); -- sample 0 request header
+            avs_read_register(12, trace_addr);
+            avs_write_register(11, x"00000001"); -- sample 0 mux/write-enable
+            avs_read_register(12, trace_mux);
+            check(unsigned(trace_addr(14 downto 0)) = WEIGHT_BASE_ADDR,
+                "trace sample 0 requested weight address is not 0x2710");
+            check(unsigned(trace_addr(19 downto 16)) = 4,
+                "trace sample 0 read phase is not PHASE_WEIGHT");
+            check(trace_mux(15) = '0' and
+                unsigned(trace_mux(14 downto 0)) = WEIGHT_BASE_ADDR,
+                "trace sample 0 Port B mux address/write-enable is wrong");
+
+            for sample in 0 to 7 loop
+                avs_write_register(11, std_logic_vector(to_unsigned(sample * 3, 32)));
+                avs_read_register(12, trace_word);
+                avs_write_register(11, std_logic_vector(to_unsigned(sample * 3 + 1, 32)));
+                avs_read_register(12, trace_mux);
+                avs_write_register(11, std_logic_vector(to_unsigned(sample * 3 + 2, 32)));
+                avs_read_register(12, debug_value);
+                report "PORTB_TRACE sample=" & integer'image(sample) &
+                     " phase=" & integer'image(to_integer(unsigned(trace_word(19 downto 16)))) &
+                     " request=0x" & to_hstring(trace_word(14 downto 0)) &
+                     " mux=0x" & to_hstring(trace_mux(14 downto 0)) &
+                     " wren=" & std_logic'image(trace_mux(15)) &
+                     " q=0x" & to_hstring(debug_value);
+            end loop;
+
+                -- Independently hold Port B on a known nonzero weight while idle.
+                avs_write_register(11, x"80000000"); -- clear/re-arm trace
+                forced_trace_control := std_logic_vector(
+                    shift_left(to_unsigned(WEIGHT_BASE_ADDR + 4, 32), 15) or
+                    to_unsigned(2**30, 32)
+                );
+                avs_write_register(11, forced_trace_control);
+                for i in 0 to 15 loop
+                    wait until rising_edge(clk);
+                end loop;
+                avs_write_register(11, forced_trace_control or x"0000001F");
+                avs_read_register(12, trace_status);
+                check(trace_status(0) = '1' and unsigned(trace_status(7 downto 2)) = 8,
+                    "forced Port B read did not capture 8 samples");
+                avs_write_register(11, forced_trace_control or x"00000001");
+                avs_read_register(12, trace_mux);
+                check(trace_mux(15) = '0' and
+                    unsigned(trace_mux(14 downto 0)) = WEIGHT_BASE_ADDR + 4,
+                    "forced Port B read did not hold the selected weight address");
+                avs_write_register(11, forced_trace_control or x"0000000B");
+                avs_read_register(12, debug_value);
+                check(unsigned(debug_value) = 1024,
+                    "forced Port B read did not return the nonzero center weight");
+
+                -- Probe Port B writes and reads using unused word 12999.
+                forced_trace_control := std_logic_vector(
+                    shift_left(to_unsigned(12999, 32), 15) or
+                    to_unsigned(2**30, 32)
+                );
+                avs_write_register(11, forced_trace_control or x"00004000");
+                for i in 0 to 15 loop
+                    wait until rising_edge(clk);
+                end loop;
+                avs_write_register(11, x"80000000"); -- re-arm for read capture
+                avs_write_register(11, forced_trace_control);
+                for i in 0 to 15 loop
+                    wait until rising_edge(clk);
+                end loop;
+                avs_write_register(11, forced_trace_control or x"0000001F");
+                avs_read_register(12, trace_status);
+                check(trace_status(0) = '1' and unsigned(trace_status(7 downto 2)) = 8,
+                    "Port B marker probe did not capture its read");
+                avs_write_register(11, forced_trace_control or x"00000002");
+                avs_read_register(12, debug_value);
+                check(unsigned(debug_value) = 16#12345678#,
+                    "Port B marker write was not readable on Port B");
 
             -- Avalon-MM DATA_READ: address in [14:0], transfer length in [30:16].
             data_command := std_logic_vector(
@@ -257,7 +347,7 @@ begin
             file_open(output_f, OUTPUT_FILE, write_mode);
             if captured_count > 0 then
                 for i in 0 to captured_count-1 loop
-                    write(output_line, to_integer(signed(captured(i)(15 downto 0))));
+                    write(output_line, to_integer(signed(captured(i))));
                     writeline(output_f, output_line);
                 end loop;
             end if;

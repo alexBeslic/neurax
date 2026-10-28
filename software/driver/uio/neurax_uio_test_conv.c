@@ -1,5 +1,5 @@
 /*
- * neurax_uio_test.c — Userspace DMA test for Neurax mSGDMA via UIO
+ * neurax_uio_test_conv.c — Image-based edge convolution test via UIO
  *
  * Replaces the /dev/msgdma kernel char-device path with direct mSGDMA
  * descriptor programming from userspace.
@@ -7,7 +7,7 @@
  * Setup:
  *   insmod uio.ko                 # loads the generic UIO kernel module
  *   insmod neurax_uio.ko          # loads the UIO kernel module
- *   ./neurax_uio_test             # runs write + read DMA test
+ *   ./neurax_uio_test_conv        # runs image convolution and RAM checks
  *
  * Access model:
  *   /dev/mem  → mmap LW bridge (0xFF200000) for mSGDMA and Neurax registers
@@ -51,7 +51,6 @@
 #define RAM_OUTPUT_BASE  13016u
 
 /* Signed Q24.8 values occupy the complete 32-bit RAM word. */
-#define Q24_8_ONE       0x00000100u
 #define Q24_8_ZERO      0x00000000u
 #define RAM_OUTPUT_SENTINEL 0x00005A5Au
 
@@ -60,7 +59,6 @@
 #define FPGA_RAM_BYTES    FPGA_OUTPUT_SIZE                     /* 92000 bytes */
 #define RAM_PORTB_DIAG_WORD 12999u /* unused gap between weights and bias */
 #define RAM_PORTB_DIAG_DATA 0x12345678u
-#define MAX_PRINT_ERRORS  32u  /* cap per-mismatch output for readability    */
 
 /* Workaround for the observed Port B byte-lane reversal. Port A stores these
  * bytes unchanged; the Port B RAM interface reverses them on read/write. */
@@ -612,12 +610,6 @@ static void print_ram_window(const char *name,
     putchar('\n');
 }
 
-/* Signed Q24.8 decode for the 32-bit convolution output. */
-static inline float q24_8_to_float(int32_t val)
-{
-    return (float)val / 256.0f;
-}
-
 /* Read one 32-bit word from the hardware's 8-sample Port B trace.
  * REG_TEMP_2 selects word 0..23; index 31 returns capture status.
  */
@@ -672,10 +664,46 @@ static void dump_portb_trace(struct neurax_uio_ctx *ctx, uint32_t trace_control)
 #define CONV_OUTPUT_H    98
 #define CONV_OUTPUT_W    98
 
+static int load_input_pixels(uint8_t *pixels, size_t pixel_count)
+{
+    FILE *file = fopen("input_pixels.bin", "rb");
+    if (!file) {
+        fprintf(stderr,
+                "[conv] Cannot open input_pixels.bin; prepare it from input.png "
+                "with tests/neurax_uio_edge_image.py first.\n");
+        return -1;
+    }
+
+    size_t read_count = fread(pixels, 1, pixel_count, file);
+    int extra_byte = fgetc(file);
+    fclose(file);
+    if (read_count != pixel_count || extra_byte != EOF) {
+        fprintf(stderr,
+                "[conv] input_pixels.bin must contain exactly %zu grayscale pixels "
+                "(read %zu%s).\n",
+                pixel_count, read_count,
+                extra_byte != EOF ? " plus extra data" : "");
+        return -1;
+    }
+    return 0;
+}
+
+/* Output (y,x) uses the center pixel at input (y+1,x+1) for the no-padding
+ * 3x3 four-neighbor Laplacian kernel. Return the expected raw Q24.8 word. */
+static int32_t expected_edge_q24_8(const uint8_t *pixels, int y, int x)
+{
+    const int center = pixels[(y + 1) * CONV_INPUT_W + x + 1];
+    const int neighbors = pixels[y * CONV_INPUT_W + x + 1]
+                        + pixels[(y + 1) * CONV_INPUT_W + x]
+                        + pixels[(y + 1) * CONV_INPUT_W + x + 2]
+                        + pixels[(y + 2) * CONV_INPUT_W + x + 1];
+    return (4 * center - neighbors) * 256;
+}
+
 /* ---------------------------------------------------------------------------
- * test_full_ram — build a convolution workload using 32-bit Q24.8 inputs,
- * one nonzero 3x3 kernel tap, and zero bias; run the accelerator, then verify
- * full-word Port B reads and outputs.
+ * test_full_ram — build a 100x100 image workload using 32-bit Q24.8 inputs,
+ * a four-neighbor 3x3 Laplacian kernel, and zero bias; run the accelerator,
+ * then verify full-word Port B reads and outputs against the CPU reference.
  *
  * Both DMA directions use descriptors no larger than the Qsys MAX_BYTE
  * setting. The m2s image is sent as sequential chunks after one SOF, while
@@ -691,22 +719,34 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("\n=== Convolution test (%dx%d input, %dx%d kernel) ===\n",
            CONV_INPUT_H, CONV_INPUT_W, CONV_KERNEL, CONV_KERNEL);
 
-    /* 1. Build the logical RAM image. C-side byte swapping compensates for the
-     * observed Port B lane reversal; shifting the image left compensates for
-     * the observed m2s write offset (logical RAM[n] is loaded from tx[n-1]).
-     * RAM[0] remains deliberately unused. */
+    /* 1. Load a 100x100 grayscale image prepared from input.png and build the
+     * logical RAM image. Pixel values are encoded as signed Q24.8. The C-side
+     * byte swap and one-word shift compensate for the currently observed board
+     * behavior; RAM[0] remains deliberately unused. */
     uint32_t *tx_data = calloc(n_words, sizeof(uint32_t));
     if (!tx_data) {
         perror("calloc tx_data");
         return -1;
     }
 
-    const uint32_t full_width_input = 0x12345678u;
-    ssize_t wr;
-    for (uint32_t i = 0; i < (uint32_t)(CONV_INPUT_H * CONV_INPUT_W); i++)
-        tx_data[RAM_INPUT_BASE + i] = full_width_input;
+    const uint32_t input_word_count = CONV_INPUT_H * CONV_INPUT_W;
+    uint8_t input_pixels[CONV_INPUT_H * CONV_INPUT_W];
+    if (load_input_pixels(input_pixels, input_word_count) < 0) {
+        free(tx_data);
+        return -1;
+    }
 
-    tx_data[RAM_WEIGHT_BASE + CONV_KERNEL * CONV_KERNEL - 1] = Q24_8_ONE;
+    ssize_t wr;
+    for (uint32_t i = 0; i < input_word_count; i++)
+        tx_data[RAM_INPUT_BASE + i] = (uint32_t)input_pixels[i] << 8;
+
+    static const int32_t edge_kernel[CONV_KERNEL * CONV_KERNEL] = {
+        0, -256, 0,
+        -256, 1024, -256,
+        0, -256, 0
+    };
+    for (uint32_t i = 0; i < CONV_KERNEL * CONV_KERNEL; i++)
+        tx_data[RAM_WEIGHT_BASE + i] = (uint32_t)edge_kernel[i];
 
     tx_data[RAM_BIAS_BASE] = Q24_8_ZERO;
     for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++)
@@ -716,9 +756,10 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         tx_data[word - 1] = byte_swap32(tx_data[word]);
     tx_data[n_words - 1] = 0;
 
-    printf("[conv] Logical input=0x%08" PRIx32
-           ", final weight=0x%08x; C-side byte-swap and one-word m2s offset compensation enabled\n",
-           full_width_input, Q24_8_ONE);
+    printf("[conv] Loaded %ux%u grayscale pixels from input_pixels.bin; "
+           "running 3x3 Laplacian edge detection\n",
+           CONV_INPUT_W, CONV_INPUT_H);
+    printf("[conv] C-side byte-swap and one-word m2s offset compensation enabled\n");
 
     /* 2. Configure the accelerator BEFORE the DMA write so the ST sink is
      *    ready (mirrors neurax_reset()/neurax_config_conv() in neurax_bsp.c) */
@@ -826,15 +867,17 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
             const uint32_t portb_input_q =
                 read_portb_trace_word(ctx, forced_q_trace_index,
                                       forced_trace_control);
+            const uint32_t expected_portb_input =
+                (uint32_t)input_pixels[forced_trace_address] << 8;
             int errors = 0;
-                         printf("[conv][diag] Port B q=0x%08" PRIx32
-                             " expected logical input=0x%08" PRIx32 "\n",
-                             portb_input_q, full_width_input);
-            if (portb_input_q != full_width_input) {
+            printf("[conv][diag] Port B q=0x%08" PRIx32
+                   " expected logical input=0x%08" PRIx32 "\n",
+                   portb_input_q, expected_portb_input);
+            if (portb_input_q != expected_portb_input) {
                 fprintf(stderr,
                         "[conv] Port B full-width/endian mismatch: got 0x%08" PRIx32
                         ", expected 0x%08" PRIx32 "\n",
-                        portb_input_q, full_width_input);
+                        portb_input_q, expected_portb_input);
                 errors++;
                 fprintf(stderr,
                         "[conv] Continuing diagnostics despite Port B mismatch.\n");
@@ -888,9 +931,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     printf("[conv] Readback OK: %u words in %u-byte-limited chunks\n",
            n_words, MSGDMA_MAX_TRANSFER_BYTES);
 
-    /* 8. Check the complete 32-bit convolution result. The only nonzero kernel
-     * tap is the final tap, so even output 0 reads input word 202 rather than
-     * the deferred/problematic RAM[0]. Every output should equal the full word. */
+    /* 8. Check all 32-bit convolution results against the software reference. */
     uint32_t *rx = malloc(n_bytes);
     if (!rx) {
         perror("malloc rx");
@@ -918,9 +959,12 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     uint32_t expected_outputs = 0;
     for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++) {
         uint32_t output = rx[RAM_OUTPUT_BASE + i];
-        if (output == RAM_OUTPUT_SENTINEL) {
+        int32_t expected_logical = expected_edge_q24_8(
+            input_pixels, i / CONV_OUTPUT_W, i % CONV_OUTPUT_W);
+        uint32_t expected_porta = byte_swap32((uint32_t)expected_logical);
+        if (output == byte_swap32(RAM_OUTPUT_SENTINEL)) {
             untouched_outputs++;
-        } else if (output == byte_swap32(full_width_input)) {
+        } else if (output == expected_porta) {
             expected_outputs++;
         } else {
             wrong_outputs++;
@@ -931,8 +975,8 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
            untouched_outputs, CONV_OUTPUT_H * CONV_OUTPUT_W,
            RAM_OUTPUT_SENTINEL);
     printf("[conv] Full-width output words: expected=%u wrong=%u "
-           "(Port A byte order expected=0x%08" PRIx32 ")\n",
-           expected_outputs, wrong_outputs, byte_swap32(full_width_input));
+            "(checked against CPU Laplacian reference)\n",
+            expected_outputs, wrong_outputs);
     if (expected_outputs != CONV_OUTPUT_H * CONV_OUTPUT_W ||
         untouched_outputs != 0 || wrong_outputs != 0)
         errors++;
@@ -947,7 +991,8 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
         CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH;
     /* RAM[0] is a known independent first-word issue; skip it here. */
     for (uint32_t i = 1; i < input_words; i++) {
-        const uint32_t expected_input = byte_swap32(full_width_input);
+        const uint32_t expected_input =
+            byte_swap32((uint32_t)input_pixels[i] << 8);
         if (rx[RAM_INPUT_BASE + i] != expected_input) {
             if (ram_errors < 8)
                 fprintf(stderr,
@@ -960,7 +1005,7 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
     }
     for (uint32_t i = 0; i < weight_words; i++) {
         const uint32_t expected_weight =
-            byte_swap32(i == weight_words - 1 ? Q24_8_ONE : Q24_8_ZERO);
+            byte_swap32((uint32_t)edge_kernel[i]);
         if (rx[RAM_WEIGHT_BASE + i] != expected_weight) {
             if (ram_errors < 8)
                 fprintf(stderr,
@@ -981,33 +1026,32 @@ static int test_full_ram(struct neurax_uio_ctx *ctx)
                weight_words);
     }
 
-    float expected_val = q24_8_to_float((int32_t)full_width_input);
     int check_positions[][2] = { {10, 10}, {50, 50}, {90, 90}, {1, 1}, {97, 97} };
     int num_checks = sizeof(check_positions) / sizeof(check_positions[0]);
-    printf("[conv] Checking full-width output value %.4f at selected positions:\n",
-           expected_val);
+    printf("[conv] Checking signed Laplacian outputs at selected positions:\n");
     for (int c = 0; c < num_checks; c++) {
         int oh = check_positions[c][0];
         int ow = check_positions[c][1];
         int out_idx = oh * CONV_OUTPUT_W + ow;
 
         uint32_t word = rx[RAM_OUTPUT_BASE + out_idx];
-        int32_t val = (int32_t)byte_swap32(word);
-        float fval = q24_8_to_float(val);
+        int32_t logical_value = (int32_t)byte_swap32(word);
+        int32_t expected_value = expected_edge_q24_8(input_pixels, oh, ow);
 
-        printf("    output[%d][%d] (idx=%d) = %.4f (logical=0x%08" PRIx32
-               ", Port A raw=0x%08" PRIx32 ", expected=%.4f)\n",
-               oh, ow, out_idx, fval, byte_swap32(word), word, expected_val);
+        printf("    output[%d][%d] (idx=%d) logical=%d raw=0x%08" PRIx32
+               " expected=%d\n",
+               oh, ow, out_idx, logical_value, word, expected_value);
 
-        if (byte_swap32(word) != full_width_input)
+        if (logical_value != expected_value)
             errors++;
     }
 
     printf("Input values:\n");
     for (size_t i = 1; i < 10; i++)
     {
-        printf("Read at %d: 0x%08x (expected Port A raw 0x%08x)\n",
-               (int)i, rx[i], byte_swap32(full_width_input));
+         printf("Read at %d: 0x%08x (expected Port A raw 0x%08x)\n",
+             (int)i, rx[i],
+             byte_swap32((uint32_t)input_pixels[i] << 8));
     }
     
     printf("Ouput values:\n");

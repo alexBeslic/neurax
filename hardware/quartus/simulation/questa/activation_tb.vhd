@@ -23,7 +23,7 @@ entity activation_tb is
         PIPELINE_STAGES : integer := 3;
         PARALLEL_UNITS  : integer := 4;
         ACT_TYPE_STR    : string := "RELU";    -- RELU | SIGMOID | TANH | LINEAR | LEAKY_RELU | ELU
-        ALPHA_RAW       : integer := 26;       -- ~0.1 in Q8.8, used by LEAKY_RELU/ELU
+        ALPHA_RAW       : integer := 26;       -- ~0.1 in signed Q24.8, used by LEAKY_RELU/ELU
         INPUT_FILE      : string := "input.txt";
         OUTPUT_FILE     : string := "output.txt";
         CLK_PERIOD      : time := 10 ns

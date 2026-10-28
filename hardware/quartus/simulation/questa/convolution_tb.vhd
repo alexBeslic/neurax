@@ -8,7 +8,7 @@
 -- recombines the filtered planes into the output image.
 --
 -- Input image plane, kernel weights and bias are read from plain text files
--- (one signed integer per line, Q8.8 fixed point). The filtered plane is
+-- (one signed integer per line, signed Q24.8 fixed point). The filtered plane is
 -- written back out the same way.
 
 library IEEE;

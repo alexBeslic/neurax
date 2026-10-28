@@ -9,7 +9,7 @@ use IEEE.NUMERIC_STD.ALL;
 -- Globalni paket za tipove i konstante
 package accel_types is
     -- Opšti parametri
-    constant DATA_WIDTH    : integer := 16;
+    constant DATA_WIDTH    : integer := 32;
     constant FRAC_WIDTH    : integer := 8;
     constant INT_WIDTH     : integer := DATA_WIDTH - FRAC_WIDTH;
 
@@ -72,14 +72,14 @@ entity FPGA_accelerator is
         INPUT_HEIGHT        : integer := 8;
         INPUT_WIDTH         : integer := 8;
         MAX_CHANNELS        : integer := 4;
-        PARALLEL_UNITS      : integer := 4;
+        PARALLEL_UNITS      : integer := 1;
         -- RAM layout base addresses (in 32-bit words)
         -- HPS streams data into these regions before starting an operation.
         -- Input:   0 .. WEIGHT_BASE-1
         -- Weights: WEIGHT_BASE .. BIAS_BASE-1
         -- Bias:    BIAS_BASE .. OUTPUT_BASE-1
         -- Output:  OUTPUT_BASE .. end
-        -- (One Q8.8 value per 32-bit word, in lower 16 bits)
+        -- (One signed Q24.8 value per 32-bit RAM word)
         INPUT_BASE_ADDR     : integer := 0;
         WEIGHT_BASE_ADDR    : integer := 10000;
         BIAS_BASE_ADDR      : integer := 13000;
@@ -126,7 +126,8 @@ entity FPGA_accelerator is
 
         -- Debug/monitoring
         debug_cycles : out std_logic_vector(31 downto 0);
-        debug_status : out std_logic_vector(7 downto 0)
+        debug_status : out std_logic_vector(7 downto 0);
+        debug_read_phase_o : out std_logic_vector(3 downto 0)
     );
 end FPGA_accelerator;
 
@@ -161,8 +162,7 @@ architecture behavioral of FPGA_accelerator is
             output_valid   : out std_logic;
             output_data    : out std_logic_vector(DATA_WIDTH-1 downto 0);
             output_addr    : out std_logic_vector(15 downto 0);
-            output_write_en: out std_logic;
-            kernel_done_o  : out std_logic
+            output_write_en: out std_logic
         );
     end component;
 
@@ -170,7 +170,7 @@ architecture behavioral of FPGA_accelerator is
         generic (
             INPUT_HEIGHT      : integer := 32;
             INPUT_WIDTH       : integer := 32;
-            PARALLEL_CHANNELS : integer := 4
+            PARALLEL_CHANNELS : integer := 1
         );
         port (
             clk              : in  std_logic;
@@ -198,7 +198,7 @@ architecture behavioral of FPGA_accelerator is
     component activation_block
         generic (
             PIPELINE_STAGES : integer := 3;
-            PARALLEL_UNITS  : integer := 4
+            PARALLEL_UNITS  : integer := 1
         );
         port (
             clk              : in  std_logic;
@@ -285,15 +285,31 @@ architecture behavioral of FPGA_accelerator is
     -- Sticky done flag: latched high when operation completes, cleared on new start
     signal done_latch : std_logic;
 
+    -- First Port B weight read address/data and output, exposed through
+    -- existing debug regs.
+    signal conv_debug_weight_valid   : std_logic;
+    signal conv_debug_weight_address : std_logic_vector(15 downto 0);
+    signal conv_debug_output_valid   : std_logic;
+    signal conv_debug_weight         : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal conv_debug_output         : std_logic_vector(DATA_WIDTH-1 downto 0);
+
     -- Convolution RAM read sequencer
     -- Conv needs input + weight + (optionally) bias per MAC iteration.
-    -- We time-multiplex the single read port across 3 phases.
-    type conv_read_phase_t is (PHASE_INPUT, PHASE_WEIGHT, PHASE_BIAS, PHASE_DONE);
-    signal conv_read_phase    : conv_read_phase_t;
-    signal conv_read_phase_d1 : conv_read_phase_t;
-    signal conv_data_ready    : std_logic;  -- pulses when all reads captured
-    signal conv_need_bias     : std_logic;
-    signal conv_kernel_done   : std_logic;  -- from convolution_block: last tap of window
+    -- Each value has a read phase and a capture phase on the shared RAM port.
+    type conv_read_phase_t is (
+        PHASE_INPUT, PHASE_INPUT_CAPTURE, PHASE_INPUT_SETTLE, PHASE_INPUT_SAMPLE,
+        PHASE_WEIGHT, PHASE_WEIGHT_CAPTURE, PHASE_WEIGHT_SETTLE, PHASE_WEIGHT_SAMPLE,
+        PHASE_BIAS, PHASE_BIAS_CAPTURE, PHASE_BIAS_SETTLE, PHASE_BIAS_SAMPLE,
+        PHASE_READY, PHASE_DONE
+    );
+    signal conv_read_phase  : conv_read_phase_t;
+    signal conv_data_ready  : std_logic;
+    signal conv_need_bias   : std_logic;
+
+    -- Preserve the sequencer state so SignalTap can correlate RAM address/data
+    -- with the exact read phase on hardware.
+    attribute keep : boolean;
+    attribute keep of conv_read_phase : signal is true;
 
     -- Registered RAM read data per conv channel
     signal conv_input_data_reg  : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -304,12 +320,8 @@ architecture behavioral of FPGA_accelerator is
     signal pool_read_pending : std_logic;
     signal act_read_pending  : std_logic;
 
-    -- 16-bit extract from 32-bit RAM word
-    signal ram_q_16 : std_logic_vector(DATA_WIDTH-1 downto 0);
-
+    -- Pooling and activation process one full-width RAM word per cycle.
 begin
-
-    ram_q_16 <= ram_q_i(DATA_WIDTH-1 downto 0);
 
     -- =========================================================================
     -- Configuration record setup
@@ -356,8 +368,7 @@ begin
             output_valid   => conv_output_valid,
             output_data    => conv_output_data,
             output_addr    => conv_output_addr,
-            output_write_en=> conv_output_write_en,
-            kernel_done_o  => conv_kernel_done
+            output_write_en=> conv_output_write_en
         );
 
     pool_inst: pooling_block
@@ -445,6 +456,38 @@ begin
         end if;
     end process;
 
+    process(clk, rst)
+    begin
+        if rst = '1' then
+            conv_debug_weight_valid   <= '0';
+            conv_debug_weight_address <= (others => '0');
+            conv_debug_output_valid   <= '0';
+            conv_debug_weight         <= (others => '0');
+            conv_debug_output         <= (others => '0');
+        elsif rising_edge(clk) then
+            if current_state = IDLE and enable = '1' and start_operation = '1' then
+                conv_debug_weight_valid <= '0';
+                conv_debug_output_valid   <= '0';
+            else
+                if current_state = CONV_OP and
+                   conv_read_phase = PHASE_WEIGHT_SAMPLE and
+                   conv_debug_weight_valid = '0' then
+                    conv_debug_weight_address <= std_logic_vector(
+                        unsigned(conv_weight_addr) +
+                        to_unsigned(WEIGHT_BASE_ADDR, 16));
+                    conv_debug_weight <= ram_q_i;
+                    conv_debug_weight_valid <= '1';
+                end if;
+
+                if current_state = CONV_OP and conv_output_write_en = '1' and
+                   conv_debug_output_valid = '0' then
+                    conv_debug_output       <= conv_output_data;
+                    conv_debug_output_valid <= '1';
+                end if;
+            end if;
+        end if;
+    end process;
+
     process(current_state, enable, start_operation, operation_select,
             conv_done, pool_done, act_done)
     begin
@@ -478,88 +521,64 @@ begin
     act_start  <= '1' when current_state = IDLE and next_state = ACT_OP  else '0';
 
     -- =========================================================================
-    -- Convolution RAM read sequencer
-    -- Cycles through PHASE_INPUT -> PHASE_WEIGHT -> (PHASE_BIAS) -> PHASE_DONE
-    -- Each phase presents an address; data arrives 1 clk later (captured in d1).
+    -- Hold each RAM address through an explicit capture phase. The M10K read
+    -- data is registered, so advancing the address on the capture edge can
+    -- otherwise make the sampled value depend on the RAM implementation.
     -- =========================================================================
     conv_need_bias <= conv_bias_read_en;
+    conv_data_ready <= '1' when conv_read_phase = PHASE_READY else '0';
+    debug_read_phase_o <= std_logic_vector(to_unsigned(
+        conv_read_phase_t'pos(conv_read_phase), debug_read_phase_o'length));
 
     process(clk, rst)
     begin
         if rst = '1' then
-            conv_read_phase    <= PHASE_DONE;
-            conv_read_phase_d1 <= PHASE_DONE;
+            conv_read_phase       <= PHASE_DONE;
+            conv_input_data_reg   <= (others => '0');
+            conv_weight_data_reg  <= (others => '0');
+            conv_bias_data_reg    <= (others => '0');
         elsif rising_edge(clk) then
-            conv_read_phase_d1 <= conv_read_phase;
-
-            if current_state = CONV_OP then
+            if current_state /= CONV_OP or conv_input_read_en = '0' then
+                conv_read_phase <= PHASE_DONE;
+            else
                 case conv_read_phase is
                     when PHASE_DONE =>
-                        -- Start a new read cycle when the conv block is requesting,
-                        -- but NOT if the kernel window is already complete
-                        -- (conv_kernel_done='1'). input_read_en/weight_read_en are
-                        -- LEVEL signals held throughout CONV_COMPUTE, so without this
-                        -- guard the sequencer dispatches one extra "phantom" fetch
-                        -- right after the window's final tap, reusing stale
-                        -- (not-yet-reset) addresses. That phantom fetch's RAM read
-                        -- collides with the WRITE_OUTPUT write on the shared single
-                        -- Avalon-MM address bus, corrupting the next position's
-                        -- first tap with the echoed write data.
-                        --
-                        -- This is NOT off-by-one: conv_kernel_done is combinational
-                        -- from registered kh/kw/in_ch counters, which only reach
-                        -- their max value once the window's final tap has been
-                        -- ACCEPTED. At the dispatch decision for that final tap
-                        -- itself, the counters (and hence conv_kernel_done) still
-                        -- read '0', so the legitimate fetch is not blocked -- only
-                        -- the following (phantom) dispatch decision sees '1'.
-                        if conv_input_read_en = '1' and conv_kernel_done = '0' then
-                            conv_read_phase <= PHASE_INPUT;
-                        end if;
+                        conv_read_phase <= PHASE_INPUT;
                     when PHASE_INPUT =>
+                        conv_read_phase <= PHASE_INPUT_CAPTURE;
+                    when PHASE_INPUT_CAPTURE =>
+                        conv_read_phase <= PHASE_INPUT_SETTLE;
+                    when PHASE_INPUT_SETTLE =>
+                        conv_read_phase <= PHASE_INPUT_SAMPLE;
+                    when PHASE_INPUT_SAMPLE =>
+                        conv_input_data_reg <= ram_q_i;
                         conv_read_phase <= PHASE_WEIGHT;
                     when PHASE_WEIGHT =>
+                        conv_read_phase <= PHASE_WEIGHT_CAPTURE;
+                    when PHASE_WEIGHT_CAPTURE =>
+                        conv_read_phase <= PHASE_WEIGHT_SETTLE;
+                    when PHASE_WEIGHT_SETTLE =>
+                        conv_read_phase <= PHASE_WEIGHT_SAMPLE;
+                    when PHASE_WEIGHT_SAMPLE =>
+                        conv_weight_data_reg <= ram_q_i;
                         if conv_need_bias = '1' then
                             conv_read_phase <= PHASE_BIAS;
                         else
-                            conv_read_phase <= PHASE_DONE;
+                            conv_read_phase <= PHASE_READY;
                         end if;
                     when PHASE_BIAS =>
+                        conv_read_phase <= PHASE_BIAS_CAPTURE;
+                    when PHASE_BIAS_CAPTURE =>
+                        conv_read_phase <= PHASE_BIAS_SETTLE;
+                    when PHASE_BIAS_SETTLE =>
+                        conv_read_phase <= PHASE_BIAS_SAMPLE;
+                    when PHASE_BIAS_SAMPLE =>
+                        conv_bias_data_reg <= ram_q_i;
+                        conv_read_phase <= PHASE_READY;
+                    when PHASE_READY =>
                         conv_read_phase <= PHASE_DONE;
                 end case;
-            else
-                conv_read_phase    <= PHASE_DONE;
-                conv_read_phase_d1 <= PHASE_DONE;
             end if;
-        end if;
-    end process;
-
-    -- Capture returned RAM data into the correct register (delayed by 1 clk)
-    process(clk, rst)
-    begin
-        if rst = '1' then
-            conv_input_data_reg  <= (others => '0');
-            conv_weight_data_reg <= (others => '0');
-            conv_bias_data_reg   <= (others => '0');
-            conv_data_ready      <= '0';
-        elsif rising_edge(clk) then
-            conv_data_ready <= '0';
-
-            case conv_read_phase_d1 is
-                when PHASE_INPUT =>
-                    conv_input_data_reg <= ram_q_16;
-                when PHASE_WEIGHT =>
-                    conv_weight_data_reg <= ram_q_16;
-                    -- If no bias was needed, data is ready now
-                    if conv_read_phase = PHASE_DONE then
-                        conv_data_ready <= '1';
-                    end if;
-                when PHASE_BIAS =>
-                    conv_bias_data_reg <= ram_q_16;
-                    conv_data_ready <= '1';
-                when PHASE_DONE =>
-                    null;
-            end case;
         end if;
     end process;
 
@@ -592,13 +611,7 @@ begin
 
             if pool_read_pending = '1' then
                 pool_input_valid <= '1';
-                pool_input_data(0) <= ram_q_i(DATA_WIDTH-1 downto 0);
-                if PARALLEL_UNITS > 1 then
-                    pool_input_data(1) <= ram_q_i(2*DATA_WIDTH-1 downto DATA_WIDTH);
-                end if;
-                for i in 2 to PARALLEL_UNITS-1 loop
-                    pool_input_data(i) <= (others => '0');
-                end loop;
+                pool_input_data(0) <= ram_q_i;
             end if;
         end if;
     end process;
@@ -624,13 +637,7 @@ begin
 
             if act_read_pending = '1' then
                 act_input_valid <= '1';
-                act_input_data(0) <= ram_q_i(DATA_WIDTH-1 downto 0);
-                if PARALLEL_UNITS > 1 then
-                    act_input_data(1) <= ram_q_i(2*DATA_WIDTH-1 downto DATA_WIDTH);
-                end if;
-                for i in 2 to PARALLEL_UNITS-1 loop
-                    act_input_data(i) <= (others => '0');
-                end loop;
+                act_input_data(0) <= ram_q_i;
             end if;
         end if;
     end process;
@@ -658,13 +665,16 @@ begin
             when CONV_OP =>
                 -- Read address mux based on sequencer phase
                 case conv_read_phase is
-                    when PHASE_INPUT =>
+                    when PHASE_INPUT | PHASE_INPUT_CAPTURE |
+                         PHASE_INPUT_SETTLE | PHASE_INPUT_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
                             unsigned(conv_input_addr) + to_unsigned(INPUT_BASE_ADDR, 16));
-                    when PHASE_WEIGHT =>
+                    when PHASE_WEIGHT | PHASE_WEIGHT_CAPTURE |
+                         PHASE_WEIGHT_SETTLE | PHASE_WEIGHT_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
                             unsigned(conv_weight_addr) + to_unsigned(WEIGHT_BASE_ADDR, 16));
-                    when PHASE_BIAS =>
+                    when PHASE_BIAS | PHASE_BIAS_CAPTURE |
+                         PHASE_BIAS_SETTLE | PHASE_BIAS_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
                             resize(unsigned(conv_bias_addr), 16) + to_unsigned(BIAS_BASE_ADDR, 16));
                     when others =>
@@ -676,8 +686,7 @@ begin
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
                         unsigned(conv_output_addr) + to_unsigned(OUTPUT_BASE_ADDR, 16));
-                    ram_data_o(DATA_WIDTH-1 downto 0)  <= conv_output_data;
-                    ram_data_o(31 downto DATA_WIDTH)    <= (others => '0');
+                    ram_data_o <= conv_output_data;
                 end if;
 
             -- =============================================================
@@ -691,10 +700,7 @@ begin
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
                         resize(unsigned(pool_output_addr), 16) + to_unsigned(OUTPUT_BASE_ADDR, 16));
-                    ram_data_o(DATA_WIDTH-1 downto 0) <= pool_output_data(0);
-                    if PARALLEL_UNITS > 1 then
-                        ram_data_o(2*DATA_WIDTH-1 downto DATA_WIDTH) <= pool_output_data(1);
-                    end if;
+                    ram_data_o <= pool_output_data(0);
                 end if;
 
             -- =============================================================
@@ -708,10 +714,7 @@ begin
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
                         unsigned(act_output_addr) + to_unsigned(OUTPUT_BASE_ADDR, 16));
-                    ram_data_o(DATA_WIDTH-1 downto 0) <= act_output_data(0);
-                    if PARALLEL_UNITS > 1 then
-                        ram_data_o(2*DATA_WIDTH-1 downto DATA_WIDTH) <= act_output_data(1);
-                    end if;
+                    ram_data_o <= act_output_data(0);
                 end if;
 
             -- =============================================================
@@ -730,7 +733,13 @@ begin
     operation_busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
     current_operation <= selected_operation;
 
-    debug_cycles <= std_logic_vector(cycle_counter);
-    debug_status <= "000000" & selected_operation;
+    -- After completion, expose the full 32-bit first Port B weight word,
+    -- first output MSB, and an RTL revision tag without changing the register map.
+    debug_cycles <= conv_debug_weight
+                    when done_latch = '1'
+                    else std_logic_vector(cycle_counter);
+    debug_status <= conv_debug_weight_valid & conv_debug_output(31) & "110001"
+                    when done_latch = '1' and conv_debug_output_valid = '1'
+                    else "000000" & selected_operation;
 
 end behavioral;
