@@ -3,9 +3,9 @@
 
 # Object files
 *.o
-*.ko
 *.obj
 *.elf
+
 
 # Linker output
 *.ilk
@@ -53,3 +53,15 @@ dkms.conf
 
 # debug information files
 *.dwo
+*db/*
+
+# build directories
+*/CMakeFiles/*
+*/build/*
+
+# toolchain files
+toolchain/*
+!toolchain/README.md
+!toolchain/setup_tools.sh
+
+*.img

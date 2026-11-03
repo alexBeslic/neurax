@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preferences>
+ <debug showDebugMenu="0" />
+ <systemtable filter="All Interfaces">
+  <columns>
+   <connections preferredWidth="207" />
+   <irq preferredWidth="47" />
+   <name preferredWidth="204" />
+  </columns>
+ </systemtable>
+ <library expandedCategories="Library,Project,Project/Neurax" />
+ <window width="1578" height="1066" x="291" y="-34" />
+ <generation
+   synthesis="VHDL"
+   path="_PROJECT_NAME_/"
+   simulation="NONE"
+   testbench_simulation="VHDL"
+   block_symbol_file="1" />
+ <hdlexample language="VHDL" />
+</preferences>

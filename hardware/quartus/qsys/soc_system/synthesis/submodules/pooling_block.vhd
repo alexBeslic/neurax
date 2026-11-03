@@ -1,0 +1,387 @@
+-- Package za definiranje pooling operacija
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use work.accel_types.all;
+entity pooling_block is
+    generic (
+        INPUT_HEIGHT : integer := 32;
+        INPUT_WIDTH : integer := 32;
+        PARALLEL_CHANNELS : integer := 4  -- Broj kanala koji se procesiraju paralelno
+    );
+    port (
+        clk : in std_logic;
+        rst : in std_logic;
+        
+        -- Control signals
+        start : in std_logic;
+        done : out std_logic;
+        ready : out std_logic;
+        busy : out std_logic;
+        
+        -- Configuration
+        config : in pooling_config_t;
+        batch_size : in integer range 1 to MAX_BATCH_SIZE;
+        
+        -- Input data interface
+        input_valid : in std_logic;
+        input_data : in data_array_1d(0 to PARALLEL_CHANNELS-1);
+        input_addr : out std_logic_vector(17 downto 0);  -- Veća adresa za 4D tensor
+        input_read_en : out std_logic;
+        
+        -- Output data interface
+        output_valid : out std_logic;
+        output_data : out data_array_1d(0 to PARALLEL_CHANNELS-1);
+        output_addr : out std_logic_vector(17 downto 0);
+        output_write_en : out std_logic
+    );
+end pooling_block;
+
+architecture behavioral of pooling_block is
+    
+    -- State machine
+    type state_t is (IDLE, SETUP_DIMS, POOL_COMPUTE, WRITE_OUTPUT, DONE_ST);
+    signal current_state, next_state : state_t;
+    
+    -- Calculated dimensions
+    signal output_height : integer range 0 to MAX_HEIGHT;
+    signal output_width : integer range 0 to MAX_WIDTH;
+    
+    -- Counters
+    signal batch_cnt : integer range 0 to MAX_BATCH_SIZE-1;
+    signal channel_cnt : integer range 0 to MAX_CHANNELS-1;
+    signal out_h_cnt : integer range 0 to MAX_HEIGHT-1;
+    signal out_w_cnt : integer range 0 to MAX_WIDTH-1;
+    signal pool_h_cnt : integer range 0 to MAX_POOL_SIZE-1;
+    signal pool_w_cnt : integer range 0 to MAX_POOL_SIZE-1;
+    
+    -- Pooling accumulatori za paralelne kanale
+    type pool_accumulator_t is record
+        value : signed(DATA_WIDTH+6-1 downto 0);
+        count : integer range 0 to MAX_POOL_SIZE*MAX_POOL_SIZE;
+        initialized : std_logic;
+    end record;
+    
+    type pool_acc_array_t is array (0 to PARALLEL_CHANNELS-1) of pool_accumulator_t;
+    signal pool_accumulators : pool_acc_array_t;
+    
+    -- Buffer za window podatke
+    type window_buffer_t is array (0 to MAX_POOL_SIZE-1, 0 to MAX_POOL_SIZE-1) of data_array_1d(0 to PARALLEL_CHANNELS-1);
+    signal window_buffer : window_buffer_t;
+    signal window_valid : std_logic_vector(0 to MAX_POOL_SIZE*MAX_POOL_SIZE-1);
+    
+    -- Control signali
+    signal pool_operation_active : std_logic;
+    signal window_complete : std_logic;
+    signal output_valid_driver : std_logic;
+    
+    -- Helper funkcije
+    function calculate_output_dim(input_dim, pool_size, stride : integer) return integer is
+    begin
+        return (input_dim - pool_size) / stride + 1;
+    end function;
+    
+    function max_of_two(a, b : signed) return signed is
+    begin
+        if a > b then
+            return a;
+        else
+            return b;
+        end if;
+    end function;
+    
+    function min_of_two(a, b : signed) return signed is
+    begin
+        if a < b then
+            return a;
+        else
+            return b;
+        end if;
+    end function;
+
+    function saturate_data(value : signed) return std_logic_vector is
+        constant MAX_DATA : signed(value'length-1 downto 0) := to_signed(2147483647, value'length);
+        constant MIN_DATA : signed(value'length-1 downto 0) :=
+            shift_left(to_signed(-1, value'length), DATA_WIDTH-1);
+    begin
+        if value > MAX_DATA then
+            return x"7FFFFFFF";
+        elsif value < MIN_DATA then
+            return x"80000000";
+        end if;
+        return std_logic_vector(resize(value, DATA_WIDTH));
+    end function;
+
+begin
+    
+    -- Izračunaj output dimenzije
+    output_height <= calculate_output_dim(INPUT_HEIGHT, config.pool_size, config.stride);
+    output_width <= calculate_output_dim(INPUT_WIDTH, config.pool_size, config.stride);
+    
+    -- Main state machine
+    process(clk, rst)
+    begin
+        if rst = '1' then
+            current_state <= IDLE;
+            batch_cnt <= 0;
+            channel_cnt <= 0;
+            out_h_cnt <= 0;
+            out_w_cnt <= 0;
+            pool_h_cnt <= 0;
+            pool_w_cnt <= 0;
+            
+            -- Reset pool accumulators
+            for i in 0 to PARALLEL_CHANNELS-1 loop
+                pool_accumulators(i).value <= (others => '0');
+                pool_accumulators(i).count <= 0;
+                pool_accumulators(i).initialized <= '0';
+            end loop;
+            
+            -- Reset window buffer
+            for h in 0 to MAX_POOL_SIZE-1 loop
+                for w in 0 to MAX_POOL_SIZE-1 loop
+                    for c in 0 to PARALLEL_CHANNELS-1 loop
+                        window_buffer(h, w)(c) <= (others => '0');
+                    end loop;
+                end loop;
+            end loop;
+            
+            window_valid <= (others => '0');
+            
+        elsif rising_edge(clk) then
+            current_state <= next_state;
+            
+            case current_state is
+                when IDLE =>
+                    batch_cnt <= 0;
+                    channel_cnt <= 0;
+                    out_h_cnt <= 0;
+                    out_w_cnt <= 0;
+                    pool_h_cnt <= 0;
+                    pool_w_cnt <= 0;
+                    
+                    for i in 0 to PARALLEL_CHANNELS-1 loop
+                        pool_accumulators(i).value <= (others => '0');
+                        pool_accumulators(i).count <= 0;
+                        pool_accumulators(i).initialized <= '0';
+                    end loop;
+                    
+                when SETUP_DIMS =>
+                    -- Pripremi za pooling operaciju
+                    for i in 0 to PARALLEL_CHANNELS-1 loop
+                        pool_accumulators(i).value <= (others => '0');
+                        pool_accumulators(i).count <= 0;
+                        pool_accumulators(i).initialized <= '0';
+                    end loop;
+                    
+                when POOL_COMPUTE =>
+                    if input_valid = '1' and pool_operation_active = '1' then
+                        -- Load data into window buffer
+                        for c in 0 to PARALLEL_CHANNELS-1 loop
+                            window_buffer(pool_h_cnt, pool_w_cnt)(c) <= input_data(c);
+                        end loop;
+                        
+                        -- Process pooling za svaki kanal
+                        for c in 0 to PARALLEL_CHANNELS-1 loop
+                            case config.pool_type is
+                                when MAX_POOL =>
+                                    if pool_accumulators(c).initialized = '0' then
+                                        pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
+                                        pool_accumulators(c).initialized <= '1';
+                                    else
+                                        if resize(signed(input_data(c)), DATA_WIDTH+6) > pool_accumulators(c).value then
+                                            pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
+                                        end if;
+                                    end if;
+                                    
+                                when MIN_POOL =>
+                                    if pool_accumulators(c).initialized = '0' then
+                                        pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
+                                        pool_accumulators(c).initialized <= '1';
+                                    else
+                                        if resize(signed(input_data(c)), DATA_WIDTH+6) < pool_accumulators(c).value then
+                                            pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
+                                        end if;
+                                    end if;
+                                    
+                                when AVERAGE_POOL | SUM_POOL =>
+                                    pool_accumulators(c).value <= pool_accumulators(c).value + resize(signed(input_data(c)), DATA_WIDTH+6);
+                                    
+                                when others =>
+                                    pool_accumulators(c).value <= resize(signed(input_data(c)), DATA_WIDTH+6);
+                            end case;
+                            
+                            pool_accumulators(c).count <= pool_accumulators(c).count + 1;
+                        end loop;
+                        
+                        -- Increment pool window counters
+                        if pool_w_cnt < config.pool_size - 1 then
+                            pool_w_cnt <= pool_w_cnt + 1;
+                        elsif pool_h_cnt < config.pool_size - 1 then
+                            pool_w_cnt <= 0;
+                            pool_h_cnt <= pool_h_cnt + 1;
+                        else
+                            -- Window complete, move to next output position
+                            pool_w_cnt <= 0;
+                            pool_h_cnt <= 0;
+                            
+                            -- The output is formed combinationally from the accumulator
+                            -- and this final input sample; clear state for the next window.
+                            for c in 0 to PARALLEL_CHANNELS-1 loop
+                                pool_accumulators(c).value <= (others => '0');
+                                pool_accumulators(c).count <= 0;
+                                pool_accumulators(c).initialized <= '0';
+                            end loop;
+                            
+                            -- Move to next output position
+                            if out_w_cnt < output_width - 1 then
+                                out_w_cnt <= out_w_cnt + 1;
+                            elsif out_h_cnt < output_height - 1 then
+                                out_w_cnt <= 0;
+                                out_h_cnt <= out_h_cnt + 1;
+                            elsif channel_cnt + PARALLEL_CHANNELS < config.channels then
+                                out_w_cnt <= 0;
+                                out_h_cnt <= 0;
+                                channel_cnt <= channel_cnt + PARALLEL_CHANNELS;
+                            elsif batch_cnt < batch_size - 1 then
+                                out_w_cnt <= 0;
+                                out_h_cnt <= 0;
+                                channel_cnt <= 0;
+                                batch_cnt <= batch_cnt + 1;
+                            end if;
+                        end if;
+                    end if;
+                    
+                when WRITE_OUTPUT =>
+                    -- Output results
+                    null;
+                    
+                when DONE_ST =>
+                    null;
+            end case;
+        end if;
+    end process;
+    
+    -- Next state logic
+    process(current_state, start, batch_cnt, channel_cnt, out_h_cnt, out_w_cnt,
+            pool_h_cnt, pool_w_cnt, batch_size, config, output_height, output_width)
+    begin
+        next_state <= current_state;
+        
+        case current_state is
+            when IDLE =>
+                if start = '1' then
+                    next_state <= SETUP_DIMS;
+                end if;
+                
+            when SETUP_DIMS =>
+                next_state <= POOL_COMPUTE;
+                
+            when POOL_COMPUTE =>
+                if batch_cnt = batch_size - 1 and
+                   channel_cnt + PARALLEL_CHANNELS >= config.channels and
+                   out_h_cnt = output_height - 1 and
+                   out_w_cnt = output_width - 1 and
+                   pool_h_cnt = config.pool_size - 1 and
+                   pool_w_cnt = config.pool_size - 1 then
+                    next_state <= WRITE_OUTPUT;
+                end if;
+                
+            when WRITE_OUTPUT =>
+                next_state <= DONE_ST;
+                
+            when DONE_ST =>
+                next_state <= IDLE;
+                
+            when others =>
+                next_state <= IDLE;
+        end case;
+    end process;
+    
+    -- Input address generation
+    input_address_gen: process(batch_cnt, out_h_cnt, out_w_cnt, pool_h_cnt, pool_w_cnt, 
+            channel_cnt, config)
+        variable in_h, in_w : integer;
+        variable base_addr : integer;
+    begin
+        in_h := out_h_cnt * config.stride + pool_h_cnt;
+        in_w := out_w_cnt * config.stride + pool_w_cnt;
+        
+        -- 4D tensor indexing: [batch][height][width][channel]
+        base_addr := ((batch_cnt * INPUT_HEIGHT + in_h) * INPUT_WIDTH + in_w) * 
+                    config.channels + channel_cnt;
+        
+        input_addr <= std_logic_vector(to_unsigned(base_addr, 18));
+    end process;
+    
+    -- Output address generation
+    output_address_gen: process(batch_cnt, out_h_cnt, out_w_cnt, channel_cnt, config, output_height, output_width)
+        variable out_addr : integer;
+    begin
+        out_addr := ((batch_cnt * output_height + out_h_cnt) * output_width + out_w_cnt) * 
+                   config.channels + channel_cnt;
+        
+        output_addr <= std_logic_vector(to_unsigned(out_addr, 18));
+    end process;
+    
+    -- Present the complete result, including the sample currently completing the window.
+    output_data_gen: process(current_state, window_complete, input_valid,
+                             input_data, pool_accumulators, config)
+        variable result_value : signed(DATA_WIDTH+6-1 downto 0);
+        variable input_value  : signed(DATA_WIDTH-1 downto 0);
+        variable total_value  : signed(DATA_WIDTH+6-1 downto 0);
+    begin
+        for c in 0 to PARALLEL_CHANNELS-1 loop
+            output_data(c) <= (others => '0');
+            if current_state = POOL_COMPUTE and window_complete = '1' and input_valid = '1' then
+                input_value := signed(input_data(c));
+                case config.pool_type is
+                    when MAX_POOL =>
+                        if pool_accumulators(c).initialized = '0' or
+                           resize(input_value, DATA_WIDTH+6) > pool_accumulators(c).value then
+                            result_value := resize(input_value, DATA_WIDTH+6);
+                        else
+                            result_value := pool_accumulators(c).value;
+                        end if;
+                    when MIN_POOL =>
+                        if pool_accumulators(c).initialized = '0' or
+                           resize(input_value, DATA_WIDTH+6) < pool_accumulators(c).value then
+                            result_value := resize(input_value, DATA_WIDTH+6);
+                        else
+                            result_value := pool_accumulators(c).value;
+                        end if;
+                    when SUM_POOL =>
+                        result_value := pool_accumulators(c).value + resize(input_value, DATA_WIDTH+6);
+                    when AVERAGE_POOL =>
+                        total_value := pool_accumulators(c).value + resize(input_value, DATA_WIDTH+6);
+                        result_value := total_value / to_signed(pool_accumulators(c).count + 1, DATA_WIDTH+6);
+                    when others =>
+                        result_value := resize(input_value, DATA_WIDTH+6);
+                end case;
+                    output_data(c) <= saturate_data(result_value);
+            end if;
+        end loop;
+    end process;
+    
+    -- Control signals
+    pool_operation_active <= '1' when current_state = POOL_COMPUTE else '0';
+    window_complete <= '1' when pool_h_cnt = config.pool_size - 1 and 
+                              pool_w_cnt = config.pool_size - 1 else '0';
+    
+    input_read_en <= pool_operation_active;
+    
+    output_valid_driver <= '1' when current_state = POOL_COMPUTE and
+                            window_complete = '1' and input_valid = '1' else '0';
+    
+    output_write_en <= output_valid_driver;
+    output_valid <= output_valid_driver;
+
+    -- Status signals
+    ready <= '1' when current_state = IDLE else '0';
+    busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
+    done <= '1' when current_state = DONE_ST else '0';
+    
+end behavioral;
