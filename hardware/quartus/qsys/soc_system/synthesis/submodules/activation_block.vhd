@@ -49,6 +49,7 @@ architecture behavioral of activation_block is
         valid : std_logic;
         data : std_logic_vector(DATA_WIDTH-1 downto 0);
         activation_sel : activation_type_t;
+        address : std_logic_vector(15 downto 0);
     end record;
     
     type pipeline_array_t is array (0 to PIPELINE_STAGES-1) of pipeline_stage_t;
@@ -58,6 +59,7 @@ architecture behavioral of activation_block is
     
     -- Counters
     signal element_counter : integer range 0 to MAX_TENSOR_SIZE := 0;
+    signal request_counter : integer range 0 to MAX_TENSOR_SIZE := 0;
     signal lut_init_counter : integer range 0 to 256;
     
     -- LUT memories za aproksimacije
@@ -83,11 +85,6 @@ architecture behavioral of activation_block is
             int_val := integer(real_val * real(2**FRAC_WIDTH));
         end if;
         return std_logic_vector(to_signed(int_val, DATA_WIDTH));
-    end function;
-    
-    function from_fixed(fixed_val : std_logic_vector) return real is
-    begin
-        return real(to_integer(signed(fixed_val))) / real(2**FRAC_WIDTH);
     end function;
     
     function apply_relu(input_val : std_logic_vector) return std_logic_vector is
@@ -122,8 +119,6 @@ architecture behavioral of activation_block is
         return lut_mem(addr);
     end function;
     -- ---------------------------------------------------------------------------
-	 signal out_addr_int : integer range 0 to 65535;
-
 begin
 
     ---------------------------------------------------------------------------
@@ -140,6 +135,7 @@ begin
         if rst = '1' then
             current_state <= IDLE;
             element_counter <= 0;
+            request_counter <= 0;
             lut_init_counter <= 0;
             lut_initialized <= '0';
             
@@ -149,6 +145,7 @@ begin
                     pipeline(i)(j).valid <= '0';
                     pipeline(i)(j).data <= (others => '0');
                     pipeline(i)(j).activation_sel <= RELU;
+                    pipeline(i)(j).address <= (others => '0');
                 end loop;
             end loop;
             
@@ -158,6 +155,7 @@ begin
             case current_state is
                 when IDLE =>
                     element_counter <= 0;
+                    request_counter <= 0;
                     lut_init_counter <= 0;
                     
                 -- INIT_LUT: LUT inicijalizacija (sintetizabilno)
@@ -214,16 +212,29 @@ begin
                                 pipeline(i)(0).valid <= '1';
                                 pipeline(i)(0).data <= input_data(i);
                                 pipeline(i)(0).activation_sel <= activation_type;
+                                pipeline(i)(0).address <= std_logic_vector(
+                                    to_unsigned(element_counter + i, 16));
                             else
                                 pipeline(i)(0).valid <= '0';
                             end if;
                         end loop;
                         
-                        -- Increment counter
-                        if element_counter + PARALLEL_UNITS < tensor_size then
-                            element_counter <= element_counter + PARALLEL_UNITS;
-                        else
-                            element_counter <= tensor_size;
+                        -- Requests and returned data are counted separately:
+                        -- the RAM response arrives after the address request.
+                        if request_counter < tensor_size then
+                            if request_counter + PARALLEL_UNITS < tensor_size then
+                                request_counter <= request_counter + PARALLEL_UNITS;
+                            else
+                                request_counter <= tensor_size;
+                            end if;
+                        end if;
+
+                        if input_valid = '1' then
+                            if element_counter + PARALLEL_UNITS < tensor_size then
+                                element_counter <= element_counter + PARALLEL_UNITS;
+                            else
+                                element_counter <= tensor_size;
+                            end if;
                         end if;
                     end if;
                     
@@ -284,26 +295,20 @@ begin
     end process;
     
     ---------------------------------------------------------------------------
-    -- Pipeline processing logic (izvršava aktivaciju na izlazu pipeline-a)
-    -- Ovaj proces je sequential i deklaracije variable su ovde (pre begin)
+    -- Apply the activation to the valid data at the final pipeline stage.
     ---------------------------------------------------------------------------
-    process(clk)
-        -- variables for per-iteration computation
+    process(pipeline, alpha, sigmoid_lut, tanh_lut, exp_lut)
         variable in_val        : std_logic_vector(DATA_WIDTH-1 downto 0);
         variable out_val       : std_logic_vector(DATA_WIDTH-1 downto 0);
         variable act_sel       : activation_type_t;
         variable mult_result   : signed(63 downto 0);
         variable elu_result    : signed(DATA_WIDTH-1 downto 0);
         variable exp_val_vec   : std_logic_vector(DATA_WIDTH-1 downto 0);
-        variable i_var         : integer;
-        variable j_var         : integer;
     begin
-        if rising_edge(clk) then
-            -- Po defaultu postavi izlaze na 0 (ako nema valid)
-            for i_var in 0 to PARALLEL_UNITS-1 loop
-                if pipeline(i_var)(PIPELINE_STAGES-1).valid = '1' then
-                    in_val := pipeline(i_var)(PIPELINE_STAGES-1).data;
-                    act_sel := pipeline(i_var)(PIPELINE_STAGES-1).activation_sel;
+        for i_var in 0 to PARALLEL_UNITS-1 loop
+            if pipeline(i_var)(PIPELINE_STAGES-1).valid = '1' then
+                in_val := pipeline(i_var)(PIPELINE_STAGES-1).data;
+                act_sel := pipeline(i_var)(PIPELINE_STAGES-1).activation_sel;
                     
                     case act_sel is
                         when RELU =>
@@ -337,42 +342,30 @@ begin
                             out_val := in_val;
                     end case;
                     
-                    output_data(i_var) <= out_val;
-                else
-                    output_data(i_var) <= (others => '0');
-                end if;
-            end loop;
-        end if;
+                output_data(i_var) <= out_val;
+            else
+                output_data(i_var) <= (others => '0');
+            end if;
+        end loop;
     end process;
     
     ---------------------------------------------------------------------------
     -- Address generation (simple mapping)
     ---------------------------------------------------------------------------
-    input_addr <= std_logic_vector(to_unsigned(element_counter, 16));
-    -- Proces za izračunavanje output address
-	 process(element_counter)
-		begin
-			 if element_counter >= PIPELINE_STAGES then
-				  out_addr_int <= element_counter - PIPELINE_STAGES;
-			 else
-				  out_addr_int <= 0;
-			 end if;
-	 end process;
-
-	 -- Pretvaranje u std_logic_vector
-	 output_addr <= std_logic_vector(to_unsigned(out_addr_int, 16));
+    input_addr <= std_logic_vector(to_unsigned(request_counter, 16));
+    output_addr <= pipeline(0)(PIPELINE_STAGES-1).address;
     ---------------------------------------------------------------------------
     -- Control signals and simple glue logic
     ---------------------------------------------------------------------------
     pipeline_enable <= '1' when current_state = PROCESSING else '0';
     processing_active <= '1' when current_state = PROCESSING or current_state = PIPELINE_FLUSH else '0';
     
-    input_read_en <= pipeline_enable;
+    input_read_en <= '1' when pipeline_enable = '1' and
+                              request_counter < tensor_size else '0';
     
     -- output_valid_driver: '1' ako bilo koja paralelna ćelija u poslednjem stage-u ima valid
     process(pipeline)
         variable any_valid : std_logic := '0';
-        variable idx : integer;
     begin
         any_valid := '0';
         for idx in 0 to PARALLEL_UNITS-1 loop
