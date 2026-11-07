@@ -554,7 +554,7 @@ set_instance_parameter_value hps_0 {usb_mp_clk_div} {0}
 set_instance_parameter_value hps_0 {use_default_mpu_clk} {1}
 
 add_instance neurax_avalon_accelerator_0 neurax_avalon_accelerator 1.0
-set_instance_parameter_value neurax_avalon_accelerator_0 {PARALLEL_UNITS} {4}
+set_instance_parameter_value neurax_avalon_accelerator_0 {PARALLEL_UNITS} {1}
 set_instance_parameter_value neurax_avalon_accelerator_0 {g_ADDR_WIDTH} {4}
 set_instance_parameter_value neurax_avalon_accelerator_0 {g_FB_HEIGHT} {100}
 set_instance_parameter_value neurax_avalon_accelerator_0 {g_FB_WIDTH} {100}

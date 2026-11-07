@@ -3,7 +3,7 @@
 # Targets:
 #   all        build kernel module AND userspace test
 #   module     build neurax_uio.ko (cross-compiled for ARM)
-#   userspace  build the convolution and activation tests (ARM Linux)
+#   userspace  build the convolution, activation, and pooling tests (ARM Linux)
 #   install    copy outputs to NFS root for deployment
 #   clean
 #
@@ -30,13 +30,16 @@ module:
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) \
 		-C $(KERNEL_SRC) M=$(PWD) modules
 
-userspace: neurax_uio_test_conv neurax_uio_test_activation
+userspace: neurax_uio_test_conv neurax_uio_test_activation neurax_uio_test_pooling
 
 neurax_uio_test_conv: neurax_uio_test_conv.c msgdma_uio.h
 	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_conv.c 
 
 neurax_uio_test_activation: neurax_uio_test_activation.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h
 	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_activation.c
+
+neurax_uio_test_pooling: neurax_uio_test_pooling.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h
+	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_pooling.c
 
 UIO_KO := $(KERNEL_SRC)/drivers/uio/uio.ko
 
@@ -45,8 +48,9 @@ install: module userspace
 	cp neurax_uio.ko    $(NFS_ROOT)/
 	cp neurax_uio_test_conv  $(NFS_ROOT)/
 	cp neurax_uio_test_activation  $(NFS_ROOT)/
+	cp neurax_uio_test_pooling  $(NFS_ROOT)/
 
 clean:
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) \
 		-C $(KERNEL_SRC) M=$(PWD) clean
-	rm -f neurax_uio_test_conv neurax_uio_test_activation
+	rm -f neurax_uio_test_conv neurax_uio_test_activation neurax_uio_test_pooling

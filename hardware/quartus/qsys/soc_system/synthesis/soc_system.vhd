@@ -890,7 +890,7 @@ begin
 			g_PIXEL_WIDTH     => 24,
 			g_FB_WIDTH        => 100,
 			g_FB_HEIGHT       => 100,
-			PARALLEL_UNITS    => 4
+			PARALLEL_UNITS    => 1
 		)
 		port map (
 			g_rst_i               => rst_controller_001_reset_out_reset,                                         --          reset.reset

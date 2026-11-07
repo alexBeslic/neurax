@@ -1,0 +1,181 @@
+{
+  "reg": [
+    {
+      "name": "CMD",
+      "address": "0x0",
+      "bits": 32,
+      "fields": [
+        {"bits": 1, "name": "ENABLE", "attr": "Enable accelerator"},
+        {"bits": 2, "name": "OPERATION_SELECT", "attr": "Select operation type"},
+        {"bits": 1, "name": "START_OPERATION", "attr": "Start the selected operation"},
+        {"bits": 12},
+        {"bits": 1, "name": "WEIGHT_VALID", "attr": "Weights are valid"},
+        {"bits": 1, "name": "BIAS_VALID", "attr": "Bias is valid"},
+        {"bits": 14}
+      ]
+    },
+    {
+      "name": "STATUS",
+      "address": "0x1",
+      "bits": 32,
+      "fields": [
+        {"bits": 1, "name": "INPUT_READY", "attr": "Input data is ready"},
+        {"bits": 1, "name": "INPUT_VALID", "attr": "Input data is valid"},
+        {"bits": 1, "name": "OUTPUT_READY", "attr": "Output is ready to read"},
+        {"bits": 1, "name": "OUTPUT_VALID", "attr": "Output data is valid"},
+        {"bits": 1, "name": "DONE", "attr": "Operation completed"},
+        {"bits": 1, "name": "BUSY", "attr": "Accelerator is busy"},
+        {"bits": 2, "name": "CURRENT_OPERATION", "attr": "Current operation code"},
+        {"bits": 9},
+        {"bits": 1, "name": "WEIGHT_READY", "attr": "Weights accepted"},
+        {"bits": 1, "name": "BIAS_READY", "attr": "Bias accepted"},
+        {"bits": 13}
+      ]
+    },
+    {
+      "name": "CONFIG",
+      "address": "0x2",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "attr": "Reserved for future use"}
+      ]
+    },
+    {
+      "name": "CONV_CONFIG_0",
+      "address": "0x3",
+      "bits": 32,
+      "fields": [
+        {"bits": 8, "name": "STRIDE", "attr": "Convolution stride"},
+        {"bits": 8, "name": "PADDING", "attr": "Convolution padding"},
+        {"bits": 8, "name": "GROUPS", "attr": "Number of groups"},
+        {"bits": 8, "name": "KERNEL_SIZE", "attr": "Kernel size (NxN)"}
+      ]
+    },
+    {
+      "name": "CONV_CONFIG_1",
+      "address": "0x4",
+      "bits": 32,
+      "fields": [
+        {"bits": 8, "name": "INPUT_CHANNELS", "attr": "Number of input channels"},
+        {"bits": 8, "name": "OUTPUT_CHANNELS", "attr": "Number of output channels"},
+        {"bits": 16}
+      ]
+    },
+    {
+      "name": "POOL_CONFIG",
+      "address": "0x5",
+      "bits": 32,
+      "fields": [
+        {"bits": 8, "name": "SIZE", "attr": "Pool size (NxN)"},
+        {"bits": 8, "name": "STRIDE", "attr": "Pool stride"},
+        {"bits": 8, "name": "TYPE", "attr": ["MAX (0)", "AVERAGE (1)", "MIN (2)", "SUM (3)"]},
+        {"bits": 8, "name": "CHANNELS", "attr": "Number of channels"}
+      ]
+    },
+    {
+      "name": "ACTIVATION_CONFIG",
+      "address": "0x6",
+      "bits": 32,
+      "fields": [
+        {"bits": 8, "name": "TYPE", "attr": ["ReLU (0)", "Sigmoid (1)", "Tanh (2)", "Linear (3)", "LeakyReLU (4)", "ELU (5)"]},
+        {"bits": 16, "name": "TENSOR_SIZE", "attr": "Tensor size for activation"},
+        {"bits": 8}
+      ]
+    },
+    {
+      "name": "ACTIVATION_ALPHA",
+      "address": "0x7",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "name": "ALPHA", "attr": "Alpha parameter as fixed-point value"}
+      ]
+    },
+    {
+      "name": "BATCH_SIZE",
+      "address": "0x8",
+      "bits": 32,
+      "fields": [
+        {"bits": 8, "name": "SIZE", "attr": "Batch size"},
+        {"bits": 24}
+      ]
+    },
+    {
+      "name": "TEMP_0",
+      "address": "0x9",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "name": "DATA", "attr": "Temporary data storage"}
+      ]
+    },
+    {
+      "name": "TEMP_1",
+      "address": "0xA",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "name": "DATA", "attr": "Temporary data storage"}
+      ]
+    },
+    {
+      "name": "RESERVED_11",
+      "address": "0xB",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "attr": "Reserved"}
+      ]
+    },
+    {
+      "name": "RESERVED_12",
+      "address": "0xC",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "attr": "Reserved"}
+      ]
+    },
+    {
+      "name": "RESERVED_13",
+      "address": "0xD",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "attr": "Reserved"}
+      ]
+    },
+    {
+      "name": "RESERVED_14",
+      "address": "0xE",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "attr": "Reserved"}
+      ]
+    },
+    {
+      "name": "READ_ONLY",
+      "address": "0xF",
+      "bits": 32,
+      "fields": [
+        {"bits": 32, "name": "MAGIC", "attr": "Magic number: 0xCAB00D1E (CABOODLE)"}
+      ]
+    }
+  ],
+  "constants": {
+    "pooling_ops": {
+      "MAX": 0,
+      "AVERAGE": 1,
+      "MIN": 2,
+      "SUM": 3
+    },
+    "activation_types": {
+      "RELU": 0,
+      "SIGMOID": 1,
+      "TANH": 2,
+      "LINEAR": 3,
+      "LEAKY_RELU": 4,
+      "ELU": 5
+    }
+  },
+  "config": {
+    "totalRegisters": 16,
+    "registerWidth": 32,
+    "addressBits": 4,
+    "baseAddress": "0x0"
+  }
+}

@@ -44,8 +44,8 @@ static int run_activation(struct neurax_uio_ctx *ctx)
         return -1;
     }
 
-        printf("\n=== ReLU/Linear activation test (%u Q24.8 values) ===\n",
-            tensor_size);
+    printf("\n=== ReLU/Linear activation test (%u Q24.8 values) ===\n",
+           tensor_size);
     for (uint32_t i = 0; i < tensor_size; i++)
         tx_data[RAM_INPUT_BASE + i] = (uint32_t)activation_input_value(i);
     for (uint32_t i = 0; i < tensor_size; i++)
@@ -82,6 +82,7 @@ static int run_activation(struct neurax_uio_ctx *ctx)
     }
     uint32_t input_errors = 0;
     bool all_passed = true;
+    bool have_readback = false;
     const uint32_t activation_types[] = {
         ACTIVATION_RELU, ACTIVATION_LINEAR
     };
@@ -102,7 +103,9 @@ static int run_activation(struct neurax_uio_ctx *ctx)
         ctx->neurax->reg_cmd = CMD_ENABLE | CMD_OP_ACTIVATION;
 
         volatile uint32_t status = ctx->neurax->reg_status;
-        if (!(status & (STATUS_BUSY | STATUS_DONE))) {
+        /* 4096 serial elements cannot finish in the 10 us START pulse window.
+         * Require BUSY and DONE clear so a stale sticky DONE cannot look complete. */
+        if (!(status & STATUS_BUSY) || (status & STATUS_DONE)) {
             fprintf(stderr,
                     "[activation] %s START was not accepted (STATUS=0x%08x)\n",
                     activation_names[mode], status);
@@ -142,6 +145,7 @@ static int run_activation(struct neurax_uio_ctx *ctx)
             break;
 
         memcpy(rx, ctx->rx_buf, n_bytes);
+        have_readback = true;
         uint32_t output_errors = 0;
         uint32_t untouched_outputs = 0;
 
@@ -189,11 +193,13 @@ static int run_activation(struct neurax_uio_ctx *ctx)
             all_passed = false;
     }
 
-    if (all_passed && save_ram_readback(rx, n_words) < 0)
-        all_passed = false;
-    if (all_passed)
-        printf("Final RAM readback saved to res.txt.\n");
-    else if (input_errors != 0)
+    if (have_readback) {
+        if (save_ram_readback(rx, n_words) < 0)
+            all_passed = false;
+        else
+            printf("RAM readback saved to res.txt (including failed checks).\n");
+    }
+    if (input_errors != 0)
         printf("Input RAM integrity: FAIL (%u mismatches)\n", input_errors);
 
     free(rx);

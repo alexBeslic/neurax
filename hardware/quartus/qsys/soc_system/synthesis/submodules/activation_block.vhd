@@ -29,6 +29,7 @@ entity activation_block is
         input_data : in data_array_t(0 to PARALLEL_UNITS-1);
         input_addr : out std_logic_vector(15 downto 0);
         input_read_en : out std_logic;
+        input_read_ready : in std_logic := '1';
         
         -- Output data interface
         output_valid : out std_logic;
@@ -219,9 +220,9 @@ begin
                             end if;
                         end loop;
                         
-                        -- Requests and returned data are counted separately:
-                        -- the RAM response arrives after the address request.
-                        if request_counter < tensor_size then
+                        -- Count only granted requests; the shared RAM can be
+                        -- occupied by an output write on a given cycle.
+                        if request_counter < tensor_size and input_read_ready = '1' then
                             if request_counter + PARALLEL_UNITS < tensor_size then
                                 request_counter <= request_counter + PARALLEL_UNITS;
                             else
@@ -361,7 +362,8 @@ begin
     processing_active <= '1' when current_state = PROCESSING or current_state = PIPELINE_FLUSH else '0';
     
     input_read_en <= '1' when pipeline_enable = '1' and
-                              request_counter < tensor_size else '0';
+                              request_counter < tensor_size and
+                              input_read_ready = '1' else '0';
     
     -- output_valid_driver: '1' ako bilo koja paralelna ćelija u poslednjem stage-u ima valid
     process(pipeline)

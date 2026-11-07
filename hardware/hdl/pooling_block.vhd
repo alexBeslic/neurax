@@ -31,6 +31,7 @@ entity pooling_block is
         input_data : in data_array_1d(0 to PARALLEL_CHANNELS-1);
         input_addr : out std_logic_vector(17 downto 0);  -- Veća adresa za 4D tensor
         input_read_en : out std_logic;
+        input_read_ready : in std_logic := '1';
         
         -- Output data interface
         output_valid : out std_logic;
@@ -57,6 +58,7 @@ architecture behavioral of pooling_block is
     signal out_w_cnt : integer range 0 to MAX_WIDTH-1;
     signal pool_h_cnt : integer range 0 to MAX_POOL_SIZE-1;
     signal pool_w_cnt : integer range 0 to MAX_POOL_SIZE-1;
+    signal read_inflight : std_logic;
     
     -- Pooling accumulatori za paralelne kanale
     type pool_accumulator_t is record
@@ -102,6 +104,27 @@ architecture behavioral of pooling_block is
         end if;
     end function;
 
+    function divide_power_of_two_trunc(value : signed; shift_amount : natural)
+        return signed is
+        variable quotient : signed(value'range);
+        variable has_remainder : boolean := false;
+    begin
+        -- Arithmetic shift rounds negative values down. Correct by one when
+        -- discarded bits are nonzero to match signed division's truncation to 0.
+        quotient := shift_right(value, shift_amount);
+        if value(value'high) = '1' then
+            for bit_index in 0 to shift_amount-1 loop
+                if value(bit_index) = '1' then
+                    has_remainder := true;
+                end if;
+            end loop;
+            if has_remainder then
+                quotient := quotient + 1;
+            end if;
+        end if;
+        return quotient;
+    end function;
+
     function saturate_data(value : signed) return std_logic_vector is
         constant MAX_DATA : signed(value'length-1 downto 0) := to_signed(2147483647, value'length);
         constant MIN_DATA : signed(value'length-1 downto 0) :=
@@ -132,6 +155,7 @@ begin
             out_w_cnt <= 0;
             pool_h_cnt <= 0;
             pool_w_cnt <= 0;
+            read_inflight <= '0';
             
             -- Reset pool accumulators
             for i in 0 to PARALLEL_CHANNELS-1 loop
@@ -162,6 +186,7 @@ begin
                     out_w_cnt <= 0;
                     pool_h_cnt <= 0;
                     pool_w_cnt <= 0;
+                    read_inflight <= '0';
                     
                     for i in 0 to PARALLEL_CHANNELS-1 loop
                         pool_accumulators(i).value <= (others => '0');
@@ -171,6 +196,7 @@ begin
                     
                 when SETUP_DIMS =>
                     -- Pripremi za pooling operaciju
+                    read_inflight <= '0';
                     for i in 0 to PARALLEL_CHANNELS-1 loop
                         pool_accumulators(i).value <= (others => '0');
                         pool_accumulators(i).count <= 0;
@@ -178,6 +204,12 @@ begin
                     end loop;
                     
                 when POOL_COMPUTE =>
+                    if input_valid = '1' then
+                        read_inflight <= '0';
+                    elsif read_inflight = '0' and input_read_ready = '1' then
+                        read_inflight <= '1';
+                    end if;
+
                     if input_valid = '1' and pool_operation_active = '1' then
                         -- Load data into window buffer
                         for c in 0 to PARALLEL_CHANNELS-1 loop
@@ -267,7 +299,8 @@ begin
     
     -- Next state logic
     process(current_state, start, batch_cnt, channel_cnt, out_h_cnt, out_w_cnt,
-            pool_h_cnt, pool_w_cnt, batch_size, config, output_height, output_width)
+            pool_h_cnt, pool_w_cnt, batch_size, config, output_height, output_width,
+            input_valid)
     begin
         next_state <= current_state;
         
@@ -281,7 +314,8 @@ begin
                 next_state <= POOL_COMPUTE;
                 
             when POOL_COMPUTE =>
-                if batch_cnt = batch_size - 1 and
+                if input_valid = '1' and
+                   batch_cnt = batch_size - 1 and
                    channel_cnt + PARALLEL_CHANNELS >= config.channels and
                    out_h_cnt = output_height - 1 and
                    out_w_cnt = output_width - 1 and
@@ -357,7 +391,20 @@ begin
                         result_value := pool_accumulators(c).value + resize(input_value, DATA_WIDTH+6);
                     when AVERAGE_POOL =>
                         total_value := pool_accumulators(c).value + resize(input_value, DATA_WIDTH+6);
-                        result_value := total_value / to_signed(pool_accumulators(c).count + 1, DATA_WIDTH+6);
+                        -- The divisor is the configured window area. Use a
+                        -- short exact path for power-of-four areas and constant
+                        -- divisors for the remaining supported window sizes.
+                        case config.pool_size is
+                            when 1 => result_value := total_value;
+                            when 2 => result_value := divide_power_of_two_trunc(total_value, 2);
+                            when 3 => result_value := total_value / to_signed(9, DATA_WIDTH+6);
+                            when 4 => result_value := divide_power_of_two_trunc(total_value, 4);
+                            when 5 => result_value := total_value / to_signed(25, DATA_WIDTH+6);
+                            when 6 => result_value := total_value / to_signed(36, DATA_WIDTH+6);
+                            when 7 => result_value := total_value / to_signed(49, DATA_WIDTH+6);
+                            when 8 => result_value := divide_power_of_two_trunc(total_value, 6);
+                            when others => result_value := total_value;
+                        end case;
                     when others =>
                         result_value := resize(input_value, DATA_WIDTH+6);
                 end case;
@@ -371,7 +418,9 @@ begin
     window_complete <= '1' when pool_h_cnt = config.pool_size - 1 and 
                               pool_w_cnt = config.pool_size - 1 else '0';
     
-    input_read_en <= pool_operation_active;
+    input_read_en <= '1' when pool_operation_active = '1' and
+                              read_inflight = '0' and
+                              input_read_ready = '1' else '0';
     
     output_valid_driver <= '1' when current_state = POOL_COMPUTE and
                             window_complete = '1' and input_valid = '1' else '0';

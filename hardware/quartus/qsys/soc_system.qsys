@@ -797,7 +797,7 @@
    kind="neurax_avalon_accelerator"
    version="1.0"
    enabled="1">
-  <parameter name="PARALLEL_UNITS" value="4" />
+   <parameter name="PARALLEL_UNITS" value="1" />
   <parameter name="g_ADDR_WIDTH" value="4" />
   <parameter name="g_DATA_ADDR_WIDTH" value="15" />
   <parameter name="g_FB_HEIGHT" value="100" />
