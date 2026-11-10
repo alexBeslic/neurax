@@ -24,4 +24,8 @@ typedef struct {
     const volatile uint32_t reg_read_only; /**< Magic number 0xCAB00D1E*/
 } neurax_reg_t;
 
+/* DATA_SC reset handshake: write REQ; FPGA clears REQ and sets ACK when idle. */
+#define NEURAX_DATA_SC_WR_RESET_REQ (1u << 2)
+#define NEURAX_DATA_SC_WR_RESET_ACK (1u << 3)
+
 #endif /* NEURAX_REGS_H */

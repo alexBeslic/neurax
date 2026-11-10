@@ -72,6 +72,8 @@ entity neurax_register_block is
         neurax_data_start_o          : out std_logic;
         neurax_data_start_addr_o     : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
         neurax_data_length_o         : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+        neurax_data_wr_reset_req_o   : out std_logic;
+        neurax_data_wr_reset_ack_i   : in  std_logic;
         neurax_data_busy_i           : in std_logic;
         neurax_data_done_i           : in std_logic
     );
@@ -158,11 +160,23 @@ begin
                     -- Valid address range
                     for i in 0 to (g_WIDTH/8 - 1) loop
                         if avs_byteenable_i(i) = '1' then
-                            -- Write only the enabled bytes
-                            ram(to_integer(unsigned(avs_address_i)))(i*8 + 7 downto i*8) <= avs_writedata_i(i*8 + 7 downto i*8);
+                            -- DATA_SC bits 0/1 are hardware-owned; software may
+                            -- write the reset request and START command only.
+                            if unsigned(avs_address_i) = c_REG_DATA_SC and i = 0 then
+                                ram(to_integer(c_REG_DATA_SC))(7 downto 2) <= avs_writedata_i(7 downto 2);
+                            else
+                                ram(to_integer(unsigned(avs_address_i)))(i*8 + 7 downto i*8) <= avs_writedata_i(i*8 + 7 downto i*8);
+                            end if;
                         end if;
                     end loop;
                 end if;
+            end if;
+
+            -- The data interface acknowledges the request only when its source
+            -- FSM is idle, after the write pointer has been reset.
+            if neurax_data_wr_reset_ack_i = '1' then
+                ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_WR_RESET) <= '0';
+                ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_WR_RESET_ACK) <= '1';
             end if;
         end if;
     end process;
@@ -230,6 +244,7 @@ begin
 
     -- Data interface
     neurax_data_start_o <= ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_START);
+    neurax_data_wr_reset_req_o <= ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_WR_RESET);
     neurax_data_start_addr_o <= ram(to_integer(c_REG_DATA_READ))(t_DATA_READ_START_ADDR);
     neurax_data_length_o <= ram(to_integer(c_REG_DATA_READ))(t_DATA_READ_LENGTH);
 

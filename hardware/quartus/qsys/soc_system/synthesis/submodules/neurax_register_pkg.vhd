@@ -66,6 +66,8 @@ package neurax_register_pkg is
   -- Data status/config register
   constant c_DATA_SC_DONE : natural := 0; -- Bit 0 in data status/config register
   constant c_DATA_SC_BUSY : natural := 1; -- Bit 1 in data status/config register
+  constant c_DATA_SC_WR_RESET : natural := 2; -- Bit 2: write-pointer reset request
+  constant c_DATA_SC_WR_RESET_ACK : natural := 3; -- Bit 3: sticky reset acknowledgment
   constant c_DATA_SC_START : natural := 31; -- Bit 31 in data status/config register
   
   -- Data start/length register
