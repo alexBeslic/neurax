@@ -51,10 +51,11 @@ static int run_activation(struct neurax_uio_ctx *ctx)
     for (uint32_t i = 0; i < tensor_size; i++)
         tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
 
-    /* Preserve the tested board's Port B byte swap and one-word DMA offset. */
-    for (uint32_t word = 1; word < n_words; word++)
-        tx_data[word - 1] = byte_swap32(tx_data[word]);
-    tx_data[n_words - 1] = 0;
+    /* Preserve the tested board's Port B byte-lane reversal. The explicit
+     * FPGA pointer-reset handshake now places payload word 0 at RAM[0], so do
+     * not shift the image to compensate for the old SOF first-beat loss. */
+    for (uint32_t word = 0; word < n_words; word++)
+        tx_data[word] = byte_swap32(tx_data[word]);
 
     ctx->neurax->reg_cmd = 0;
     usleep_ms(1);
@@ -150,8 +151,7 @@ static int run_activation(struct neurax_uio_ctx *ctx)
         uint32_t untouched_outputs = 0;
 
         if (mode == 0) {
-            /* RAM[0] is skipped due to the board's first-word DMA offset. */
-            for (uint32_t i = 1; i < tensor_size; i++) {
+            for (uint32_t i = 0; i < tensor_size; i++) {
                 const uint32_t expected_input =
                     byte_swap32((uint32_t)activation_input_value(i));
                 if (rx[RAM_INPUT_BASE + i] != expected_input) {
@@ -165,8 +165,7 @@ static int run_activation(struct neurax_uio_ctx *ctx)
             }
         }
 
-        /* Output zero depends on the intentionally skipped source RAM[0]. */
-        for (uint32_t i = 1; i < tensor_size; i++) {
+        for (uint32_t i = 0; i < tensor_size; i++) {
             const uint32_t output = rx[RAM_OUTPUT_BASE + i];
             const int32_t input = activation_input_value(i);
             const int32_t expected_value = activation_types[mode] == ACTIVATION_RELU

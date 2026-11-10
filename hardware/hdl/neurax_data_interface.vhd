@@ -6,7 +6,7 @@
 -- Port B: Direct RAM access for the FPGA accelerator (full address range).
 --
 -- Sink path (HPS -> RAM):
---   Ready only while IDLE (asi_ready_o = '1' when rd_state = IDLE).  Writes are
+--   Ready while IDLE except for the one-cycle SOF pointer-reset stall. Writes are
 --   blocked during PREFETCH, SEND, and FLUSH to prevent Port A address conflicts.
 --   Each accepted word is written at wr_ptr; the pointer wraps at 2**g_ADDR_WIDTH.
 --
@@ -77,6 +77,8 @@ entity neurax_data_interface is
         rd_length_i     : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0); -- READ_LENGTH (words)
         rd_busy_o       : out std_logic;                                    -- CONTROL.BUSY
         rd_done_o       : out std_logic;                                    -- CONTROL.DONE (one-cycle pulse)
+        wr_reset_req_i  : in  std_logic;                                    -- software write-pointer reset request
+        wr_reset_ack_o  : out std_logic;                                    -- reset accepted while source FSM is idle
 
         ------ RAM Port B (accelerator access, unchanged) ------
         ram_b_rdaddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
@@ -104,8 +106,9 @@ architecture arch of neurax_data_interface is
     -- Sink write pointer (wraps naturally at 2**g_ADDR_WIDTH)
     signal wr_ptr : unsigned(g_ADDR_WIDTH - 1 downto 0);
 
-    -- Sink backpressure (combinatorial; '1' only in IDLE)
+    -- Sink backpressure (IDLE and no deferred SOF pointer reset)
     signal sink_ready : std_logic;
+    signal sof_pending : std_logic;
 
     -- Latched command registers (sampled once when rd_start_i is accepted;
     -- stable throughout PREFETCH, SEND and FLUSH; connection points for
@@ -200,7 +203,10 @@ begin
     --   A channel-1 packet marker is treated as a reset marker for the write
     --   pointer; it is not stored into RAM as payload data.
     -- =========================================================================
-    sink_ready    <= '1' when rd_state = IDLE else '0';
+    -- If the channel-1 marker arrives while the source FSM is busy, remember
+    -- it and hold the next channel-0 payload until wr_ptr has been reset.
+    sink_ready <= '1' when rd_state = IDLE and wr_reset_req_i = '0' and
+                           (sof_pending = '0' or asi_channel_i = '1') else '0';
     asi_ready_o   <= sink_ready;
     port_a_wren   <= asi_valid_i and sink_ready and (not asi_channel_i);
     port_a_wrdata <= asi_data_i;
@@ -242,6 +248,7 @@ begin
     -- Status outputs (map to CONTROL register bits in Avalon-MM block)
     rd_busy_o     <= '0' when rd_state = IDLE                            else '1';
     rd_done_o     <= '1' when rd_state = FLUSH                           else '0';
+    wr_reset_ack_o <= '1' when wr_reset_req_i = '1' and rd_state = IDLE else '0';
 
     -- =========================================================================
     -- Clocked process: sink write pointer + source read state machine
@@ -250,6 +257,7 @@ begin
     begin
         if rst_i = '1' then
             wr_ptr         <= (others => '0');
+            sof_pending    <= '0';
             cmd_start_addr <= (others => '0');
             cmd_length     <= (others => '0');
             rd_state       <= IDLE;
@@ -263,8 +271,14 @@ begin
             -- adapter can suppress valid for channels above its configured maximum,
             -- so recognize the marker from channel while the sink is idle. The
             -- marker itself is never stored; channel=0 valid handshakes advance RAM.
-            if sink_ready = '1' and asi_channel_i = '1' then
-                wr_ptr <= (others => '0');
+            if wr_reset_req_i = '1' and rd_state = IDLE then
+                wr_ptr      <= (others => '0');
+                sof_pending <= '0';
+            elsif asi_channel_i = '1' then
+                sof_pending <= '1';
+            elsif rd_state = IDLE and sof_pending = '1' then
+                wr_ptr      <= (others => '0');
+                sof_pending <= '0';
             elsif port_a_wren = '1' then
                 wr_ptr <= wr_ptr + 1;
             end if;

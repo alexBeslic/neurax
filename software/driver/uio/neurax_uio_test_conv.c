@@ -42,6 +42,7 @@
 
 #define STATUS_DONE             (1u << 4)
 #define STATUS_BUSY             (1u << 5)
+#define WRITE_RESET_TIMEOUT_US  200000u
 
 /* RAM word layout (one signed Q24.8 value per 32-bit word).
  * Must match FPGA generics g_FB_HEIGHT/g_FB_WIDTH and FPGA_accelerator offsets. */
@@ -259,30 +260,27 @@ void neurax_uio_deinit(struct neurax_uio_ctx *ctx)
 }
 
 /* ---------------------------------------------------------------------------
- * Send channel=1 SOF descriptor to mSGDMA0 (m2s).
- *
- * The FPGA neurax_data_interface resets write_index and clears buffer_full
- * on asi_channel_i=1, breaking any "buffer full / asi_ready=0" deadlock.
- * Call this once before each complete RAM image to guarantee the FPGA side
- * is ready; the image itself may be split across multiple mSGDMA descriptors.
- * Returns 0 on success, -1 on timeout.
+ * Request an acknowledged RAM upload-pointer reset through DATA_SC. Unlike
+ * the channel-1 marker, this does not depend on Qsys adapter channel behavior.
+ * The FPGA latches the ACK bit after the source FSM is idle and the pointer
+ * has actually been reset. Returns 0 on success, -1 on timeout.
  * ------------------------------------------------------------------------- */
-static int msgdma_send_sof(struct neurax_uio_ctx *ctx)
+static int neurax_reset_write_pointer(struct neurax_uio_ctx *ctx)
 {
-    msgdma_push_descr(ctx->m2s, ctx->tx_phys, 0,
-                      sizeof(uint32_t), DESC_CHAN(1));
+    ctx->neurax->reg_data_sc = NEURAX_DATA_SC_WR_RESET_REQ;
+    __sync_synchronize();
 
-    uint64_t deadline = now_us() + SOF_TIMEOUT_US;
+    uint64_t deadline = now_us() + WRITE_RESET_TIMEOUT_US;
     uint32_t status;
     do {
-        status = ctx->m2s->csr_status;
-        if (!(status & CSR_ST_BUSY)) return 0;
+        status = ctx->neurax->reg_data_sc;
+        if (status & NEURAX_DATA_SC_WR_RESET_ACK) return 0;
         usleep_ms(1);
     } while (now_us() < deadline);
 
-    msgdma_reset(ctx->m2s);
-    fprintf(stderr, "[SOF] timeout (CSR=0x%08x) — channel support disabled in Qsys?\n",
-            status);
+    fprintf(stderr,
+            "[DMA write] FPGA did not acknowledge RAM pointer reset "
+            "(DATA_SC=0x%08x)\n", status);
     return -1;
 }
 
@@ -317,8 +315,8 @@ ssize_t neurax_dma_write(struct neurax_uio_ctx *ctx,
 {
     if (len == 0) return 0;
 
-    /* Send SOF first to reset FPGA write_index / clear buffer_full */
-    if (msgdma_send_sof(ctx) < 0)
+    /* Reset and acknowledge the FPGA write pointer before sending payload. */
+    if (neurax_reset_write_pointer(ctx) < 0)
         return -1;
 
     size_t total = len > DMA_BUF_SIZE ? DMA_BUF_SIZE : len;
@@ -335,7 +333,7 @@ ssize_t neurax_dma_write(struct neurax_uio_ctx *ctx,
         if (dma_len > user_len)
             memset((uint8_t *)ctx->tx_buf + user_len, 0, dma_len - user_len);
 
-        /* Keep the write pointer continuous; send SOF only once per full image. */
+        /* Keep the pointer continuous across payload chunks. */
         msgdma_push_descr(ctx->m2s, (uint32_t)ctx->tx_phys, 0, dma_len, 0);
 
         uint32_t status = ctx->m2s->csr_status;
@@ -536,8 +534,9 @@ static int32_t expected_edge_q24_8(const uint8_t *pixels, int y, int x)
  * contents and convolution results against the CPU reference.
  *
  * Both DMA directions use descriptors no larger than the Qsys MAX_BYTE
- * setting. The m2s image is sent as sequential chunks after one SOF, while
- * each s2m chunk is paired with an FPGA RAM-read command.
+ * setting. The m2s image is sent as sequential chunks after an acknowledged
+ * write-pointer reset, while each s2m chunk is paired with an FPGA RAM-read
+ * command.
  *
  * Returns 0 on PASS, -1 on any error.
  * ------------------------------------------------------------------------- */
@@ -550,9 +549,8 @@ static int run_image_convolution(struct neurax_uio_ctx *ctx)
            CONV_INPUT_H, CONV_INPUT_W, CONV_KERNEL, CONV_KERNEL);
 
     /* Load the prepared image and build the logical RAM image. Pixels use
-     * signed Q24.8. The C-side
-     * byte swap and one-word shift compensate for the currently observed board
-     * behavior; RAM[0] remains deliberately unused. */
+     * signed Q24.8. The C-side byte swap compensates for the observed Port B
+     * byte-lane reversal; the acknowledged pointer reset makes RAM[0] usable. */
     uint32_t *tx_data = calloc(n_words, sizeof(uint32_t));
     if (!tx_data) {
         perror("calloc tx_data");
@@ -582,9 +580,8 @@ static int run_image_convolution(struct neurax_uio_ctx *ctx)
     for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++)
         tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
 
-    for (uint32_t word = 1; word < n_words; word++)
-        tx_data[word - 1] = byte_swap32(tx_data[word]);
-    tx_data[n_words - 1] = 0;
+    for (uint32_t word = 0; word < n_words; word++)
+        tx_data[word] = byte_swap32(tx_data[word]);
 
     /* Configure the accelerator before DMA so the Avalon-ST sink is ready. */
     ctx->neurax->reg_cmd = 0;
@@ -694,8 +691,7 @@ static int run_image_convolution(struct neurax_uio_ctx *ctx)
     const uint32_t input_words = CONV_INPUT_H * CONV_INPUT_W;
     const uint32_t weight_words =
         CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH;
-    /* RAM[0] is a known independent first-word issue; skip it here. */
-    for (uint32_t i = 1; i < input_words; i++) {
+    for (uint32_t i = 0; i < input_words; i++) {
         const uint32_t expected_input =
             byte_swap32((uint32_t)input_pixels[i] << 8);
         if (rx[RAM_INPUT_BASE + i] != expected_input) {

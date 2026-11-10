@@ -111,6 +111,8 @@ architecture arch of neurax is
         neurax_data_start_o          : out std_logic;
         neurax_data_start_addr_o     : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
         neurax_data_length_o         : out std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+        neurax_data_wr_reset_req_o   : out std_logic;
+        neurax_data_wr_reset_ack_i   : in  std_logic;
         neurax_data_busy_i           : in std_logic;
         neurax_data_done_i           : in std_logic
     );
@@ -141,6 +143,8 @@ architecture arch of neurax is
         rd_length_i       : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
         rd_busy_o         : out std_logic;                                  
         rd_done_o         : out std_logic;                                  
+        wr_reset_req_i    : in  std_logic;
+        wr_reset_ack_o    : out std_logic;
         ram_b_rdaddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
         ram_b_q_o         : out std_logic_vector(g_DATA_WIDTH - 1 downto 0);
         ram_b_wraddress_i : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0);
@@ -234,6 +238,8 @@ architecture arch of neurax is
     signal neurax_data_start        : std_logic;
     signal neurax_data_start_addr   : std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
     signal neurax_data_length       : std_logic_vector(g_DATA_ADDR_WIDTH-1 downto 0);
+    signal neurax_data_wr_reset_req : std_logic;
+    signal neurax_data_wr_reset_ack : std_logic;
     signal neurax_data_busy         : std_logic;
     signal neurax_data_done         : std_logic;
 
@@ -310,6 +316,8 @@ begin
         neurax_data_start_o      => neurax_data_start,
         neurax_data_start_addr_o => neurax_data_start_addr,
         neurax_data_length_o     => neurax_data_length,
+        neurax_data_wr_reset_req_o => neurax_data_wr_reset_req,
+        neurax_data_wr_reset_ack_i => neurax_data_wr_reset_ack,
         neurax_data_busy_i       => neurax_data_busy,
         neurax_data_done_i       => neurax_data_done
     );
@@ -353,6 +361,8 @@ begin
         rd_length_i      => neurax_data_length,
         rd_busy_o        => neurax_data_busy,
         rd_done_o        => neurax_data_done,
+        wr_reset_req_i   => neurax_data_wr_reset_req,
+        wr_reset_ack_o   => neurax_data_wr_reset_ack,
 
         -- RAM Port B -> connected to FPGA accelerator
         -- Accelerator uses 16-bit addresses; truncate to 15-bit for M10K RAM

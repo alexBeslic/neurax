@@ -95,10 +95,11 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
     for (uint32_t i = 0; i < POOL_OUTPUT_WORDS; i++)
         tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
 
-    /* Keep the established board Port B byte-swap/one-word DMA workaround. */
-    for (uint32_t word = 1; word < n_words; word++)
-        tx_data[word - 1] = byte_swap32(tx_data[word]);
-    tx_data[n_words - 1] = 0;
+    /* Preserve the tested board's Port B byte-lane reversal. The explicit
+     * FPGA pointer-reset handshake now places payload word 0 at RAM[0], so do
+     * not shift the image to compensate for the old SOF first-beat loss. */
+    for (uint32_t word = 0; word < n_words; word++)
+        tx_data[word] = byte_swap32(tx_data[word]);
 
     ctx->neurax->reg_cmd = 0;
     usleep_ms(1);
@@ -191,7 +192,7 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
         uint32_t untouched_outputs = 0;
 
         if (mode == 0) {
-            for (uint32_t i = 1; i < POOL_INPUT_HEIGHT * POOL_INPUT_WIDTH; i++) {
+            for (uint32_t i = 0; i < POOL_INPUT_HEIGHT * POOL_INPUT_WIDTH; i++) {
                 const uint32_t expected_input = byte_swap32(
                     (uint32_t)pooling_input_value(i));
                 if (rx[RAM_INPUT_BASE + i] != expected_input) {
@@ -212,9 +213,6 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
                 const uint32_t expected = byte_swap32(
                     (uint32_t)pooling_reference(y, x, type));
 
-                /* The first output uses RAM[0], affected by the known DMA offset. */
-                if (index == 0)
-                    continue;
                 if (output == byte_swap32(RAM_OUTPUT_SENTINEL)) {
                     untouched_outputs++;
                 } else if (output != expected) {
