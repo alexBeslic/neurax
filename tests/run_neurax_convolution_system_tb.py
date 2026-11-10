@@ -39,9 +39,10 @@ EDGE_WEIGHTS = (0, -256, 0, -256, 1024, -256, 0, -256, 0)
 def prepare_input_image():
     with Image.open(IMAGE_FILE) as source:
         image = source.convert("L")
+    resampling = getattr(Image, "Resampling", Image)
     image.thumbnail(
         (MAX_INPUT_DIMENSION, MAX_INPUT_DIMENSION),
-        Image.Resampling.LANCZOS,
+        resampling.LANCZOS,
     )
     width, height = image.size
     if width < 3 or height < 3:

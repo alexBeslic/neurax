@@ -180,6 +180,7 @@ architecture behavioral of FPGA_accelerator is
             input_data       : in  data_array_1d(0 to PARALLEL_CHANNELS-1);
             input_addr       : out std_logic_vector(17 downto 0);
             input_read_en    : out std_logic;
+            input_read_ready : in  std_logic := '1';
             output_valid     : out std_logic;
             output_data      : out data_array_1d(0 to PARALLEL_CHANNELS-1);
             output_addr      : out std_logic_vector(17 downto 0);
@@ -206,6 +207,7 @@ architecture behavioral of FPGA_accelerator is
             input_data       : in  data_array_t(0 to PARALLEL_UNITS-1);
             input_addr       : out std_logic_vector(15 downto 0);
             input_read_en    : out std_logic;
+            input_read_ready : in  std_logic := '1';
             output_valid     : out std_logic;
             output_data      : out data_array_t(0 to PARALLEL_UNITS-1);
             output_addr      : out std_logic_vector(15 downto 0);
@@ -248,6 +250,7 @@ architecture behavioral of FPGA_accelerator is
     signal pool_input_addr    : std_logic_vector(17 downto 0);
     signal pool_output_addr   : std_logic_vector(17 downto 0);
     signal pool_input_read_en : std_logic;
+    signal pool_input_read_ready : std_logic;
     signal pool_output_write_en : std_logic;
 
     -- Activation block wires
@@ -258,6 +261,7 @@ architecture behavioral of FPGA_accelerator is
     signal act_input_addr     : std_logic_vector(15 downto 0);
     signal act_output_addr    : std_logic_vector(15 downto 0);
     signal act_input_read_en  : std_logic;
+    signal act_input_read_ready : std_logic;
     signal act_output_write_en: std_logic;
 
     -- Top-level state machine
@@ -287,11 +291,14 @@ architecture behavioral of FPGA_accelerator is
     signal conv_weight_data_reg : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal conv_bias_data_reg   : std_logic_vector(DATA_WIDTH-1 downto 0);
 
-    -- Pooling/Activation RAM read pipeline (1 cycle latency)
+    -- Pooling and activation RAM read pipelines (both two clocks on Port B).
     signal pool_read_pending : std_logic;
+    signal pool_read_pending_d : std_logic;
     signal act_read_pending  : std_logic;
+    signal act_read_pending_d : std_logic;
 
-    -- Pooling and activation process one full-width RAM word per cycle.
+    -- Both paths process full-width RAM words; activation arbitrates its reads
+    -- against output writes on the shared single-port accelerator interface.
 begin
 
     -- =========================================================================
@@ -361,6 +368,7 @@ begin
             input_data       => pool_input_data,
             input_addr       => pool_input_addr,
             input_read_en    => pool_input_read_en,
+            input_read_ready => pool_input_read_ready,
             output_valid     => pool_output_valid,
             output_data      => pool_output_data,
             output_addr      => pool_output_addr,
@@ -386,6 +394,7 @@ begin
             input_data       => act_input_data,
             input_addr       => act_input_addr,
             input_read_en    => act_input_read_en,
+            input_read_ready => act_input_read_ready,
             output_valid     => act_output_valid,
             output_data      => act_output_data,
             output_addr      => act_output_addr,
@@ -447,6 +456,11 @@ begin
     conv_start <= '1' when current_state = IDLE and next_state = CONV_OP else '0';
     pool_start <= '1' when current_state = IDLE and next_state = POOL_OP else '0';
     act_start  <= '1' when current_state = IDLE and next_state = ACT_OP  else '0';
+
+    -- Port B is single-operation-per-cycle: output writes take priority, so
+    -- only issue pooling/activation input reads when no output write is pending.
+    pool_input_read_ready <= '0' when pool_output_write_en = '1' else '1';
+    act_input_read_ready <= '0' when act_output_write_en = '1' else '1';
 
     -- =========================================================================
     -- Hold each RAM address through an explicit capture phase. The M10K read
@@ -523,19 +537,23 @@ begin
     begin
         if rst = '1' then
             pool_read_pending <= '0';
+            pool_read_pending_d <= '0';
             pool_input_valid  <= '0';
             for i in 0 to PARALLEL_UNITS-1 loop
                 pool_input_data(i) <= (others => '0');
             end loop;
         elsif rising_edge(clk) then
             pool_input_valid  <= '0';
+            pool_read_pending_d <= pool_read_pending;
             pool_read_pending <= '0';
 
             if current_state = POOL_OP and pool_input_read_en = '1' then
                 pool_read_pending <= '1';
             end if;
 
-            if pool_read_pending = '1' then
+            -- Port B registers address and output; capture each granted read
+            -- after the second pending stage.
+            if pool_read_pending_d = '1' then
                 pool_input_valid <= '1';
                 pool_input_data(0) <= ram_q_i;
             end if;
@@ -543,25 +561,29 @@ begin
     end process;
 
     -- =========================================================================
-    -- Activation RAM data pipeline (1 cycle read latency)
+    -- Activation RAM data pipeline (2 cycle read latency).
     -- =========================================================================
     process(clk, rst)
     begin
         if rst = '1' then
             act_read_pending <= '0';
+            act_read_pending_d <= '0';
             act_input_valid  <= '0';
             for i in 0 to PARALLEL_UNITS-1 loop
                 act_input_data(i) <= (others => '0');
             end loop;
         elsif rising_edge(clk) then
             act_input_valid  <= '0';
+            act_read_pending_d <= act_read_pending;
             act_read_pending <= '0';
 
             if current_state = ACT_OP and act_input_read_en = '1' then
                 act_read_pending <= '1';
             end if;
 
-            if act_read_pending = '1' then
+            -- Port B registers both the address and output, so its read latency
+            -- is two clocks. Capture the RAM word on the matching delayed request.
+            if act_read_pending_d = '1' then
                 act_input_valid <= '1';
                 act_input_data(0) <= ram_q_i;
             end if;

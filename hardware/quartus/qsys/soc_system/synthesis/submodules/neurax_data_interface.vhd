@@ -259,9 +259,11 @@ begin
 
         elsif rising_edge(clk_i) then
 
-            -- ---- Sink: channel=1 resets the write pointer, channel=0 advances it
-            -- on every accepted handshake.  The marker word is not stored into RAM.
-            if asi_valid_i = '1' and sink_ready = '1' and asi_channel_i = '1' then
+            -- ---- Sink: channel=1 resets the write pointer. The generated Qsys
+            -- adapter can suppress valid for channels above its configured maximum,
+            -- so recognize the marker from channel while the sink is idle. The
+            -- marker itself is never stored; channel=0 valid handshakes advance RAM.
+            if sink_ready = '1' and asi_channel_i = '1' then
                 wr_ptr <= (others => '0');
             elsif port_a_wren = '1' then
                 wr_ptr <= wr_ptr + 1;

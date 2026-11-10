@@ -1,0 +1,236 @@
+The packet-based architecture is correct and I want to keep it.
+
+Do NOT redesign the architecture.
+
+The IDLE -> PREFETCH -> SEND state machine is the intended design.
+
+Instead, review the implementation for correctness and make only the following improvements.
+
+==============================================================================
+1. Block writes while a read transfer is active
+==============================================================================
+
+Currently:
+
+    asi_ready_o <= '1';
+
+This allows a DMA write while the read state machine is using Port A.
+
+Since Port A is shared between the Avalon-ST sink and the packet transmitter, the hardware itself should prevent simultaneous access instead of relying on software.
+
+Change the interface so that:
+
+    asi_ready_o <= '1' only while rd_state = IDLE
+
+or equivalently
+
+    asi_ready_o <= not rd_busy_o
+
+The sink must naturally backpressure the upstream DMA while a read transfer is active.
+
+==============================================================================
+2. Write only on a valid Avalon-ST handshake
+==============================================================================
+
+Currently:
+
+    port_a_wren <= asi_valid_i;
+
+Modify this to follow Avalon-ST semantics:
+
+    port_a_wren <= asi_valid_i AND asi_ready_o;
+
+The RAM write should only occur when a transfer is actually accepted.
+
+==============================================================================
+3. Review the Port A look-ahead timing
+==============================================================================
+
+Do NOT remove the look-ahead optimization.
+
+Instead verify that the timing is correct for Intel altsyncram configured as:
+
+    outdata_reg_a = "UNREGISTERED"
+    read_during_write_mode_port_a = "NEW_DATA_NO_NBE_READ"
+
+Specifically verify:
+
+- PREFETCH loads the first address correctly.
+- The first transmitted word is RAM[start_address].
+- During SEND, changing Port A to rd_ptr+1 on a successful handshake does not skip or duplicate any addresses.
+- One word per clock is maintained under continuous ready.
+
+If the timing is already correct, leave it unchanged.
+
+Only modify it if there is an actual timing issue.
+
+==============================================================================
+4. RAM bounds
+==============================================================================
+
+The RAM is instantiated with
+
+    numwords = 2**g_ADDR_WIDTH
+
+while
+
+    g_RAM_SIZE = 23000
+
+Review the write and read pointers.
+
+If the design is intended to use only g_RAM_SIZE words, implement explicit wrap-around at g_RAM_SIZE.
+
+If the design intentionally uses the entire physical RAM (32768 words), remove the unused g_RAM_SIZE generic to avoid confusion.
+
+Do not leave both mechanisms in place.
+
+==============================================================================
+5. Ignore START requests while busy
+==============================================================================
+
+While the transmitter is in PREFETCH or SEND:
+
+- Ignore additional rd_start_i pulses.
+- Do not restart the transfer.
+- Do not reload the pointers.
+- Continue the current transfer until completion.
+
+Document this behavior with comments.
+
+==============================================================================
+6. Add an explicit FLUSH state
+==============================================================================
+
+Extend the state machine to
+
+    IDLE
+      ↓
+    PREFETCH
+      ↓
+    SEND
+      ↓
+    FLUSH
+      ↓
+    IDLE
+
+The FLUSH state lasts exactly one clock.
+
+Purpose:
+
+- explicitly clear any packet control signals
+- ensure the transmitter returns to a clean idle condition
+- make future extensions (interrupts, packet status, metadata) easier
+
+The FLUSH state must NOT reduce throughput because it occurs only after the final word has already been accepted.
+
+==============================================================================
+7. Add an explicit transfer completion indication
+==============================================================================
+
+Add a new output:
+
+    rd_done_o : out std_logic;
+
+Behavior:
+
+- Assert rd_done_o for exactly one clock cycle after the final successful Avalon-ST handshake of a packet.
+- The pulse must occur only when the last word has actually been accepted.
+- rd_done_o must automatically return to '0' on the next clock.
+- The pulse should not require software to clear it.
+
+This signal will later be connected to the Avalon-MM register block so software can:
+
+- poll for transfer completion,
+- generate an interrupt,
+- synchronize future DMA transactions.
+
+==============================================================================
+8. Keep status outputs consistent
+==============================================================================
+
+rd_busy_o should:
+
+- Assert when entering PREFETCH.
+- Remain asserted throughout SEND.
+- Remain asserted during FLUSH.
+- Deassert only after returning to IDLE.
+
+==============================================================================
+9. Latch the command at START
+==============================================================================
+
+The current interface has:
+
+    rd_start_i
+    rd_start_addr_i
+    rd_length_i
+
+These inputs may change while a transfer is active.
+
+Modify the implementation so that the command is latched exactly once when a new transfer starts.
+
+On the cycle that rd_start_i is accepted:
+
+- Copy rd_start_addr_i into an internal register.
+- Copy rd_length_i into an internal register.
+- Initialize rd_ptr from the latched start address.
+- Initialize the remaining-word counter from the latched length.
+
+During PREFETCH, SEND and FLUSH:
+
+- Ignore any changes on rd_start_addr_i.
+- Ignore any changes on rd_length_i.
+- Ignore additional rd_start_i pulses.
+
+The transfer must execute entirely from the internally latched command.
+
+This makes the interface transactional and prevents software from accidentally modifying a transfer that is already in progress.
+
+==============================================================================
+10. Prepare for Avalon-MM register integration
+==============================================================================
+
+The design will eventually be controlled by an Avalon-MM register block.
+
+Structure the RTL so it is easy to connect the following registers later:
+
+    CONTROL.START
+    CONTROL.BUSY
+    CONTROL.DONE
+    READ_START_ADDRESS
+    READ_LENGTH
+
+The current external ports may remain unchanged, but the internal architecture should clearly separate:
+
+- command inputs
+- latched command registers
+- status outputs
+- packet transmitter state machine
+
+This will make replacing the direct input ports with Avalon-MM registers straightforward.
+
+==============================================================================
+11. Preserve everything else
+==============================================================================
+
+Do NOT change:
+
+- the packet-based architecture
+- the SOP/EOP generation
+- the transfer-length counter
+- the Port B interface
+- the altsyncram instantiation
+
+Keep the code style consistent with Intel-generated IP.
+
+Favor simple, synchronous RTL with explicit state transitions.
+
+Maintain one-word-per-clock throughput during SEND under continuous ready.
+
+After implementing the changes, explain:
+
+- every modification,
+- why it improves robustness,
+- whether any timing changed,
+- whether throughput is still one word per clock,
+- and how the design is now prepared for Avalon-MM register integration.

@@ -480,6 +480,7 @@ static int save_ram_readback(const uint32_t *words, uint32_t word_count)
     return 0;
 }
 
+#ifndef NEURAX_UIO_HELPERS_ONLY
 /* Convolution test parameters (must match FPGA generics g_FB_HEIGHT/WIDTH) */
 #define CONV_INPUT_H     100
 #define CONV_INPUT_W     100
@@ -756,3 +757,4 @@ int main(void)
     neurax_uio_deinit(&ctx);
     return result == 0 ? 0 : 1;
 }
+#endif /* NEURAX_UIO_HELPERS_ONLY */
