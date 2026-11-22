@@ -17,11 +17,14 @@ end entity neurax_convolution_system_tb;
 
 architecture sim of neurax_convolution_system_tb is
     constant INPUT_BASE_ADDR  : natural := 0;
-    constant WEIGHT_BASE_ADDR: natural := 10000;
-    constant BIAS_BASE_ADDR  : natural := 13000;
-    constant OUTPUT_BASE_ADDR: natural := 13016;
     constant INPUT_COUNT     : natural := INPUT_WIDTH * INPUT_HEIGHT;
+    constant WEIGHT_COUNT    : natural := 9;
+    constant WEIGHT_BASE_ADDR: natural := INPUT_COUNT;
+    constant BIAS_BASE_ADDR  : natural := WEIGHT_BASE_ADDR + WEIGHT_COUNT;
+    constant OUTPUT_BASE_ADDR: natural := BIAS_BASE_ADDR + 1;
     constant OUTPUT_COUNT    : natural := INPUT_COUNT;
+    constant RAM_WORDS       : natural := 65536;
+    constant MARKER_ADDR     : natural := OUTPUT_BASE_ADDR + OUTPUT_COUNT + 1;
     constant MAX_WAIT_CYCLES : natural := 1000000;
 
     type weight_array_t is array (0 to 8) of integer;
@@ -71,7 +74,7 @@ begin
         generic map (
             g_WIDTH          => 32,
             g_ADDR_WIDTH     => 4,
-            g_DATA_ADDR_WIDTH=> 15,
+            g_DATA_ADDR_WIDTH=> 16,
             g_FB_WIDTH       => INPUT_WIDTH,
             g_FB_HEIGHT      => INPUT_HEIGHT,
             PARALLEL_UNITS   => 1
@@ -174,8 +177,8 @@ begin
     begin
         check(INPUT_COUNT <= WEIGHT_BASE_ADDR,
               "input image does not fit before the weight RAM region");
-        check(OUTPUT_BASE_ADDR + OUTPUT_COUNT <= 2**15,
-              "output image exceeds the data RAM capacity");
+          check(OUTPUT_BASE_ADDR + OUTPUT_COUNT <= RAM_WORDS,
+              "configuration-derived output image exceeds the data RAM capacity");
         check(INPUT_WIDTH <= 128 and INPUT_HEIGHT <= 128,
               "convolution dimensions exceed the accelerator limit");
 
@@ -194,7 +197,7 @@ begin
         end loop;
         file_close(input_f);
 
-        -- Populate the fixed input/weight/bias/output memory layout.
+        -- Populate adjacent, configuration-derived input/weight/bias/output regions.
         for i in INPUT_COUNT to WEIGHT_BASE_ADDR-1 loop
             sink_send((others => '0'));
         end loop;
@@ -291,9 +294,9 @@ begin
                 check(unsigned(debug_value) = 1024,
                     "forced Port B read did not return the nonzero center weight");
 
-                -- Probe Port B writes and reads using unused word 12999.
+                -- Probe Port B writes and reads using a word after all live regions.
                 forced_trace_control := std_logic_vector(
-                    shift_left(to_unsigned(12999, 32), 15) or
+                    shift_left(to_unsigned(MARKER_ADDR, 32), 15) or
                     to_unsigned(2**30, 32)
                 );
                 avs_write_register(11, forced_trace_control or x"00004000");
@@ -314,7 +317,7 @@ begin
                 check(unsigned(debug_value) = 16#12345678#,
                     "Port B marker write was not readable on Port B");
 
-            -- Avalon-MM DATA_READ: address in [14:0], transfer length in [30:16].
+            -- Avalon-MM DATA_READ: 16-bit start address and 16-bit word count.
             data_command := std_logic_vector(
                 shift_left(to_unsigned(OUTPUT_COUNT, 32), 16) or
                 to_unsigned(OUTPUT_BASE_ADDR, 32)
@@ -354,6 +357,24 @@ begin
             file_close(output_f);
             report "neurax_convolution_system_tb: output written to " & OUTPUT_FILE;
         end if;
+
+        -- A tensor needing two non-overlapping 40,000-word regions cannot fit.
+        -- It must complete as a rejected command and set STATUS.ERROR (bit 8).
+        avs_write_register(6, std_logic_vector(shift_left(to_unsigned(40000, 32), 8)));
+        avs_write_register(0, x"00000001");
+        avs_write_register(0, x"0000000D"); -- enable + activation + start
+        avs_write_register(0, x"00000005"); -- clear START, keep activation selected
+        operation_done := false;
+        for i in 0 to 20 loop
+            avs_read_register(1, status_value);
+            if status_value(4) = '1' then
+                operation_done := true;
+                exit;
+            end if;
+        end loop;
+        check(operation_done, "invalid activation configuration did not complete as rejected");
+        check(status_value(8) = '1',
+              "activation layout exceeding 65536 words must set STATUS.ERROR");
 
         if error_count = 0 then
             report "neurax_convolution_system_tb: ALL CHECKS PASSED";

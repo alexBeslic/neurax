@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="soc_system" kind="soc_system" version="1.0" fabric="QSYS">
  <!-- Format version 24.1 1077 (Future versions may contain additional information.) -->
- <!-- 2026.11.10.19:23:05 -->
+ <!-- 2026.11.17.20:18:32 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1794334965</value>
+  <value>1794943092</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -76813,7 +76813,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="g_DATA_ADDR_WIDTH">
    <type>int</type>
-   <value>15</value>
+   <value>16</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>

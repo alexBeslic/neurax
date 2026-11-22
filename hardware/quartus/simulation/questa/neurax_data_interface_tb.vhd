@@ -31,23 +31,23 @@ use STD.TEXTIO.ALL;
 entity neurax_data_interface_tb is
     generic (
         g_DATA_WIDTH    : natural := 32;
-        g_ADDR_WIDTH    : natural := 15;
+        g_ADDR_WIDTH    : natural := 16;
         CLK_PERIOD      : time := 10 ns;
-        MAX_WAIT_CYCLES : natural := 40000  -- safety bound for full-RAM transfers
+        MAX_WAIT_CYCLES : natural := 100000 -- safety bound for full-RAM transfers
     );
 end entity neurax_data_interface_tb;
 
 architecture sim of neurax_data_interface_tb is
 
     type natural_array_t is array (natural range <>) of natural;
-    constant PORTB_PROBE_ADDRS : natural_array_t(0 to 12) := (
+    constant PORTB_PROBE_ADDRS : natural_array_t(0 to 14) := (
         242, 243, 3249, 3250, 9999, 10000, 10001,
-        12999, 13000, 13016, 22619, 22620, 22999
+        12999, 13000, 13016, 22619, 22620, 22999, 32767, 32768
     );
-    constant SOURCE_PROBE_ADDRS : natural_array_t(0 to 19) := (
+    constant SOURCE_PROBE_ADDRS : natural_array_t(0 to 21) := (
         0, 241, 242, 243, 3248, 3249, 3250, 9998, 9999, 10000,
         10001, 12998, 12999, 13000, 13015, 13016, 22618, 22619,
-        22620, 22999
+        22620, 22999, 32767, 32768
     );
 
     type beat_t is record
@@ -79,6 +79,9 @@ architecture sim of neurax_data_interface_tb is
     signal rd_length     : std_logic_vector(g_ADDR_WIDTH-1 downto 0) := (others => '0');
     signal rd_busy       : std_logic;
     signal rd_done       : std_logic;
+    signal rd_error      : std_logic;
+    signal wr_reset_req  : std_logic := '0';
+    signal wr_reset_ack  : std_logic;
 
     signal ram_b_rdaddress : std_logic_vector(g_ADDR_WIDTH-1 downto 0) := (others => '0');
     signal ram_b_q         : std_logic_vector(g_DATA_WIDTH-1 downto 0);
@@ -129,6 +132,9 @@ begin
             rd_length_i     => rd_length,
             rd_busy_o       => rd_busy,
             rd_done_o       => rd_done,
+            rd_error_o      => rd_error,
+            wr_reset_req_i  => wr_reset_req,
+            wr_reset_ack_o  => wr_reset_ack,
 
             ram_b_rdaddress_i => ram_b_rdaddress,
             ram_b_q_o         => ram_b_q,
@@ -139,7 +145,7 @@ begin
 
     stimulus: process
         variable error_count    : integer := 0;
-        variable captured       : beat_array_t(0 to 32767);
+        variable captured       : beat_array_t(0 to 65535);
         variable captured_count : natural := 0;
         variable held_data      : std_logic_vector(g_DATA_WIDTH-1 downto 0);
         variable held_sop       : std_logic;
@@ -291,6 +297,7 @@ begin
 
         check(asi_ready = '1', "asi_ready_o should be 1 in IDLE");
         check(rd_busy = '0', "rd_busy_o should be 0 before any transfer");
+        check(rd_error = '0', "rd_error_o should be 0 after reset");
 
         -- ---------------------------------------------------------------
         -- Sink write burst: 16 words at addresses 0..15
@@ -363,7 +370,24 @@ begin
         collect_until_eop;
         check(captured_count = 16, "sink-blocked readback: expected 16 beats, got " & integer'image(captured_count));
 
-        wait_for_bit(asi_ready, '1', "asi_ready_o should return to 1 once the readback completes");
+          -- Request a pointer reset while the source FSM is active. The request
+          -- must be held off until IDLE, then the next sink word must land at 0.
+          wr_reset_req <= '1';
+          wait for 1 ns;
+          check(wr_reset_ack = '0',
+              "write-pointer reset must not acknowledge while source is busy");
+          wait_for_bit(rd_busy, '0', "source FSM should return to IDLE after readback");
+          wait_for_bit(wr_reset_ack, '1',
+                   "write-pointer reset should acknowledge once source is IDLE");
+          wait until rising_edge(clk);
+          wait for 1 ns;
+          wr_reset_req <= '0';
+          wait for 1 ns;
+          check(asi_ready = '1', "sink should reopen after acknowledged pointer reset");
+          sink_write(std_logic_vector(to_unsigned(777, g_DATA_WIDTH)));
+          portb_read(0);
+          check(unsigned(ram_b_q) = 777,
+              "first sink word after pointer reset should be stored at RAM[0]");
 
         -- ---------------------------------------------------------------
         -- Backpressure: hold aso_ready low mid-stream, verify the bus holds
@@ -404,16 +428,23 @@ begin
         wait_for_bit(rd_busy, '0', "backpressure: rd_busy_o should return to 0");
 
         -- ---------------------------------------------------------------
-        -- Fill and read the full 32768-word RAM capacity
+        -- Re-arm the upload pointer and fill all 65536 physical RAM addresses.
         -- ---------------------------------------------------------------
         aso_ready <= '0';
-        for i in 16 to 32767 loop
-            if i = 16 or i = 32767 then
+        wr_reset_req <= '1';
+        wait_for_bit(wr_reset_ack, '1', "full-capacity fill: pointer reset should acknowledge");
+        wait until rising_edge(clk);
+        wr_reset_req <= '0';
+        wait for 1 ns;
+        for i in 0 to 65535 loop
+            if i = 0 or i = 32767 or i = 32768 or i = 65535 then
                 report "FULL RAM INPUT[" & integer'image(i) & "] = " &
                        integer'image(100 + i);
             end if;
             sink_write(std_logic_vector(to_unsigned(100 + i, g_DATA_WIDTH)));
         end loop;
+
+        check(asi_ready = '1', "sink should accept exactly 65536 words without truncation");
 
         -- Inspect Port A's actual source/readback path at the RAM regions
         -- implicated by the latest board dump before the full-stream check.
@@ -432,42 +463,49 @@ begin
                   ", got " & integer'image(to_integer(unsigned(ram_b_q))));
         end loop;
 
-        -- rd_length_i is 15 bits, so the largest single transfer is 32767
-        -- words. Read those words, then read the final RAM address separately.
+          -- A single 16-bit length can express 65535 words. Read [0,65534],
+          -- then read address 65535 separately; software uses <=1024-word DMA
+          -- chunks, while this test verifies the hardware endpoint directly.
         file_open(output_file, "data_interface_output.txt", write_mode);
         aso_ready <= '1';
-        start_readback(0, 32767);
+          start_readback(0, 65535);
         collect_until_eop;
-        check(captured_count = 32767,
-              "full-RAM readback: expected 32767 beats, got " & integer'image(captured_count));
+          check(captured_count = 65535,
+              "full-RAM readback: expected 65535 beats, got " & integer'image(captured_count));
         if captured_count > 0 then
             for i in 0 to captured_count - 1 loop
                 write(output_line, to_integer(unsigned(captured(i).data)));
                 writeline(output_file, output_line);
             end loop;
         end if;
-        if captured_count = 32767 then
-            for i in 0 to 32766 loop
+         if captured_count = 65535 then
+             for i in 0 to 65534 loop
                 check(unsigned(captured(i).data) = 100 + i,
                       "full-RAM readback: data mismatch at address " & integer'image(i));
             end loop;
             report "FULL RAM OUTPUT[0] = " &
                    integer'image(to_integer(unsigned(captured(0).data)));
-            report "FULL RAM OUTPUT[32766] = " &
-                   integer'image(to_integer(unsigned(captured(32766).data)));
+             report "FULL RAM OUTPUT[32767] = " &
+                 integer'image(to_integer(unsigned(captured(32767).data)));
+             report "FULL RAM OUTPUT[32768] = " &
+                 integer'image(to_integer(unsigned(captured(32768).data)));
+             check(unsigned(captured(32767).data) = 32867,
+                "boundary address 32767 data mismatch");
+             check(unsigned(captured(32768).data) = 32868,
+                "boundary address 32768 data mismatch");
         end if;
 
         wait_for_bit(rd_done, '1', "full-RAM readback: rd_done_o should pulse");
         wait_for_bit(rd_busy, '0', "full-RAM readback: rd_busy_o should return to 0");
 
-        start_readback(32767, 1);
+        start_readback(65535, 1);
         collect_until_eop;
         check(captured_count = 1, "last-address readback: expected 1 beat");
         if captured_count = 1 then
-            report "FULL RAM OUTPUT[32767] = " &
+            report "FULL RAM OUTPUT[65535] = " &
                    integer'image(to_integer(unsigned(captured(0).data)));
-            check(unsigned(captured(0).data) = 32867,
-                  "last-address readback: data mismatch at address 32767");
+            check(unsigned(captured(0).data) = 65635,
+                  "last-address readback: data mismatch at address 65535");
             write(output_line, to_integer(unsigned(captured(0).data)));
             writeline(output_file, output_line);
         end if;
@@ -475,6 +513,12 @@ begin
         report "neurax_data_interface_tb: full readback written to data_interface_output.txt";
 
         wait_for_bit(rd_done, '1', "last-address readback: rd_done_o should pulse");
+
+        -- Overflowing [65535, 65537) must be rejected, never wrapped to RAM[0].
+        start_readback(65535, 2);
+        wait for 1 ns;
+        check(rd_error = '1', "out-of-range read command should set rd_error_o");
+        check(rd_busy = '0', "out-of-range read command must not start the source FSM");
 
         -- ---------------------------------------------------------------
         -- Summary

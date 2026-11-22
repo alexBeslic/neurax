@@ -37,6 +37,7 @@ package neurax_register_pkg is
   constant c_STATUS_DONE           : natural := 4; -- Bit 3 in status register
   constant c_STATUS_BUSY           : natural := 5; -- Bit 4 in status register
   subtype t_STATUS_CURRENT_OPERATION is natural range 7 downto 6; -- Bits [6:5] in status register
+  constant c_STATUS_ERROR          : natural := 8; -- Invalid operation configuration/layout
   constant c_STATUS_WEIGHT_READY       : natural := 17; -- Bit 17 in status register
   constant c_STATUS_BIAS_READY       : natural := 18; -- Bit 18 in status register
 
@@ -68,11 +69,12 @@ package neurax_register_pkg is
   constant c_DATA_SC_BUSY : natural := 1; -- Bit 1 in data status/config register
   constant c_DATA_SC_WR_RESET : natural := 2; -- Bit 2: write-pointer reset request
   constant c_DATA_SC_WR_RESET_ACK : natural := 3; -- Bit 3: sticky reset acknowledgment
+  constant c_DATA_SC_READ_ERROR : natural := 4; -- Bit 4: invalid read range
   constant c_DATA_SC_START : natural := 31; -- Bit 31 in data status/config register
   
   -- Data start/length register
-  subtype t_DATA_READ_START_ADDR is natural range 14 downto 0; -- Bits [14:0] in data read start address register
-  subtype t_DATA_READ_LENGTH is natural range 30 downto 16; -- Bits [30:16] in data read length register
+  subtype t_DATA_READ_START_ADDR is natural range 15 downto 0; -- Bits [15:0] in data read start address register
+  subtype t_DATA_READ_LENGTH is natural range 31 downto 16; -- Bits [31:16] in data read length register
 
   -- READ-ONLY register values
   constant c_MAGIC_NUMBER : std_logic_vector(31 downto 0) := x"CAB00D1E"; -- Magic number caboodle in hex

@@ -70,9 +70,9 @@ architecture behavioral of convolution_block is
     signal output_width : integer range 0 to MAX_WIDTH;
     
     -- Accumulator za konvoluciju
-    -- 32x32-bit products are 64 bits. Up to 5x5x16=400 products may be
-    -- accumulated, so 73 signed bits preserve the full supported sum.
-    signal conv_accumulator : signed(72 downto 0);
+    -- 32x32-bit products are 64 bits. Up to 11x11x16=1936 products may be
+    -- accumulated, so 74 signed bits preserve the full supported sum.
+    signal conv_accumulator : signed(73 downto 0);
     signal mult_result : signed(63 downto 0);
     
     -- Pipeline registri

@@ -29,14 +29,14 @@ entity pooling_block is
         -- Input data interface
         input_valid : in std_logic;
         input_data : in data_array_1d(0 to PARALLEL_CHANNELS-1);
-        input_addr : out std_logic_vector(17 downto 0);  -- Veća adresa za 4D tensor
+        input_addr : out std_logic_vector(19 downto 0);  -- Up to 128x128x16x4 tensor words
         input_read_en : out std_logic;
         input_read_ready : in std_logic := '1';
         
         -- Output data interface
         output_valid : out std_logic;
         output_data : out data_array_1d(0 to PARALLEL_CHANNELS-1);
-        output_addr : out std_logic_vector(17 downto 0);
+        output_addr : out std_logic_vector(19 downto 0);
         output_write_en : out std_logic
     );
 end pooling_block;
@@ -348,7 +348,7 @@ begin
         base_addr := ((batch_cnt * INPUT_HEIGHT + in_h) * INPUT_WIDTH + in_w) * 
                     config.channels + channel_cnt;
         
-        input_addr <= std_logic_vector(to_unsigned(base_addr, 18));
+        input_addr <= std_logic_vector(to_unsigned(base_addr, 20));
     end process;
     
     -- Output address generation
@@ -358,7 +358,7 @@ begin
         out_addr := ((batch_cnt * output_height + out_h_cnt) * output_width + out_w_cnt) * 
                    config.channels + channel_cnt;
         
-        output_addr <= std_logic_vector(to_unsigned(out_addr, 18));
+        output_addr <= std_logic_vector(to_unsigned(out_addr, 20));
     end process;
     
     -- Present the complete result, including the sample currently completing the window.

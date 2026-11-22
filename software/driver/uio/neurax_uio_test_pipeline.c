@@ -1,8 +1,8 @@
 /*
  * neurax_uio_test_pipeline.c — sequential accelerator block integration tests.
  *
- * Each block reads from the fixed RAM input base and writes to the fixed RAM
- * output base. This test therefore reads each stage's output, converts the
+ * Each block uses a configuration-derived, non-overlapping RAM layout. This
+ * test therefore reads each stage's output, converts the
  * board's observed Port-A/Port-B byte order, places the result at RAM word 0,
  * and uploads it before starting the next operation.
  *
@@ -11,8 +11,7 @@
  *   2. ReLU -> MIN pooling
  *   3. convolution -> SUM pooling
  *
- * On the current 100x100 build, activation is limited to 4096 words. In the
- * three-stage case it transforms the first 4000 words (40 full rows); the
+ * The pipeline test transforms the first 4000 words (40 full rows); the
  * remaining rows retain the convolution result and are also checked by pool.
  */
 #define NEURAX_UIO_HELPERS_ONLY
@@ -53,16 +52,22 @@ static int32_t pipeline_input_value(uint32_t index)
     return ((int32_t)(index % 31u) - 15) * 256;
 }
 
-static void initialize_image(uint32_t *image)
+static int initialize_image(uint32_t *image)
 {
+    struct neurax_ram_layout layout;
+    if (neurax_layout_conv(&layout, PIPE_INPUT_HEIGHT, PIPE_INPUT_WIDTH,
+                           1, 1, 0, 1, 1, 1) < 0)
+        return -1;
+
     memset(image, 0, FPGA_RAM_BYTES);
     for (uint32_t i = 0; i < PIPE_INPUT_WORDS; i++)
-        image[RAM_INPUT_BASE + i] = (uint32_t)pipeline_input_value(i);
+        image[layout.input_base + i] = (uint32_t)pipeline_input_value(i);
 
-    image[RAM_WEIGHT_BASE] = PIPE_CONV_WEIGHT;
-    image[RAM_BIAS_BASE] = Q24_8_ZERO;
-    for (uint32_t i = 0; i < FPGA_RAM_WORDS - RAM_OUTPUT_BASE; i++)
-        image[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
+    image[layout.weight_base] = PIPE_CONV_WEIGHT;
+    image[layout.bias_base] = Q24_8_ZERO;
+    for (uint32_t i = layout.end_word; i < FPGA_RAM_WORDS; i++)
+        image[i] = RAM_OUTPUT_SENTINEL;
+    return 0;
 }
 
 static int upload_logical_image(struct neurax_uio_ctx *ctx,
@@ -136,7 +141,8 @@ static int start_and_wait(struct neurax_uio_ctx *ctx,
     ctx->neurax->reg_cmd = CMD_ENABLE | operation_select;
 
     volatile uint32_t status = ctx->neurax->reg_status;
-    if (!(status & STATUS_BUSY) || (status & STATUS_DONE)) {
+    if (!(status & STATUS_BUSY) || (status & STATUS_DONE) ||
+        (status & NEURAX_STATUS_ERROR)) {
         fprintf(stderr,
                 "[pipeline] %s START was not accepted (STATUS=0x%08x)\n",
                 operation_name, status);
@@ -146,6 +152,11 @@ static int start_and_wait(struct neurax_uio_ctx *ctx,
     uint64_t deadline = now_us() + DMA_TIMEOUT_US;
     do {
         status = ctx->neurax->reg_status;
+        if (status & NEURAX_STATUS_ERROR) {
+            fprintf(stderr, "[pipeline] %s rejected (STATUS=0x%08x)\n",
+                    operation_name, status);
+            return -1;
+        }
         if (status & STATUS_DONE)
             return 0;
         usleep_ms(1);
@@ -182,6 +193,11 @@ static int run_convolution_stage(struct neurax_uio_ctx *ctx,
                                  int32_t *output)
 {
     int32_t expected[PIPE_INPUT_WORDS];
+    struct neurax_ram_layout layout;
+
+    if (neurax_layout_conv(&layout, PIPE_INPUT_HEIGHT, PIPE_INPUT_WIDTH,
+                           1, 1, 0, 1, 1, 1) < 0)
+        return -1;
 
     if (prepare_accelerator(ctx) < 0)
         return -1;
@@ -190,12 +206,12 @@ static int run_convolution_stage(struct neurax_uio_ctx *ctx,
 
     if (upload_logical_image(ctx, image) < 0 ||
         start_and_wait(ctx, 0, "1x1 convolution") < 0 ||
-        read_ram_region(ctx, RAM_OUTPUT_BASE, CONV_OUTPUT_WORDS,
+        read_ram_region(ctx, layout.output_base, layout.output_words,
                         (uint32_t *)output) < 0)
         return -1;
 
     for (uint32_t i = 0; i < PIPE_INPUT_WORDS; i++)
-        expected[i] = (int32_t)image[RAM_INPUT_BASE + i] * 2;
+        expected[i] = (int32_t)image[layout.input_base + i] * 2;
 
     return report_mismatches("convolution output", output, expected,
                              PIPE_INPUT_WORDS);
@@ -206,6 +222,10 @@ static int run_activation_stage(struct neurax_uio_ctx *ctx,
                                 int32_t *output)
 {
     int32_t expected[PIPE_ACTIVATION_WORDS];
+    struct neurax_ram_layout layout;
+
+    if (neurax_layout_activation(&layout, PIPE_ACTIVATION_WORDS) < 0)
+        return -1;
 
     if (prepare_accelerator(ctx) < 0)
         return -1;
@@ -215,12 +235,12 @@ static int run_activation_stage(struct neurax_uio_ctx *ctx,
 
     if (upload_logical_image(ctx, image) < 0 ||
         start_and_wait(ctx, CMD_OP_ACTIVATION, "ReLU") < 0 ||
-        read_ram_region(ctx, RAM_OUTPUT_BASE, PIPE_ACTIVATION_WORDS,
+        read_ram_region(ctx, layout.output_base, layout.output_words,
                         (uint32_t *)output) < 0)
         return -1;
 
     for (uint32_t i = 0; i < PIPE_ACTIVATION_WORDS; i++) {
-        int32_t value = (int32_t)image[RAM_INPUT_BASE + i];
+        int32_t value = (int32_t)image[layout.input_base + i];
         expected[i] = value > 0 ? value : 0;
     }
 
@@ -301,6 +321,10 @@ static int run_pool_stage(struct neurax_uio_ctx *ctx,
 {
     int32_t actual[PIPE_POOL_WORDS];
     int32_t expected[PIPE_POOL_WORDS];
+    struct neurax_ram_layout layout;
+    if (neurax_layout_pool(&layout, PIPE_INPUT_HEIGHT, PIPE_INPUT_WIDTH,
+                           PIPE_POOL_SIZE, PIPE_POOL_STRIDE, 1, 1) < 0)
+        return -1;
     const uint32_t pool_config = (1u << 24)
                                | (pool_type << 16)
                                | (PIPE_POOL_STRIDE << 8)
@@ -312,7 +336,7 @@ static int run_pool_stage(struct neurax_uio_ctx *ctx,
 
     if (upload_logical_image(ctx, image) < 0 ||
         start_and_wait(ctx, CMD_OP_POOLING, pool_name) < 0 ||
-        read_ram_region(ctx, RAM_OUTPUT_BASE, PIPE_POOL_WORDS,
+        read_ram_region(ctx, layout.output_base, layout.output_words,
                         (uint32_t *)actual) < 0)
         return -1;
 
@@ -340,6 +364,7 @@ static int run_pipeline_case(struct neurax_uio_ctx *ctx,
     int32_t *conv_output = malloc(PIPE_INPUT_WORDS * sizeof(*conv_output));
     int32_t *activation_output =
         malloc(PIPE_ACTIVATION_WORDS * sizeof(*activation_output));
+    int result = 0;
     if (!image || !conv_output || !activation_output) {
         perror("pipeline test allocation");
         free(activation_output);
@@ -348,9 +373,11 @@ static int run_pipeline_case(struct neurax_uio_ctx *ctx,
         return -1;
     }
 
-    initialize_image(image);
-    int result = 0;
-
+    if (initialize_image(image) < 0) {
+        fprintf(stderr, "[pipeline] convolution layout exceeds FPGA RAM capacity\n");
+        result = -1;
+        goto done;
+    }
     if (test_case == CASE_CONV_ACT_POOL || test_case == CASE_CONV_POOL) {
         printf("\n[pipeline] Running 1x1 convolution (weight=2.0)\n");
         if (run_convolution_stage(ctx, image, conv_output) < 0) {
@@ -358,7 +385,7 @@ static int run_pipeline_case(struct neurax_uio_ctx *ctx,
             goto done;
         }
         for (uint32_t i = 0; i < PIPE_INPUT_WORDS; i++)
-            image[RAM_INPUT_BASE + i] = (uint32_t)conv_output[i];
+            image[i] = (uint32_t)conv_output[i];
     }
 
     if (test_case == CASE_CONV_ACT_POOL || test_case == CASE_ACT_POOL) {
@@ -369,7 +396,7 @@ static int run_pipeline_case(struct neurax_uio_ctx *ctx,
             goto done;
         }
         for (uint32_t i = 0; i < PIPE_ACTIVATION_WORDS; i++)
-            image[RAM_INPUT_BASE + i] = (uint32_t)activation_output[i];
+            image[i] = (uint32_t)activation_output[i];
     }
 
     uint32_t pool_type;

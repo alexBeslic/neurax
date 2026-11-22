@@ -19,6 +19,7 @@
 #define MSGDMA_UIO_H
 
 #include <stdint.h>
+#include "neurax_ram_layout.h"
 
 /* ---------------------------------------------------------------------------
  * LW-H2F bridge layout (byte offsets from base 0xFF200000)
@@ -103,8 +104,8 @@ struct msgdma_reg {
 /* Must not exceed MAX_BYTE configured for the Neurax mSGDMA instances in Qsys. */
 #define MSGDMA_MAX_TRANSFER_BYTES 4096u
 
-/* neurax_data_interface output RAM size: g_RAM_SIZE = 23000 × 32-bit words */
-#define FPGA_OUTPUT_SIZE    (23000u * sizeof(uint32_t))
+/* Backward-compatible name used by the legacy test; this is physical RAM. */
+#define FPGA_OUTPUT_SIZE    FPGA_RAM_BYTES
 
 /* Timeouts (microseconds) */
 #define SOF_TIMEOUT_US      200000u  /* 200 ms: SOF should complete quickly  */

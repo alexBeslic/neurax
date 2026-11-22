@@ -218,7 +218,7 @@ architecture rtl of soc_system is
 		generic (
 			g_WIDTH           : natural := 32;
 			g_ADDR_WIDTH      : natural := 4;
-			g_DATA_ADDR_WIDTH : natural := 15;
+			g_DATA_ADDR_WIDTH : natural := 16;
 			g_PIXEL_WIDTH     : natural := 24;
 			g_FB_WIDTH        : natural := 100;
 			g_FB_HEIGHT       : natural := 100;
@@ -886,7 +886,7 @@ begin
 		generic map (
 			g_WIDTH           => 32,
 			g_ADDR_WIDTH      => 4,
-			g_DATA_ADDR_WIDTH => 15,
+			g_DATA_ADDR_WIDTH => 16,
 			g_PIXEL_WIDTH     => 24,
 			g_FB_WIDTH        => 100,
 			g_FB_HEIGHT       => 100,

@@ -564,6 +564,7 @@ proc compose { } {
     add_instance neurax_avalon_accelerator_0 neurax_avalon_accelerator 1.0
     set_instance_parameter_value neurax_avalon_accelerator_0 {PARALLEL_UNITS} {1}
     set_instance_parameter_value neurax_avalon_accelerator_0 {g_ADDR_WIDTH} {4}
+    set_instance_parameter_value neurax_avalon_accelerator_0 {g_DATA_ADDR_WIDTH} {16}
     set_instance_parameter_value neurax_avalon_accelerator_0 {g_FB_HEIGHT} {100}
     set_instance_parameter_value neurax_avalon_accelerator_0 {g_FB_WIDTH} {100}
     set_instance_parameter_value neurax_avalon_accelerator_0 {g_PIXEL_WIDTH} {24}

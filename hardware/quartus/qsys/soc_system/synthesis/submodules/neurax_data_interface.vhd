@@ -35,8 +35,8 @@
 --   Replacing direct input ports with Avalon-MM registers requires only wiring
 --   register write-data to the input ports and the write strobe to rd_start_i.
 --
--- RAM note: the full 2**g_ADDR_WIDTH = 32768 words of physical RAM are used.
---   The upper 32768-23000 = 9768 addresses are unused but harmless.
+-- RAM note: 16 address bits expose all 65536 physical RAM words. Software
+--   must validate each operation layout and read the complete range in chunks.
 --   g_RAM_SIZE has been removed to avoid implying a software-enforced wrap.
 --
 library ieee;
@@ -49,7 +49,7 @@ use altera_mf.altera_mf_components.all;
 entity neurax_data_interface is
     generic (
         g_DATA_WIDTH : natural := 32;
-        g_ADDR_WIDTH : natural := 15    -- 15 bits => 32768-word RAM (covers 23000 words)
+        g_ADDR_WIDTH : natural := 16    -- 16 bits => all 65536 RAM words
     );
     port (
         clk_i : in  std_logic;
@@ -77,6 +77,7 @@ entity neurax_data_interface is
         rd_length_i     : in  std_logic_vector(g_ADDR_WIDTH - 1 downto 0); -- READ_LENGTH (words)
         rd_busy_o       : out std_logic;                                    -- CONTROL.BUSY
         rd_done_o       : out std_logic;                                    -- CONTROL.DONE (one-cycle pulse)
+        rd_error_o      : out std_logic;                                    -- invalid/overflowing read command
         wr_reset_req_i  : in  std_logic;                                    -- software write-pointer reset request
         wr_reset_ack_o  : out std_logic;                                    -- reset accepted while source FSM is idle
 
@@ -122,6 +123,8 @@ architecture arch of neurax_data_interface is
     signal rd_ptr       : unsigned(g_ADDR_WIDTH - 1 downto 0);
     signal rd_remaining : unsigned(g_ADDR_WIDTH - 1 downto 0);
     signal rd_first     : std_logic;   -- '1' on the first word of a packet (SOP)
+    signal rd_error     : std_logic;
+    signal rd_end_addr  : unsigned(g_ADDR_WIDTH downto 0);
 
 begin
 
@@ -248,7 +251,11 @@ begin
     -- Status outputs (map to CONTROL register bits in Avalon-MM block)
     rd_busy_o     <= '0' when rd_state = IDLE                            else '1';
     rd_done_o     <= '1' when rd_state = FLUSH                           else '0';
+    rd_error_o    <= rd_error;
     wr_reset_ack_o <= '1' when wr_reset_req_i = '1' and rd_state = IDLE else '0';
+
+    rd_end_addr <= resize(unsigned(rd_start_addr_i), g_ADDR_WIDTH + 1) +
+                   resize(unsigned(rd_length_i), g_ADDR_WIDTH + 1);
 
     -- =========================================================================
     -- Clocked process: sink write pointer + source read state machine
@@ -264,6 +271,7 @@ begin
             rd_ptr         <= (others => '0');
             rd_remaining   <= (others => '0');
             rd_first       <= '1';
+            rd_error       <= '0';
 
         elsif rising_edge(clk_i) then
 
@@ -290,7 +298,12 @@ begin
                     -- Sample command inputs on the accepting cycle and latch them.
                     -- rd_start_i pulses that arrive in PREFETCH, SEND, or FLUSH are
                     -- ignored because this branch is never evaluated outside IDLE.
-                    if rd_start_i = '1' and unsigned(rd_length_i) /= 0 then
+                    if rd_start_i = '1' then
+                        rd_error <= '0';
+                        if unsigned(rd_length_i) = 0 or
+                           rd_end_addr > to_unsigned(2**g_ADDR_WIDTH, g_ADDR_WIDTH + 1) then
+                            rd_error <= '1';
+                        else
                         -- Latch: cmd registers hold the original command for the full
                         -- transfer duration and serve as the connection point for
                         -- READ_START_ADDRESS / READ_LENGTH Avalon-MM registers.
@@ -301,6 +314,7 @@ begin
                         rd_remaining   <= unsigned(rd_length_i);
                         rd_first       <= '1';
                         rd_state       <= PREFETCH;
+                        end if;
                     end if;
 
                 when PREFETCH =>

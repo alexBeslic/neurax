@@ -16,6 +16,7 @@ architecture sim of activation_block_tb is
         (-512, -1, 0, 1, 256, -256, 32767, -32768);
 
     signal clk               : std_logic := '0';
+    signal sim_finished      : boolean := false;
     signal rst               : std_logic := '1';
     signal start             : std_logic := '0';
     signal done              : std_logic;
@@ -32,10 +33,18 @@ architecture sim of activation_block_tb is
     signal output_data       : data_array_t(0 to PARALLEL_UNITS-1);
     signal output_addr       : std_logic_vector(15 downto 0);
     signal output_write_en   : std_logic;
-    signal current_element   : std_logic_vector(15 downto 0);
-    signal processing_cycles : std_logic_vector(31 downto 0);
 begin
-    clk <= not clk after CLK_PERIOD/2;
+    clock_gen : process
+    begin
+        while not sim_finished loop
+            clk <= '0';
+            wait for CLK_PERIOD/2;
+            clk <= '1';
+            wait for CLK_PERIOD/2;
+        end loop;
+        wait;
+    end process;
+
     input_valid <= input_read_en;
 
     input_memory : process(input_addr)
@@ -81,9 +90,7 @@ begin
             output_valid      => output_valid,
             output_data       => output_data,
             output_addr       => output_addr,
-            output_write_en   => output_write_en,
-            current_element   => current_element,
-            processing_cycles => processing_cycles
+            output_write_en   => output_write_en
         );
 
     stimulus : process
@@ -115,8 +122,8 @@ begin
             cycle_count := 0;
             while done /= '1' loop
                 wait until rising_edge(clk);
-                sample_valid := output_valid;
                 wait for 1 ns;
+                sample_valid := output_valid;
 
                 if sample_valid = '1' then
                     for lane in 0 to PARALLEL_UNITS-1 loop
@@ -151,7 +158,7 @@ begin
         end loop;
 
         report "*** ALL ACTIVATION TESTS PASSED ***" severity note;
-        std.env.stop;
+        sim_finished <= true;
         wait;
     end process;
 end sim;

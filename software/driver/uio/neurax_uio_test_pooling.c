@@ -77,6 +77,12 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
 {
     const uint32_t n_words = FPGA_RAM_WORDS;
     const uint32_t n_bytes = FPGA_RAM_BYTES;
+    struct neurax_ram_layout layout;
+    if (neurax_layout_pool(&layout, POOL_INPUT_HEIGHT, POOL_INPUT_WIDTH,
+                           POOL_SIZE, POOL_STRIDE, POOL_CHANNELS, 1) < 0) {
+        fprintf(stderr, "[pooling] configured input/output regions exceed FPGA RAM capacity\n");
+        return -1;
+    }
     uint32_t *tx_data = calloc(n_words, sizeof(*tx_data));
     uint32_t *rx = malloc(n_bytes);
     if (!tx_data || !rx) {
@@ -91,9 +97,9 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
            POOL_STRIDE);
 
     for (uint32_t i = 0; i < POOL_INPUT_HEIGHT * POOL_INPUT_WIDTH; i++)
-        tx_data[RAM_INPUT_BASE + i] = (uint32_t)pooling_input_value(i);
+        tx_data[layout.input_base + i] = (uint32_t)pooling_input_value(i);
     for (uint32_t i = 0; i < POOL_OUTPUT_WORDS; i++)
-        tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
+        tx_data[layout.output_base + i] = RAM_OUTPUT_SENTINEL;
 
     /* Preserve the tested board's Port B byte-lane reversal. The explicit
      * FPGA pointer-reset handshake now places payload word 0 at RAM[0], so do
@@ -143,7 +149,8 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
         ctx->neurax->reg_cmd = CMD_ENABLE | CMD_OP_POOLING;
 
         volatile uint32_t status = ctx->neurax->reg_status;
-        if (!(status & STATUS_BUSY) || (status & STATUS_DONE)) {
+        if (!(status & STATUS_BUSY) || (status & STATUS_DONE) ||
+            (status & NEURAX_STATUS_ERROR)) {
             fprintf(stderr,
                     "[pooling] %s START was not accepted (STATUS=0x%08x)\n",
                     pool_names[mode], status);
@@ -154,11 +161,18 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
         uint64_t deadline = now_us() + DMA_TIMEOUT_US;
         do {
             status = ctx->neurax->reg_status;
+            if (status & NEURAX_STATUS_ERROR) {
+                fprintf(stderr,
+                        "[pooling] operation rejected (STATUS=0x%08x)\n",
+                        status);
+                all_passed = false;
+                break;
+            }
             if (status & STATUS_DONE)
                 break;
             usleep_ms(1);
         } while (now_us() < deadline);
-        if (!(status & STATUS_DONE)) {
+        if (!(status & STATUS_DONE) || (status & NEURAX_STATUS_ERROR)) {
             fprintf(stderr, "[pooling] %s TIMEOUT (STATUS=0x%08x)\n",
                     pool_names[mode], status);
             all_passed = false;
@@ -195,12 +209,12 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
             for (uint32_t i = 0; i < POOL_INPUT_HEIGHT * POOL_INPUT_WIDTH; i++) {
                 const uint32_t expected_input = byte_swap32(
                     (uint32_t)pooling_input_value(i));
-                if (rx[RAM_INPUT_BASE + i] != expected_input) {
+                if (rx[layout.input_base + i] != expected_input) {
                     if (input_errors < 8)
                         fprintf(stderr,
                                 "[pooling] input RAM[%u]: got 0x%08" PRIx32
                                 ", expected 0x%08" PRIx32 "\n",
-                                i, rx[RAM_INPUT_BASE + i], expected_input);
+                                i, rx[layout.input_base + i], expected_input);
                     input_errors++;
                 }
             }
@@ -209,7 +223,7 @@ static int run_pooling(struct neurax_uio_ctx *ctx)
         for (uint32_t y = 0; y < POOL_OUTPUT_HEIGHT; y++) {
             for (uint32_t x = 0; x < POOL_OUTPUT_WIDTH; x++) {
                 const uint32_t index = y * POOL_OUTPUT_WIDTH + x;
-                const uint32_t output = rx[RAM_OUTPUT_BASE + index];
+                const uint32_t output = rx[layout.output_base + index];
                 const uint32_t expected = byte_swap32(
                     (uint32_t)pooling_reference(y, x, type));
 

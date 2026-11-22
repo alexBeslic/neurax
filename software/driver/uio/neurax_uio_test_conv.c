@@ -44,20 +44,9 @@
 #define STATUS_BUSY             (1u << 5)
 #define WRITE_RESET_TIMEOUT_US  200000u
 
-/* RAM word layout (one signed Q24.8 value per 32-bit word).
- * Must match FPGA generics g_FB_HEIGHT/g_FB_WIDTH and FPGA_accelerator offsets. */
-#define RAM_INPUT_BASE   0u
-#define RAM_WEIGHT_BASE  10000u
-#define RAM_BIAS_BASE    13000u
-#define RAM_OUTPUT_BASE  13016u
-
 /* Signed Q24.8 values occupy the complete 32-bit RAM word. */
 #define Q24_8_ZERO      0x00000000u
 #define RAM_OUTPUT_SENTINEL 0x00005A5Au
-
-/* Full altsyncram integrity test constants (derived from msgdma_uio.h) */
-#define FPGA_RAM_WORDS    (FPGA_OUTPUT_SIZE / sizeof(uint32_t)) /* 23000 words */
-#define FPGA_RAM_BYTES    FPGA_OUTPUT_SIZE                     /* 92000 bytes */
 
 /* Workaround for the observed Port B byte-lane reversal. Port A stores these
  * bytes unchanged; the Port B RAM interface reverses them on read/write. */
@@ -314,6 +303,11 @@ ssize_t neurax_dma_write(struct neurax_uio_ctx *ctx,
                          const void *src, size_t len)
 {
     if (len == 0) return 0;
+    if (len > FPGA_RAM_BYTES) {
+        fprintf(stderr, "[DMA write] %zu bytes exceeds the %u-byte FPGA RAM capacity\n",
+                len, FPGA_RAM_BYTES);
+        return -1;
+    }
 
     /* Reset and acknowledge the FPGA write pointer before sending payload. */
     if (neurax_reset_write_pointer(ctx) < 0)
@@ -410,8 +404,22 @@ static int readback_ram_chunk(struct neurax_uio_ctx *ctx,
                               uint32_t start_word,
                               uint32_t word_count)
 {
+    if (word_count == 0 ||
+        word_count > MSGDMA_MAX_TRANSFER_BYTES / sizeof(uint32_t) ||
+        start_word >= FPGA_RAM_WORDS ||
+        word_count > FPGA_RAM_WORDS - start_word) {
+        fprintf(stderr,
+                "[DMA read] invalid RAM chunk start=%u count=%u (capacity=%u words)\n",
+                start_word, word_count, FPGA_RAM_WORDS);
+        return -1;
+    }
     const uint32_t byte_count = word_count * sizeof(uint32_t);
-    const uint32_t read_command = (word_count << 16) | start_word;
+    uint32_t read_command;
+    if (neurax_data_read_pack(start_word, word_count, &read_command) < 0) {
+        fprintf(stderr, "[DMA read] DATA_READ fields cannot encode start=%u count=%u\n",
+                start_word, word_count);
+        return -1;
+    }
     const uint32_t destination = (uint32_t)(
         ctx->rx_phys + (uintptr_t)start_word * sizeof(uint32_t));
     uint64_t deadline;
@@ -431,6 +439,13 @@ static int readback_ram_chunk(struct neurax_uio_ctx *ctx,
     deadline = now_us() + 100000u;
     do {
         data_status = ctx->neurax->reg_data_sc;
+        if (data_status & NEURAX_DATA_SC_READ_ERROR) {
+            fprintf(stderr,
+                    "[DMA read] FPGA rejected chunk start=%u count=%u "
+                    "(DATA_SC=0x%08x)\n",
+                    start_word, word_count, data_status);
+            return -1;
+        }
         if (data_status & (1u << 1))
             break;
         usleep_ms(1);
@@ -542,123 +557,96 @@ static int32_t expected_edge_q24_8(const uint8_t *pixels, int y, int x)
  * ------------------------------------------------------------------------- */
 static int run_image_convolution(struct neurax_uio_ctx *ctx)
 {
-    const uint32_t n_words = FPGA_RAM_WORDS;   /* 23000 */
-    const uint32_t n_bytes = FPGA_RAM_BYTES;   /* 92000 */
+    const uint32_t n_words = FPGA_RAM_WORDS;
+    const uint32_t n_bytes = FPGA_RAM_BYTES;
+    struct neurax_ram_layout layout;
+    if (neurax_layout_conv(&layout, CONV_INPUT_H, CONV_INPUT_W,
+                           CONV_KERNEL, CONV_STRIDE, CONV_PADDING,
+                           CONV_IN_CH, CONV_OUT_CH, 1) < 0) {
+        fprintf(stderr, "[conv] configured tensor regions exceed FPGA RAM capacity\n");
+        return -1;
+    }
 
     printf("\n=== Convolution test (%dx%d input, %dx%d kernel) ===\n",
            CONV_INPUT_H, CONV_INPUT_W, CONV_KERNEL, CONV_KERNEL);
 
-    /* Load the prepared image and build the logical RAM image. Pixels use
-     * signed Q24.8. The C-side byte swap compensates for the observed Port B
-     * byte-lane reversal; the acknowledged pointer reset makes RAM[0] usable. */
-    uint32_t *tx_data = calloc(n_words, sizeof(uint32_t));
+    uint32_t *tx_data = calloc(n_words, sizeof(*tx_data));
     if (!tx_data) {
         perror("calloc tx_data");
         return -1;
     }
 
-    const uint32_t input_word_count = CONV_INPUT_H * CONV_INPUT_W;
     uint8_t input_pixels[CONV_INPUT_H * CONV_INPUT_W];
-    if (load_input_pixels(input_pixels, input_word_count) < 0) {
+    if (load_input_pixels(input_pixels, layout.input_words) < 0) {
         free(tx_data);
         return -1;
     }
-
-    ssize_t wr;
-    for (uint32_t i = 0; i < input_word_count; i++)
-        tx_data[RAM_INPUT_BASE + i] = (uint32_t)input_pixels[i] << 8;
 
     static const int32_t edge_kernel[CONV_KERNEL * CONV_KERNEL] = {
         0, -256, 0,
         -256, 1024, -256,
         0, -256, 0
     };
-    for (uint32_t i = 0; i < CONV_KERNEL * CONV_KERNEL; i++)
-        tx_data[RAM_WEIGHT_BASE + i] = (uint32_t)edge_kernel[i];
-
-    tx_data[RAM_BIAS_BASE] = Q24_8_ZERO;
-    for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++)
-        tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
-
+    for (uint32_t i = 0; i < layout.input_words; i++)
+        tx_data[layout.input_base + i] = (uint32_t)input_pixels[i] << 8;
+    for (uint32_t i = 0; i < layout.weight_words; i++)
+        tx_data[layout.weight_base + i] = (uint32_t)edge_kernel[i];
+    tx_data[layout.bias_base] = Q24_8_ZERO;
+    for (uint32_t i = 0; i < layout.output_words; i++)
+        tx_data[layout.output_base + i] = RAM_OUTPUT_SENTINEL;
     for (uint32_t word = 0; word < n_words; word++)
         tx_data[word] = byte_swap32(tx_data[word]);
 
-    /* Configure the accelerator before DMA so the Avalon-ST sink is ready. */
     ctx->neurax->reg_cmd = 0;
     usleep_ms(1);
     ctx->neurax->reg_cmd = CMD_ENABLE;
     usleep_ms(1);
+    ctx->neurax->reg_conv_config_0 = ((CONV_KERNEL & 0xFFu) << 24) |
+                                     ((CONV_PADDING & 0xFFu) << 8) |
+                                     (CONV_STRIDE & 0xFFu);
+    ctx->neurax->reg_conv_config_1 = ((CONV_OUT_CH & 0xFFu) << 8) |
+                                     (CONV_IN_CH & 0xFFu);
+    ctx->neurax->reg_batch_size = 1;
 
-    uint32_t conv0 = ((CONV_KERNEL & 0xFF) << 24)
-                   | ((CONV_PADDING & 0xFF) << 8)
-                   | ((CONV_STRIDE & 0xFF) << 0);
-    uint32_t conv1 = ((CONV_OUT_CH & 0xFF) << 8)
-                   | ((CONV_IN_CH  & 0xFF) << 0);
-    ctx->neurax->reg_conv_config_0 = conv0;
-    ctx->neurax->reg_conv_config_1 = conv1;
-    ctx->neurax->reg_batch_size    = 1;  /* MUST be 1, 0 skips computation */
-    volatile uint32_t status;
-    /* Write the image, kernel, bias, and output sentinels to FPGA RAM. */
-    wr = neurax_dma_write(ctx, tx_data, n_bytes);
-    if (wr < 0 || (size_t)wr != n_bytes) {
-        fprintf(stderr, "[conv] Write failed or incomplete: %zd of %u bytes\n",
-                wr, n_bytes);
-        msgdma_reset(ctx->s2m);
+    ssize_t written = neurax_dma_write(ctx, tx_data, n_bytes);
+    if (written < 0 || (size_t)written != n_bytes) {
+        fprintf(stderr, "[conv] RAM upload failed: %zd of %u bytes\n",
+                written, n_bytes);
         free(tx_data);
         return -1;
     }
-    usleep_ms(1000);
 
-    /* START is edge-detected, so clear it after the start pulse. */
     ctx->neurax->reg_cmd = CMD_ENABLE | CMD_OP_CONV | CMD_START;
     __sync_synchronize();
-    usleep_ms(1);
+    usleep_ms(10);
     ctx->neurax->reg_cmd = CMD_ENABLE | CMD_OP_CONV;
 
-    status = ctx->neurax->reg_status;
-    if (status & STATUS_DONE) {
-        fprintf(stderr,
-                "[conv] START was not accepted: DONE stayed set (STATUS=0x%08x)\n",
-                status);
-        free(tx_data);
-        return -1;
-    }
-
-    /* Wait for accelerator writes to finish before starting RAM readback. */
-    uint64_t conv_deadline = now_us() + DMA_TIMEOUT_US;
+    uint64_t deadline = now_us() + DMA_TIMEOUT_US;
+    volatile uint32_t status;
     do {
         status = ctx->neurax->reg_status;
-        if (status & STATUS_DONE) break;
+        if (status & STATUS_DONE)
+            break;
         usleep_ms(1);
-    } while (now_us() < conv_deadline);
-
-    if (!(status & STATUS_DONE)) {
-        fprintf(stderr, "[conv] Convolution TIMEOUT (STATUS=0x%08x)\n", status);
+    } while (now_us() < deadline);
+    if (!(status & STATUS_DONE) || (status & NEURAX_STATUS_ERROR)) {
+        fprintf(stderr, "[conv] operation failed (STATUS=0x%08x)\n", status);
         free(tx_data);
         return -1;
     }
-    int errors = 0;
 
-    /* Qsys configures each mSGDMA with MAX_BYTE=4096. Keep every descriptor
-     * within that limit, pairing each descriptor with a matching FPGA RAM
-     * read command (word-addressed start and word count). */
-    const uint32_t words_per_chunk =
-        MSGDMA_MAX_TRANSFER_BYTES / sizeof(uint32_t);
-    for (uint32_t start_word = 0; start_word < n_words;
-         start_word += words_per_chunk) {
+    const uint32_t words_per_chunk = MSGDMA_MAX_TRANSFER_BYTES / sizeof(uint32_t);
+    for (uint32_t start_word = 0; start_word < n_words; start_word += words_per_chunk) {
         uint32_t word_count = n_words - start_word;
         if (word_count > words_per_chunk)
             word_count = words_per_chunk;
-
         if (readback_ram_chunk(ctx, start_word, word_count) < 0) {
-            fprintf(stderr, "[conv] RAM readback failed at word %u\n",
-                    start_word);
+            fprintf(stderr, "[conv] RAM readback failed at word %u\n", start_word);
             free(tx_data);
             return -1;
         }
     }
 
-    /* Check the complete RAM image and every output against the CPU reference. */
     uint32_t *rx = malloc(n_bytes);
     if (!rx) {
         perror("malloc rx");
@@ -667,71 +655,35 @@ static int run_image_convolution(struct neurax_uio_ctx *ctx)
     }
     memcpy(rx, ctx->rx_buf, n_bytes);
 
-    int ram_errors = 0;
-    uint32_t untouched_outputs = 0;
-    uint32_t wrong_outputs = 0;
-    uint32_t expected_outputs = 0;
-    for (uint32_t i = 0; i < CONV_OUTPUT_H * CONV_OUTPUT_W; i++) {
-        uint32_t output = rx[RAM_OUTPUT_BASE + i];
-        int32_t expected_logical = expected_edge_q24_8(
+    uint32_t ram_errors = 0;
+    uint32_t output_errors = 0;
+    for (uint32_t i = 0; i < layout.input_words; i++) {
+        const uint32_t expected = byte_swap32((uint32_t)input_pixels[i] << 8);
+        if (rx[layout.input_base + i] != expected)
+            ram_errors++;
+    }
+    for (uint32_t i = 0; i < layout.weight_words; i++) {
+        const uint32_t expected = byte_swap32((uint32_t)edge_kernel[i]);
+        if (rx[layout.weight_base + i] != expected)
+            ram_errors++;
+    }
+    for (uint32_t i = 0; i < layout.output_words; i++) {
+        const uint32_t output = rx[layout.output_base + i];
+        const int32_t expected_logical = expected_edge_q24_8(
             input_pixels, i / CONV_OUTPUT_W, i % CONV_OUTPUT_W);
-        uint32_t expected_porta = byte_swap32((uint32_t)expected_logical);
-        if (output == byte_swap32(RAM_OUTPUT_SENTINEL)) {
-            untouched_outputs++;
-        } else if (output == expected_porta) {
-            expected_outputs++;
-        } else {
-            wrong_outputs++;
-        }
+        const uint32_t expected = byte_swap32((uint32_t)expected_logical);
+        if (output != expected)
+            output_errors++;
     }
-    if (expected_outputs != CONV_OUTPUT_H * CONV_OUTPUT_W ||
-        untouched_outputs != 0 || wrong_outputs != 0)
-        errors++;
 
-    const uint32_t input_words = CONV_INPUT_H * CONV_INPUT_W;
-    const uint32_t weight_words =
-        CONV_KERNEL * CONV_KERNEL * CONV_IN_CH * CONV_OUT_CH;
-    for (uint32_t i = 0; i < input_words; i++) {
-        const uint32_t expected_input =
-            byte_swap32((uint32_t)input_pixels[i] << 8);
-        if (rx[RAM_INPUT_BASE + i] != expected_input) {
-            if (ram_errors < 8)
-                fprintf(stderr,
-                        "[conv] RAM input mismatch at word %u: got 0x%08" PRIx32
-                        ", expected 0x%08" PRIx32 "\n",
-                        i, rx[RAM_INPUT_BASE + i],
-                        expected_input);
-            ram_errors++;
-        }
-    }
-    for (uint32_t i = 0; i < weight_words; i++) {
-        const uint32_t expected_weight =
-            byte_swap32((uint32_t)edge_kernel[i]);
-        if (rx[RAM_WEIGHT_BASE + i] != expected_weight) {
-            if (ram_errors < 8)
-                fprintf(stderr,
-                        "[conv] RAM weight mismatch at word %u: got 0x%08" PRIx32
-                        ", expected 0x%08" PRIx32 "\n",
-                        i, rx[RAM_WEIGHT_BASE + i],
-                        expected_weight);
-            ram_errors++;
-        }
-    }
-    if (save_ram_readback(rx, n_words) < 0) {
-        free(rx);
-        free(tx_data);
-        return -1;
-    }
-    printf("RAM readback saved to res.txt.\n");
-
+    if (save_ram_readback(rx, n_words) < 0)
+        ram_errors++;
+    printf("Image convolution: %s (%u output mismatches, %u RAM mismatches)\n",
+           output_errors == 0 && ram_errors == 0 ? "PASS" : "FAIL",
+           output_errors, ram_errors);
     free(rx);
     free(tx_data);
-    tx_data = NULL;
-
-    printf("Image convolution: %s (%u output mismatches, %d RAM mismatches)\n",
-           errors == 0 && ram_errors == 0 ? "PASS" : "FAIL",
-           wrong_outputs, ram_errors);
-    return errors == 0 && ram_errors == 0 ? 0 : -1;
+    return output_errors == 0 && ram_errors == 0 ? 0 : -1;
 }
 
 /* ---------------------------------------------------------------------------

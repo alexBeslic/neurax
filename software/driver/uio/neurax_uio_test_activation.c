@@ -38,6 +38,11 @@ static int run_activation(struct neurax_uio_ctx *ctx)
     const uint32_t n_words = FPGA_RAM_WORDS;
     const uint32_t n_bytes = FPGA_RAM_BYTES;
     const uint32_t tensor_size = ACTIVATION_TENSOR_SIZE;
+    struct neurax_ram_layout layout;
+    if (neurax_layout_activation(&layout, tensor_size) < 0) {
+        fprintf(stderr, "[activation] input/output tensors exceed FPGA RAM capacity\n");
+        return -1;
+    }
     uint32_t *tx_data = calloc(n_words, sizeof(*tx_data));
     if (!tx_data) {
         perror("calloc tx_data");
@@ -47,9 +52,9 @@ static int run_activation(struct neurax_uio_ctx *ctx)
     printf("\n=== ReLU/Linear activation test (%u Q24.8 values) ===\n",
            tensor_size);
     for (uint32_t i = 0; i < tensor_size; i++)
-        tx_data[RAM_INPUT_BASE + i] = (uint32_t)activation_input_value(i);
+        tx_data[layout.input_base + i] = (uint32_t)activation_input_value(i);
     for (uint32_t i = 0; i < tensor_size; i++)
-        tx_data[RAM_OUTPUT_BASE + i] = RAM_OUTPUT_SENTINEL;
+        tx_data[layout.output_base + i] = RAM_OUTPUT_SENTINEL;
 
     /* Preserve the tested board's Port B byte-lane reversal. The explicit
      * FPGA pointer-reset handshake now places payload word 0 at RAM[0], so do
@@ -106,7 +111,8 @@ static int run_activation(struct neurax_uio_ctx *ctx)
         volatile uint32_t status = ctx->neurax->reg_status;
         /* 4096 serial elements cannot finish in the 10 us START pulse window.
          * Require BUSY and DONE clear so a stale sticky DONE cannot look complete. */
-        if (!(status & STATUS_BUSY) || (status & STATUS_DONE)) {
+        if (!(status & STATUS_BUSY) || (status & STATUS_DONE) ||
+            (status & NEURAX_STATUS_ERROR)) {
             fprintf(stderr,
                     "[activation] %s START was not accepted (STATUS=0x%08x)\n",
                     activation_names[mode], status);
@@ -117,11 +123,18 @@ static int run_activation(struct neurax_uio_ctx *ctx)
         uint64_t deadline = now_us() + DMA_TIMEOUT_US;
         do {
             status = ctx->neurax->reg_status;
+            if (status & NEURAX_STATUS_ERROR) {
+                fprintf(stderr,
+                        "[activation] %s rejected (STATUS=0x%08x)\n",
+                        activation_names[mode], status);
+                all_passed = false;
+                break;
+            }
             if (status & STATUS_DONE)
                 break;
             usleep_ms(1);
         } while (now_us() < deadline);
-        if (!(status & STATUS_DONE)) {
+        if (!(status & STATUS_DONE) || (status & NEURAX_STATUS_ERROR)) {
             fprintf(stderr, "[activation] %s TIMEOUT (STATUS=0x%08x)\n",
                     activation_names[mode], status);
             all_passed = false;
@@ -154,19 +167,19 @@ static int run_activation(struct neurax_uio_ctx *ctx)
             for (uint32_t i = 0; i < tensor_size; i++) {
                 const uint32_t expected_input =
                     byte_swap32((uint32_t)activation_input_value(i));
-                if (rx[RAM_INPUT_BASE + i] != expected_input) {
+                if (rx[layout.input_base + i] != expected_input) {
                     if (input_errors < 8)
                         fprintf(stderr,
                                 "[activation] input RAM[%u]: got 0x%08" PRIx32
                                 ", expected 0x%08" PRIx32 "\n",
-                                i, rx[RAM_INPUT_BASE + i], expected_input);
+                                i, rx[layout.input_base + i], expected_input);
                     input_errors++;
                 }
             }
         }
 
         for (uint32_t i = 0; i < tensor_size; i++) {
-            const uint32_t output = rx[RAM_OUTPUT_BASE + i];
+            const uint32_t output = rx[layout.output_base + i];
             const int32_t input = activation_input_value(i);
             const int32_t expected_value = activation_types[mode] == ACTIVATION_RELU
                 ? (input > 0 ? input : 0) : input;

@@ -12,7 +12,7 @@ entity neurax_register_block is
     generic (
         g_WIDTH      : natural := 32;
         g_ADDR_WIDTH : natural := 4;
-        g_DATA_ADDR_WIDTH : natural := 15
+        g_DATA_ADDR_WIDTH : natural := 16
     );
 
     port (
@@ -35,6 +35,7 @@ entity neurax_register_block is
         neurax_enable_o           : out std_logic;
         neurax_operation_select_o : out std_logic_vector(1 downto 0);
         neurax_start_operation_o  : out std_logic;
+        neurax_configuration_valid_o : out std_logic;
         -- Convolution parameters
         neurax_conv_kernel_size_o     : out integer range 1 to MAX_KERNEL_SIZE;
         neurax_conv_stride_o          : out integer range 1 to 4;
@@ -67,6 +68,7 @@ entity neurax_register_block is
         -- Status signals
         neurax_operation_done_i : in  std_logic;
         neurax_operation_busy_i : in  std_logic;
+        neurax_operation_error_i : in  std_logic;
         neurax_current_operation_i : in  std_logic_vector(1 downto 0);
 
         neurax_data_start_o          : out std_logic;
@@ -75,7 +77,8 @@ entity neurax_register_block is
         neurax_data_wr_reset_req_o   : out std_logic;
         neurax_data_wr_reset_ack_i   : in  std_logic;
         neurax_data_busy_i           : in std_logic;
-        neurax_data_done_i           : in std_logic
+        neurax_data_done_i           : in std_logic;
+        neurax_data_error_i          : in std_logic
     );
 
 end neurax_register_block;
@@ -127,6 +130,51 @@ architecture arch of neurax_register_block is
         end if;
     end function;
 
+    function configuration_is_valid(
+        operation : std_logic_vector(1 downto 0);
+        conv0, conv1, pool_cfg, activation_cfg, batch_cfg : std_logic_vector(31 downto 0)
+    ) return boolean is
+        variable kernel_size, stride, padding : integer;
+        variable input_channels, output_channels : integer;
+        variable pool_size, pool_stride, pool_type, pool_channels : integer;
+        variable activation_type, tensor_size, batch_size : integer;
+    begin
+        batch_size := to_integer(unsigned(batch_cfg(t_BATCH_SIZE)));
+        if batch_size < 1 or batch_size > MAX_BATCH_SIZE then
+            return false;
+        end if;
+
+        case operation is
+            when "00" =>
+                kernel_size := to_integer(unsigned(conv0(t_CONV_KERNEL_SIZE)));
+                padding := to_integer(unsigned(conv0(t_CONV_PADDING)));
+                stride := to_integer(unsigned(conv0(t_CONV_STRIDE)));
+                input_channels := to_integer(unsigned(conv1(t_CONV_INPUT_CHANNELS)));
+                output_channels := to_integer(unsigned(conv1(t_CONV_OUTPUT_CHANNELS)));
+                return kernel_size >= 1 and kernel_size <= MAX_KERNEL_SIZE and
+                       stride >= 1 and stride <= 4 and
+                       padding <= MAX_KERNEL_SIZE/2 and
+                       input_channels >= 1 and input_channels <= MAX_CHANNELS and
+                       output_channels >= 1 and output_channels <= MAX_CHANNELS;
+            when "01" =>
+                pool_size := to_integer(unsigned(pool_cfg(t_POOL_SIZE)));
+                pool_stride := to_integer(unsigned(pool_cfg(t_POOL_STRIDE)));
+                pool_type := to_integer(unsigned(pool_cfg(t_POOL_TYPE)));
+                pool_channels := to_integer(unsigned(pool_cfg(t_POOL_CHANNELS)));
+                return pool_size >= 1 and pool_size <= MAX_POOL_SIZE and
+                       pool_stride >= 1 and pool_stride <= MAX_POOL_SIZE and
+                       pool_type <= c_POOL_OP_SUM and
+                       pool_channels >= 1 and pool_channels <= MAX_CHANNELS;
+            when "10" =>
+                activation_type := to_integer(unsigned(activation_cfg(t_ACTIVATION_TYPE)));
+                tensor_size := to_integer(unsigned(activation_cfg(t_ACTIVATION_TENSOR_SIZE)));
+                return activation_type <= c_ACTIVATION_ELU and
+                       tensor_size >= 1 and tensor_size <= MAX_TENSOR_SIZE;
+            when others =>
+                return false;
+        end case;
+    end function;
+
 begin
     --- Write process
     process(clk_i, rst_i)
@@ -137,6 +185,7 @@ begin
             -- Update register values
             ram(to_integer(c_REG_STATUS))(c_STATUS_DONE) <= neurax_operation_done_i;
             ram(to_integer(c_REG_STATUS))(c_STATUS_BUSY) <= neurax_operation_busy_i;
+            ram(to_integer(c_REG_STATUS))(c_STATUS_ERROR) <= neurax_operation_error_i;
             ram(to_integer(c_REG_STATUS))(t_STATUS_CURRENT_OPERATION) <= neurax_current_operation_i;
             ram(to_integer(c_REG_STATUS))(c_STATUS_WEIGHT_READY) <= neurax_weight_ready_i;
             ram(to_integer(c_REG_STATUS))(c_STATUS_BIAS_READY) <= neurax_bias_ready_i;
@@ -145,6 +194,7 @@ begin
 
             ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_DONE) <= neurax_data_done_i;
             ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_BUSY) <= neurax_data_busy_i;
+            ram(to_integer(c_REG_DATA_SC))(c_DATA_SC_READ_ERROR) <= neurax_data_error_i;
 
             -- Self-clear the START bit once the data FSM has accepted the command.
             -- This makes CONTROL.START behave like a one-cycle pulse instead of a
@@ -160,10 +210,11 @@ begin
                     -- Valid address range
                     for i in 0 to (g_WIDTH/8 - 1) loop
                         if avs_byteenable_i(i) = '1' then
-                            -- DATA_SC bits 0/1 are hardware-owned; software may
+                            -- DATA_SC bits 0/1 and 4 are hardware-owned; software may
                             -- write the reset request and START command only.
                             if unsigned(avs_address_i) = c_REG_DATA_SC and i = 0 then
-                                ram(to_integer(c_REG_DATA_SC))(7 downto 2) <= avs_writedata_i(7 downto 2);
+                                ram(to_integer(c_REG_DATA_SC))(7 downto 5) <= avs_writedata_i(7 downto 5);
+                                ram(to_integer(c_REG_DATA_SC))(3 downto 2) <= avs_writedata_i(3 downto 2);
                             else
                                 ram(to_integer(unsigned(avs_address_i)))(i*8 + 7 downto i*8) <= avs_writedata_i(i*8 + 7 downto i*8);
                             end if;
@@ -213,6 +264,13 @@ begin
     neurax_enable_o <= ram(to_integer(c_REG_CMD))(c_CMD_ENABLE);
     neurax_operation_select_o <= ram(to_integer(c_REG_CMD))(t_CMD_OPERATION_SELECT);
     neurax_start_operation_o <= ram(to_integer(c_REG_CMD))(c_CMD_START_OPERATION);
+    neurax_configuration_valid_o <= '1' when configuration_is_valid(
+        ram(to_integer(c_REG_CMD))(t_CMD_OPERATION_SELECT),
+        ram(to_integer(c_REG_CONV_CONFIG_0)),
+        ram(to_integer(c_REG_CONV_CONFIG_1)),
+        ram(to_integer(c_REG_POOL_CONFIG)),
+        ram(to_integer(c_REG_ACTIVATION_CONFIG)),
+        ram(to_integer(c_REG_BATCH_SIZE))) else '0';
     neurax_weight_valid_o <= ram(to_integer(c_REG_CMD))(c_CMD_WEIGHT_VALID);
     neurax_bias_valid_o <= ram(to_integer(c_REG_CMD))(c_CMD_BIAS_VALID);
 

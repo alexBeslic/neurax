@@ -32,16 +32,16 @@ module:
 
 userspace: neurax_uio_test_conv neurax_uio_test_activation neurax_uio_test_pooling neurax_uio_test_pipeline
 
-neurax_uio_test_conv: neurax_uio_test_conv.c msgdma_uio.h
+neurax_uio_test_conv: neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h neurax_ram_layout.h
 	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_conv.c 
 
-neurax_uio_test_activation: neurax_uio_test_activation.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h
+neurax_uio_test_activation: neurax_uio_test_activation.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h neurax_ram_layout.h
 	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_activation.c
 
-neurax_uio_test_pooling: neurax_uio_test_pooling.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h
+neurax_uio_test_pooling: neurax_uio_test_pooling.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h neurax_ram_layout.h
 	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_pooling.c
 
-neurax_uio_test_pipeline: neurax_uio_test_pipeline.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h
+neurax_uio_test_pipeline: neurax_uio_test_pipeline.c neurax_uio_test_conv.c msgdma_uio.h neurax_regs.h neurax_ram_layout.h
 	$(CROSS_COMPILE)gcc -O2 -Wall -Wextra -o $@ neurax_uio_test_pipeline.c
 
 UIO_KO := $(KERNEL_SRC)/drivers/uio/uio.ko

@@ -12,6 +12,7 @@ package accel_types is
     constant DATA_WIDTH    : integer := 32;
     constant FRAC_WIDTH    : integer := 8;
     constant INT_WIDTH     : integer := DATA_WIDTH - FRAC_WIDTH;
+    constant RAM_WORDS     : integer := 65536;
 
     constant MAX_BATCH_SIZE : integer := 4;
 
@@ -21,7 +22,7 @@ package accel_types is
     constant MAX_CHANNELS    : integer := 16;
 
     -- Konvolucija
-    constant MAX_KERNEL_SIZE : integer := 5;
+    constant MAX_KERNEL_SIZE : integer := 11;
 
     type conv_config_t is record
         kernel_size      : integer range 1 to MAX_KERNEL_SIZE;
@@ -44,7 +45,7 @@ package accel_types is
     end record;
 
     -- Aktivacije
-    constant MAX_TENSOR_SIZE   : integer := 4096;
+    constant MAX_TENSOR_SIZE   : integer := 65535;
     constant SIGMOID_LUT_SIZE  : integer := 256;
     constant TANH_LUT_SIZE     : integer := 256;
     constant EXP_LUT_SIZE      : integer := 128;
@@ -72,18 +73,7 @@ entity FPGA_accelerator is
         INPUT_HEIGHT        : integer := 8;
         INPUT_WIDTH         : integer := 8;
         MAX_CHANNELS        : integer := 4;
-        PARALLEL_UNITS      : integer := 1;
-        -- RAM layout base addresses (in 32-bit words)
-        -- HPS streams data into these regions before starting an operation.
-        -- Input:   0 .. WEIGHT_BASE-1
-        -- Weights: WEIGHT_BASE .. BIAS_BASE-1
-        -- Bias:    BIAS_BASE .. OUTPUT_BASE-1
-        -- Output:  OUTPUT_BASE .. end
-        -- (One signed Q24.8 value per 32-bit RAM word)
-        INPUT_BASE_ADDR     : integer := 0;
-        WEIGHT_BASE_ADDR    : integer := 10000;
-        BIAS_BASE_ADDR      : integer := 13000;
-        OUTPUT_BASE_ADDR    : integer := 13016
+        PARALLEL_UNITS      : integer := 1
     );
     port (
         clk : in std_logic;
@@ -93,6 +83,7 @@ entity FPGA_accelerator is
         enable : in std_logic;
         operation_select : in std_logic_vector(1 downto 0);
         start_operation : in std_logic;
+        configuration_valid : in std_logic;
 
         -- Configuration inputs
         conv_kernel_size     : in integer range 1 to MAX_KERNEL_SIZE;
@@ -122,6 +113,7 @@ entity FPGA_accelerator is
         -- Status signals
         operation_done    : out std_logic;
         operation_busy    : out std_logic;
+        operation_error   : out std_logic;
         current_operation : out std_logic_vector(1 downto 0)
     );
 end FPGA_accelerator;
@@ -178,12 +170,12 @@ architecture behavioral of FPGA_accelerator is
             batch_size       : in  integer range 1 to MAX_BATCH_SIZE;
             input_valid      : in  std_logic;
             input_data       : in  data_array_1d(0 to PARALLEL_CHANNELS-1);
-            input_addr       : out std_logic_vector(17 downto 0);
+            input_addr       : out std_logic_vector(19 downto 0);
             input_read_en    : out std_logic;
             input_read_ready : in  std_logic := '1';
             output_valid     : out std_logic;
             output_data      : out data_array_1d(0 to PARALLEL_CHANNELS-1);
-            output_addr      : out std_logic_vector(17 downto 0);
+            output_addr      : out std_logic_vector(19 downto 0);
             output_write_en  : out std_logic
         );
     end component;
@@ -247,8 +239,8 @@ architecture behavioral of FPGA_accelerator is
     signal pool_input_data    : data_array_1d(0 to PARALLEL_UNITS-1);
     signal pool_output_valid  : std_logic;
     signal pool_output_data   : data_array_1d(0 to PARALLEL_UNITS-1);
-    signal pool_input_addr    : std_logic_vector(17 downto 0);
-    signal pool_output_addr   : std_logic_vector(17 downto 0);
+    signal pool_input_addr    : std_logic_vector(19 downto 0);
+    signal pool_output_addr   : std_logic_vector(19 downto 0);
     signal pool_input_read_en : std_logic;
     signal pool_input_read_ready : std_logic;
     signal pool_output_write_en : std_logic;
@@ -265,13 +257,72 @@ architecture behavioral of FPGA_accelerator is
     signal act_output_write_en: std_logic;
 
     -- Top-level state machine
-    type top_state_t is (IDLE, CONV_OP, POOL_OP, ACT_OP, DONE_ST);
+    type top_state_t is (IDLE, CONV_OP, POOL_OP, ACT_OP, DONE_ST, ERROR_ST);
     signal current_state, next_state : top_state_t;
 
     signal selected_operation : std_logic_vector(1 downto 0);
 
     -- Sticky done flag: latched high when operation completes, cleared on new start
     signal done_latch : std_logic;
+    signal error_latch : std_logic;
+    signal operation_layout_valid : std_logic;
+    signal conv_weight_base, conv_bias_base, conv_output_base : integer;
+    signal tensor_output_base, pool_output_base : integer;
+
+    function output_dim(input_dim, kernel_size, padding, stride : integer)
+        return integer is
+    begin
+        return (input_dim + 2 * padding - kernel_size) / stride + 1;
+    end function;
+
+    function operation_fits_ram(
+        operation : std_logic_vector(1 downto 0);
+        input_height, input_width : integer;
+        conv_kernel, conv_stride, conv_padding, conv_in_ch, conv_out_ch : integer;
+        pool_size, pool_stride, pool_channels, tensor_words, batch : integer
+    ) return boolean is
+        variable input_words, weight_words, bias_words, output_words : integer;
+        variable out_height, out_width : integer;
+        variable total_words : integer;
+    begin
+        if input_height < 1 or input_height > MAX_HEIGHT or
+           input_width < 1 or input_width > MAX_WIDTH or
+           batch < 1 or batch > MAX_BATCH_SIZE then
+            return false;
+        end if;
+
+        case operation is
+            when "00" =>
+                out_height := output_dim(input_height, conv_kernel, conv_padding, conv_stride);
+                out_width := output_dim(input_width, conv_kernel, conv_padding, conv_stride);
+                if out_height < 1 or out_height > MAX_HEIGHT or
+                   out_width < 1 or out_width > MAX_WIDTH then
+                    return false;
+                end if;
+                input_words := input_height * input_width * conv_in_ch * batch;
+                weight_words := conv_kernel * conv_kernel * conv_in_ch * conv_out_ch;
+                bias_words := conv_out_ch;
+                output_words := out_height * out_width * conv_out_ch * batch;
+                total_words := input_words + weight_words + bias_words + output_words;
+                return total_words <= RAM_WORDS;
+            when "01" =>
+                if pool_size > input_height or pool_size > input_width then
+                    return false;
+                end if;
+                out_height := (input_height - pool_size) / pool_stride + 1;
+                out_width := (input_width - pool_size) / pool_stride + 1;
+                input_words := input_height * input_width * pool_channels * batch;
+                output_words := out_height * out_width * pool_channels * batch;
+                total_words := input_words + output_words;
+                return out_height >= 1 and out_width >= 1 and total_words <= RAM_WORDS;
+            when "10" =>
+                input_words := tensor_words;
+                total_words := input_words * 2;
+                return tensor_words >= 1 and total_words <= RAM_WORDS;
+            when others =>
+                return false;
+        end case;
+    end function;
 
     -- Convolution RAM read sequencer
     -- Conv needs input + weight + (optionally) bias per MAC iteration.
@@ -314,6 +365,20 @@ begin
     pooling_config.stride    <= pool_stride;
     pooling_config.pool_type <= pool_type;
     pooling_config.channels  <= pool_channels;
+
+    operation_layout_valid <= '1' when configuration_valid = '1' and
+        operation_fits_ram(operation_select, INPUT_HEIGHT, INPUT_WIDTH,
+            conv_kernel_size, conv_stride, conv_padding,
+            conv_input_channels, conv_output_channels,
+            pool_size, pool_stride, pool_channels, tensor_size, batch_size)
+        else '0';
+
+    conv_weight_base <= INPUT_HEIGHT * INPUT_WIDTH * conv_input_channels * batch_size;
+    conv_bias_base <= conv_weight_base +
+        conv_kernel_size * conv_kernel_size * conv_input_channels * conv_output_channels;
+    conv_output_base <= conv_bias_base + conv_output_channels;
+    pool_output_base <= INPUT_HEIGHT * INPUT_WIDTH * pool_channels * batch_size;
+    tensor_output_base <= tensor_size;
 
     -- =========================================================================
     -- Component instantiations
@@ -410,34 +475,46 @@ begin
             current_state      <= IDLE;
             selected_operation <= "00";
             done_latch         <= '0';
+            error_latch        <= '0';
         elsif rising_edge(clk) then
             current_state <= next_state;
 
             if current_state = IDLE and enable = '1' and start_operation = '1' then
                 selected_operation <= operation_select;
                 done_latch         <= '0';  -- Clear done on new operation start
+                error_latch        <= '0';
             end if;
 
-            -- Latch done when entering DONE_ST
-            if next_state = DONE_ST and current_state /= DONE_ST then
+            -- Latch completion for both successful and rejected commands.
+            if (next_state = DONE_ST or next_state = ERROR_ST) and
+               current_state /= DONE_ST and current_state /= ERROR_ST then
                 done_latch <= '1';
+            end if;
+
+            if next_state = ERROR_ST and current_state = IDLE then
+                error_latch <= '1';
             end if;
         end if;
     end process;
 
     process(current_state, enable, start_operation, operation_select,
+            configuration_valid, operation_layout_valid,
             conv_done, pool_done, act_done)
     begin
         next_state <= current_state;
         case current_state is
             when IDLE =>
                 if enable = '1' and start_operation = '1' then
-                    case operation_select is
-                        when "00"   => next_state <= CONV_OP;
-                        when "01"   => next_state <= POOL_OP;
-                        when "10"   => next_state <= ACT_OP;
-                        when others => next_state <= IDLE;
-                    end case;
+                    if configuration_valid = '0' or operation_layout_valid = '0' then
+                        next_state <= ERROR_ST;
+                    else
+                        case operation_select is
+                            when "00"   => next_state <= CONV_OP;
+                            when "01"   => next_state <= POOL_OP;
+                            when "10"   => next_state <= ACT_OP;
+                            when others => next_state <= ERROR_ST;
+                        end case;
+                    end if;
                 end if;
             when CONV_OP =>
                 if conv_done = '1' then next_state <= DONE_ST; end if;
@@ -446,6 +523,8 @@ begin
             when ACT_OP =>
                 if act_done = '1' then next_state <= DONE_ST; end if;
             when DONE_ST =>
+                next_state <= IDLE;
+            when ERROR_ST =>
                 next_state <= IDLE;
             when others =>
                 next_state <= IDLE;
@@ -600,7 +679,9 @@ begin
             pool_input_addr, pool_input_read_en,
             pool_output_write_en, pool_output_addr, pool_output_data,
             act_input_addr, act_input_read_en,
-            act_output_write_en, act_output_addr, act_output_data)
+            act_output_write_en, act_output_addr, act_output_data,
+            conv_weight_base, conv_bias_base, conv_output_base,
+            pool_output_base, tensor_output_base)
     begin
         -- Defaults: no read, no write
         ram_rdaddress_o <= (others => '0');
@@ -616,15 +697,15 @@ begin
                     when PHASE_INPUT | PHASE_INPUT_CAPTURE |
                          PHASE_INPUT_SETTLE | PHASE_INPUT_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
-                            unsigned(conv_input_addr) + to_unsigned(INPUT_BASE_ADDR, 16));
+                            unsigned(conv_input_addr));
                     when PHASE_WEIGHT | PHASE_WEIGHT_CAPTURE |
                          PHASE_WEIGHT_SETTLE | PHASE_WEIGHT_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
-                            unsigned(conv_weight_addr) + to_unsigned(WEIGHT_BASE_ADDR, 16));
+                            unsigned(conv_weight_addr) + to_unsigned(conv_weight_base, 16));
                     when PHASE_BIAS | PHASE_BIAS_CAPTURE |
                          PHASE_BIAS_SETTLE | PHASE_BIAS_SAMPLE =>
                         ram_rdaddress_o <= std_logic_vector(
-                            resize(unsigned(conv_bias_addr), 16) + to_unsigned(BIAS_BASE_ADDR, 16));
+                            resize(unsigned(conv_bias_addr), 16) + to_unsigned(conv_bias_base, 16));
                     when others =>
                         null;
                 end case;
@@ -633,7 +714,7 @@ begin
                 if conv_output_write_en = '1' then
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
-                        unsigned(conv_output_addr) + to_unsigned(OUTPUT_BASE_ADDR, 16));
+                        unsigned(conv_output_addr) + to_unsigned(conv_output_base, 16));
                     ram_data_o <= conv_output_data;
                 end if;
 
@@ -641,13 +722,13 @@ begin
             when POOL_OP =>
                 if pool_input_read_en = '1' then
                     ram_rdaddress_o <= std_logic_vector(
-                        resize(unsigned(pool_input_addr), 16) + to_unsigned(INPUT_BASE_ADDR, 16));
+                        resize(unsigned(pool_input_addr), 16));
                 end if;
 
                 if pool_output_write_en = '1' then
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
-                        resize(unsigned(pool_output_addr), 16) + to_unsigned(OUTPUT_BASE_ADDR, 16));
+                        resize(unsigned(pool_output_addr), 16) + to_unsigned(pool_output_base, 16));
                     ram_data_o <= pool_output_data(0);
                 end if;
 
@@ -655,13 +736,13 @@ begin
             when ACT_OP =>
                 if act_input_read_en = '1' then
                     ram_rdaddress_o <= std_logic_vector(
-                        unsigned(act_input_addr) + to_unsigned(INPUT_BASE_ADDR, 16));
+                        unsigned(act_input_addr));
                 end if;
 
                 if act_output_write_en = '1' then
                     ram_wren_o <= '1';
                     ram_wraddress_o <= std_logic_vector(
-                        unsigned(act_output_addr) + to_unsigned(OUTPUT_BASE_ADDR, 16));
+                        unsigned(act_output_addr) + to_unsigned(tensor_output_base, 16));
                     ram_data_o <= act_output_data(0);
                 end if;
 
@@ -678,7 +759,9 @@ begin
     -- pool_done/act_done signals are only 1-clock pulses)
     operation_done <= done_latch;
 
-    operation_busy <= '1' when current_state /= IDLE and current_state /= DONE_ST else '0';
+    operation_busy <= '1' when current_state /= IDLE and current_state /= DONE_ST and
+                               current_state /= ERROR_ST else '0';
+    operation_error <= error_latch;
     current_operation <= selected_operation;
 
 end behavioral;

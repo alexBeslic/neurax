@@ -221,7 +221,7 @@ neurax_register_pkg.vhd (package, imported by register block)
 | Address | Register | Purpose |
 |---------|----------|---------|
 | 0x0 | CMD | Command & control (enable, start, operation select) |
-| 0x1 | STATUS | Status flags (busy, done, input/output ready) |
+| 0x1 | STATUS | Status flags (busy, done, input/output ready, error at bit 8) |
 | 0x2 | CONFIG | General configuration (reserved) |
 | 0x3 | CONV_CONFIG_0 | Convolution config (stride, padding, groups, kernel) |
 | 0x4 | CONV_CONFIG_1 | Convolution config (input/output channels) |
@@ -229,7 +229,9 @@ neurax_register_pkg.vhd (package, imported by register block)
 | 0x6 | ACTIVATION_CONFIG | Activation type & tensor size |
 | 0x7 | ACTIVATION_ALPHA | Alpha parameter (LeakyReLU, ELU) |
 | 0x8 | BATCH_SIZE | Batch size |
-| 0x9–0xC | TEMP_0–3 | Temporary storage |
+| 0x9 | DATA_SC | DMA read start/busy/done/error and upload-reset handshake |
+| 0xA | DATA_READ | Read start word `[15:0]`, count `[31:16]` |
+| 0xB–0xC | TEMP_2–3 | Port-B trace controls/data |
 | 0xD | DEBUG_CYCLES | Cycle counter (read-only) |
 | 0xE | DEBUG_STATUS | Debug status code (read-only) |
 | 0xF | READ_ONLY | Magic number 0xCAB00D1E (read-only) |
@@ -241,11 +243,17 @@ neurax_register_pkg.vhd (package, imported by register block)
 - **DATA_WIDTH:** 32 bits (signed fixed-point Q24.8)  
 - **FRAC_WIDTH:** 8 bits (fractional part)  
 - **MAX_BATCH_SIZE:** 4  
-- **MAX_KERNEL_SIZE:** 5  
+- **MAX_KERNEL_SIZE:** 11  
 - **MAX_POOL_SIZE:** 8  
 - **MAX_CHANNELS:** 16  
-- **MAX_TENSOR_SIZE:** 4096  
-- **RAM_SIZE:** 23000 × 32-bit words (≈92 KB)
+- **MAX_TENSOR_SIZE:** 65535 words per tensor (operation layout must also fit)
+- **RAM_SIZE:** 65536 × 32-bit words = 256 KiB (full 16-bit address space)
+
+Convolution lays out input, weights, bias, and output contiguously; activation and
+pooling lay out input and output contiguously. Each operation is rejected with
+`STATUS.ERROR` if its complete layout exceeds RAM. DATA_READ carries a 16-bit
+start address and a 16-bit word count, so software reads the full 64K range in
+chunks (each DMA chunk is limited to 1024 words).
 
 ---
 

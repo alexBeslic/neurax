@@ -16,7 +16,7 @@ package neurax_accel_types_pkg is
     constant MAX_CHANNELS    : integer := 16;
 
     -- Konvolucija
-    constant MAX_KERNEL_SIZE : integer := 5;
+    constant MAX_KERNEL_SIZE : integer := 11;
 
     type conv_config_t is record
         kernel_size      : integer range 1 to MAX_KERNEL_SIZE;
@@ -39,7 +39,7 @@ package neurax_accel_types_pkg is
     end record;
 
     -- Aktivacije
-    constant MAX_TENSOR_SIZE   : integer := 4096;
+    constant MAX_TENSOR_SIZE   : integer := 65535;
     constant SIGMOID_LUT_SIZE  : integer := 256;
     constant TANH_LUT_SIZE     : integer := 256;
     constant EXP_LUT_SIZE      : integer := 128;
